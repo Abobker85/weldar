@@ -11,7 +11,7 @@
             <td class="var-value" style="text-align: center; font-weight: bold;" colspan="2">
                 <div class="report-number mt-1">
                     <input type="text" class="form-input" name="vt_report_no" id="vt_report_no" 
-                        value="{{ $vtReportNo ?? 'EEA-AIC-VT-0001' }}" readonly>
+                        value="{{ $certificate->vt_report_no ?? ($vtReportNo ?? 'EEA-AIC-VT-0001') }}" readonly>
                 </div>
             </td>
         </tr>
@@ -20,20 +20,20 @@
         <tr>
             <td class="var-label" colspan="1" style="width: 33.33%;">
                 <div class="checkbox-container">
-                    <input type="checkbox" name="transverse_face_root" id="transverse_face_root">
+                    <input type="checkbox" name="transverse_face_root" id="transverse_face_root" {{ ($certificate->transverse_face_root ?? false) ? 'checked' : '' }}>
                     <label for="transverse_face_root">□ Transverse face and root bends
                         [QW-462.3(a)]</label>
                 </div>
             </td>
             <td class="var-label" colspan="1" style="width: 33.33%;">
                 <div class="checkbox-container">
-                    <input type="checkbox" name="longitudinal_bends" id="longitudinal_bends">
+                    <input type="checkbox" name="longitudinal_bends" id="longitudinal_bends" {{ ($certificate->longitudinal_bends ?? false) ? 'checked' : '' }}>
                     <label for="longitudinal_bends">□ Longitudinal bends [QW-462.3(b)]</label>
                 </div>
             </td>
             <td class="var-label" colspan="2" style="width: 33.34%;">
                 <div class="checkbox-container">
-                    <input type="checkbox" name="side_bends" id="side_bends">
+                    <input type="checkbox" name="side_bends" id="side_bends" {{ ($certificate->side_bends ?? false) ? 'checked' : '' }}>
                     <label for="side_bends">□ Side bends [QW-462.2]</label>
                 </div>
             </td>
@@ -43,7 +43,7 @@
         <tr>
             <td class="var-label" colspan="4" style="text-align: center;">
                 <div class="checkbox-container" style="justify-content: center;">
-                    <input type="checkbox" name="pipe_bend_corrosion" id="pipe_bend_corrosion">
+                    <input type="checkbox" name="pipe_bend_corrosion" id="pipe_bend_corrosion" {{ ($certificate->pipe_bend_corrosion ?? false) ? 'checked' : '' }}>
                     <label for="pipe_bend_corrosion">□ Pipe bend specimen, corrosion-resistant weld metal
                         overlay [QW-462.5(c)]</label>
                 </div>
@@ -53,7 +53,7 @@
         <tr>
             <td class="var-label" colspan="4" style="text-align: center;">
                 <div class="checkbox-container" style="justify-content: center;">
-                    <input type="checkbox" name="plate_bend_corrosion" id="plate_bend_corrosion">
+                    <input type="checkbox" name="plate_bend_corrosion" id="plate_bend_corrosion" {{ ($certificate->plate_bend_corrosion ?? false) ? 'checked' : '' }}>
                     <label for="plate_bend_corrosion">□ Plate bend specimen, corrosion-resistant weld metal
                         overlay [QW-462.5(c)]</label>
                 </div>
@@ -64,14 +64,14 @@
         <tr>
             <td class="var-label" colspan="2">
                 <div class="checkbox-container">
-                    <input type="checkbox" name="pipe_macro_fusion" id="pipe_macro_fusion">
+                    <input type="checkbox" name="pipe_macro_fusion" id="pipe_macro_fusion" {{ ($certificate->pipe_macro_fusion ?? false) ? 'checked' : '' }}>
                     <label for="pipe_macro_fusion">□ Pipe specimen, macro test for fusion
                         [QW-462.5(c)]</label>
                 </div>
-            </td>
+            td>
             <td class="var-label" colspan="2">
                 <div class="checkbox-container">
-                    <input type="checkbox" name="plate_macro_fusion" id="plate_macro_fusion">
+                    <input type="checkbox" name="plate_macro_fusion" id="plate_macro_fusion" {{ ($certificate->plate_macro_fusion ?? false) ? 'checked' : '' }}>
                     <label for="plate_macro_fusion">□ Plate specimen, macro test for fusion
                         [QW-462.5(c)]</label>
                 </div>
@@ -92,11 +92,11 @@
             <td class="var-value" style="text-align: center; font-weight: bold;">ACC</td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="additional_type_1"
-                    placeholder="................">
+                    placeholder="................" value="{{ $certificate->additional_type_1 ?? '' }}">
             </td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="additional_result_1"
-                    placeholder="...........">
+                    placeholder="..........." value="{{ $certificate->additional_result_1 ?? '' }}">
             </td>
         </tr>
 
@@ -106,11 +106,11 @@
             <td class="var-value" style="text-align: center; font-weight: bold;">ACC</td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="additional_type_2"
-                    placeholder="................">
+                    placeholder="................" value="{{ $certificate->additional_type_2 ?? '' }}">
             </td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="additional_result_2"
-                    placeholder="...........">
+                    placeholder="..........." value="{{ $certificate->additional_result_2 ?? '' }}">
             </td>
         </tr>
 
@@ -121,20 +121,20 @@
                 <div class="report-group">
                     <span>ACC (Doc No.</span>
                     <input type="text" class="form-input rt-report" name="rt_report_no" id="rt_report_no" 
-                        value="{{ $rtReportNo ?? 'EEA-AIC-RT-0001' }}" readonly>
+                        value="{{ $certificate->rt_report_no ?? ($rtReportNo ?? 'EEA-AIC-RT-0001') }}" readonly>
                     <span>)</span>
                 </div>
                 <div class="doc-group mt-1">
                     <span>Report No.#:</span>
                     <input type="text" class="form-input doc-number" name="rt_doc_no" id="rt_doc_no" 
-                        placeholder="SO-xxxxxx">
+                        placeholder="SO-xxxxxx" value="{{ $certificate->rt_doc_no ?? '' }}">
                 </div>
             </td>
             <td class="var-value" style="text-align: center;">
                 <div class="checkbox-container">
                     <!-- Fixed RT checkbox - use a single hidden field -->
                     <input type="hidden" name="rt" value="0">
-                    <input type="checkbox" name="rt" id="rt" value="1" {{ old('rt') ? 'checked' : '' }}>
+                    <input type="checkbox" name="rt" id="rt" value="1" {{ ($certificate->rt ?? old('rt')) ? 'checked' : '' }}>
                     <label for="rt">■ RT</label>
                 </div>
             </td>
@@ -142,7 +142,7 @@
                 <div class="checkbox-container">
                     <!-- Fixed UT checkbox - use a single hidden field -->
                     <input type="hidden" name="ut" value="0">
-                    <input type="checkbox" name="ut" id="ut" value="1" {{ old('ut') ? 'checked' : '' }}>
+                    <input type="checkbox" name="ut" id="ut" value="1" {{ ($certificate->ut ?? old('ut')) ? 'checked' : '' }}>
                     <label for="ut">□ UT</label>
                 </div>
             </td>
@@ -153,26 +153,26 @@
             <td class="var-label">Fillet weld-fracture test (QW-181.2):</td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="fillet_fracture_test"
-                    placeholder="................">
+                    placeholder="................" value="{{ $certificate->fillet_fracture_test ?? '' }}">
             </td>
             <td class="var-label">Length and percent of defects</td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="defects_length"
-                    placeholder="...........">
+                    placeholder="..........." value="{{ $certificate->defects_length ?? '' }}">
             </td>
         </tr>
 
         <tr>
             <td class="var-label">
                 <div class="checkbox-container">
-                    <input type="checkbox" name="fillet_welds_plate" id="fillet_welds_plate">
+                    <input type="checkbox" name="fillet_welds_plate" id="fillet_welds_plate" {{ ($certificate->fillet_welds_plate ?? false) ? 'checked' : '' }}>
                     <label for="fillet_welds_plate">□ Fillet welds in plate [QW-462.4(b)]</label>
                 </div>
             </td>
             <td class="var-value"></td>
             <td class="var-label">
                 <div class="checkbox-container">
-                    <input type="checkbox" name="fillet_welds_pipe" id="fillet_welds_pipe">
+                    <input type="checkbox" name="fillet_welds_pipe" id="fillet_welds_pipe" {{ ($certificate->fillet_welds_pipe ?? false) ? 'checked' : '' }}>
                     <label for="fillet_welds_pipe">□ Fillet welds in pipe [QW-462.4(c)]</label>
                 </div>
             </td>
@@ -183,11 +183,11 @@
             <td class="var-label">Macro examination (QW-184)</td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="macro_exam"
-                    placeholder="................">
+                    placeholder="................" value="{{ $certificate->macro_exam ?? '' }}">
             </td>
             <td class="var-label">Fillet size (in.)</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="fillet_size" placeholder="............">
+                <input type="text" class="form-input" name="fillet_size" placeholder="............" value="{{ $certificate->fillet_size ?? '' }}">
             </td>
         </tr>
 
@@ -195,12 +195,12 @@
             <td class="var-label">Other tests</td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="other_tests"
-                    placeholder="................">
+                    placeholder="................" value="{{ $certificate->other_tests ?? '' }}">
             </td>
             <td class="var-label">Concavity or convexity (in.)</td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="concavity_convexity"
-                    placeholder="................">
+                    placeholder="................" value="{{ $certificate->concavity_convexity ?? '' }}">
             </td>
         </tr>
     </table>
@@ -210,31 +210,31 @@
         <tr>
             <td class="var-label">Film or specimens evaluated by</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="evaluated_by" value="Kalith Majeedh" required>
+                <input type="text" class="form-input" name="evaluated_by" value="{{ $certificate->evaluated_by ?? 'Kalith Majeedh' }}" required>
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="evaluated_company" value="SOGEC" readonly>
+                <input type="text" class="form-input" name="evaluated_company" value="{{ $certificate->evaluated_company ?? 'SOGEC' }}" readonly>
             </td>
         </tr>
         <tr>
             <td class="var-label">Mechanical tests conducted by</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="mechanical_tests_by" >
+                <input type="text" class="form-input" name="mechanical_tests_by" value="{{ $certificate->mechanical_tests_by ?? '' }}" >
             </td>
             <td class="var-label">Laboratory test no.</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="lab_test_no" placeholder="Enter lab test number" >
+                <input type="text" class="form-input" name="lab_test_no" placeholder="Enter lab test number" value="{{ $certificate->lab_test_no ?? '' }}" >
             </td>
         </tr>
         <tr>
             <td class="var-label">Welding supervised by</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="supervised_by" value="Ahmed Yousry" >
+                <input type="text" class="form-input" name="supervised_by" value="{{ $certificate->supervised_by ?? 'Ahmed Yousry' }}" >
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="supervised_company" value="{{ \App\Models\AppSetting::getValue('system_name', 'ELITE') }}" readonly>
+                <input type="text" class="form-input" name="supervised_company" value="{{ $certificate->supervised_company ?? (\App\Models\AppSetting::getValue('system_name', 'ELITE')) }}" readonly>
             </td>
         </tr>
     </table>
@@ -259,26 +259,26 @@
             <td style="width: 33.33%; background: #f8f9fa; font-weight: bold; text-align: center; height: 25px; border: 1px solid #000;">Position or Title</td>
         </tr>
         <tr class="sig-row">
-            <td style="border: 1px solid #000;"><input type="date" class="form-input" name="confirm_date1" style="width: 100%"></td>
+            <td style="border: 1px solid #000;"><input type="date" class="form-input" name="confirm_date1" style="width: 100%" value="{{ $certificate->confirm_date1 ?? '' }}"></td>
             <td style="border: 1px solid #000;"></td>
-            <td style="border: 1px solid #000;"><input type="text" class="form-input" name="confirm_title1" placeholder="Position" style="width: 100%">
+            <td style="border: 1px solid #000;"><input type="text" class="form-input" name="confirm_title1" placeholder="Position" style="width: 100%" value="{{ $certificate->confirm_title1 ?? '' }}">
             </td>
         </tr>
         <tr class="sig-row">
-            <td style="border: 1px solid #000;"><input type="date" class="form-input" name="confirm_date2" style="width: 100%"></td>
+            <td style="border: 1px solid #000;"><input type="date" class="form-input" name="confirm_date2" style="width: 100%" value="{{ $certificate->confirm_date2 ?? '' }}"></td>
             <td style="border: 1px solid #000;"></td>
-            <td style="border: 1px solid #000;"><input type="text" class="form-input" name="confirm_title2" placeholder="Position" style="width: 100%">
+            <td style="border: 1px solid #000;"><input type="text" class="form-input" name="confirm_title2" placeholder="Position" style="width: 100%" value="{{ $certificate->confirm_title2 ?? '' }}">
             </td>
         </tr>
         <tr class="sig-row">
-            <td style="border: 1px solid #000;"><input type="date" class="form-input" name="confirm_date3" style="width: 100%"></td>
+            <td style="border: 1px solid #000;"><input type="date" class="form-input" name="confirm_date3" style="width: 100%" value="{{ $certificate->confirm_date3 ?? '' }}"></td>
             <td style="border: 1px solid #000;"></td>
-            <td style="border: 1px solid #000;"><input type="text" class="form-input" name="confirm_title3" placeholder="Position" style="width: 100%">
+            <td style="border: 1px solid #000;"><input type="text" class="form-input" name="confirm_title3" placeholder="Position" style="width: 100%" value="{{ $certificate->confirm_title3 ?? '' }}">
             </td>
         </tr>
     </table>
 
-    @include('smaw_certificates.partials.signature-section')
+    @include('smaw_certificates.partials.signature-section', ['certificate' => $certificate])
 
     {{-- <!-- Final organization section -->
     <table style="width: 100%; table-layout: fixed; margin: 0; border-collapse: collapse; border-top: 1px solid #000;">
