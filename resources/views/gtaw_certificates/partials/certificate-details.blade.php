@@ -5,16 +5,16 @@
         <div class="cert-left">
             Certificate No:
             <input type="text" class="form-input" name="certificate_no" id="certificate_no"
-                value="{{ $newCertNo }}" style="width: 120px; display: inline; font-weight: bold;" readonly>
+                value="{{ $certificate->certificate_no ?? ($newCertNo ?? '') }}" style="width: 120px; display: inline; font-weight: bold;" readonly>
         </div>
         <div class="cert-center">
             <strong>Welder's name:</strong>
-            @include('components.welder-search')
+            @include('components.welder-search', ['selectedWelderId' => $certificate->welder_id ?? null])
         </div>
         <div class="cert-right">
             <strong>Welder ID No:</strong>
             <input type="text" class="form-input" name="welder_id_no" id="welder_id_no"
-                style="width: 60px; display: inline; font-weight: bold;" readonly>
+                value="{{ $certificate->welder->welder_no ?? '' }}" style="width: 60px; display: inline; font-weight: bold;" readonly>
         </div>
     </div>
     
@@ -23,23 +23,23 @@
         <div class="cert-left">
             <strong>Gov ID Iqama number:</strong>
             <input type="text" class="form-input" name="iqama_no" id="iqama_no"
-                style="width: 100px; display: inline; font-weight: bold;" readonly>
+                value="{{ $certificate->welder->iqama_no ?? '' }}" style="width: 100px; display: inline; font-weight: bold;" readonly>
         </div>
         <div class="cert-center">
             <strong>Company:</strong>
             <input type="text" class="form-input" name="company_name" id="company_name"
-                style="font-weight: bold;" readonly>
-            <input type="hidden" name="company_id" id="company_id">
+                value="{{ $certificate->company->name ?? '' }}" style="font-weight: bold;" readonly>
+            <input type="hidden" name="company_id" id="company_id" value="{{ $certificate->company_id ?? '' }}">
         </div>
         <div class="cert-right">
             <strong>Passport No:</strong>
             <input type="text" class="form-input" name="passport_no" id="passport_no"
-                style="width: 80px; display: inline; font-weight: bold;" readonly>
+                value="{{ $certificate->welder->passport_id_no ?? '' }}" style="width: 80px; display: inline; font-weight: bold;" readonly>
         </div>
     </div>
     
     <!-- Photo placement that spans both rows -->
     <div class="photo-container">
-        @include('components.photo-upload')
+        @include('components.photo-upload', ['photoPath' => $certificate->photo_path ?? null])
     </div>
 </div>

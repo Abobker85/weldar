@@ -73,7 +73,7 @@ class GtawCertificateController extends Controller
                     $actions .= '<a href="' . route('gtaw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank"><i class="fas fa-print"></i></a>';
                     $actions .= '<a href="' . route('gtaw-certificates.card', $certificate->id) . '" class="btn btn-sm btn-warning" target="_blank"><i class="fas fa-id-card"></i></a>';
                      $actions .= '<a href="' . route('gtaw-certificates.back-card', $certificate->id) . '" class="btn btn-sm btn-dark" title="Back Card"><i class="fas fa-id-card-alt"></i></a>';
-
+                    $actions .= '<a href="' . route('gtaw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-info"><i class="fas fa-edit"></i></a>';
                     $actions .= '<form action="' . route('gtaw-certificates.destroy', $certificate->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this certificate?\');" style="display:inline">';
                     $actions .= csrf_field();
                     $actions .= method_field('DELETE');
@@ -500,7 +500,244 @@ class GtawCertificateController extends Controller
     /**
      * Update the specified resource in storage.
      */
-   
+    public function update(Request $request, string $id)
+    {
+        $certificate = GtawCertificate::findOrFail($id);
+
+        $booleanFields = [
+            'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen', 'rt', 'ut',
+            'fillet_welds_plate', 'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
+            'transverse_face_root', 'longitudinal_bends', 'side_bends',
+            'pipe_bend_corrosion', 'plate_bend_corrosion','gtaw_process','smaw_process', 'gtaw_yes', 'gtaw_no',
+        ];
+
+        $data = $request->all();
+
+        // Set default false values for boolean fields if they're not present in request
+        foreach ($booleanFields as $field) {
+            if (!isset($data[$field])) {
+                $data[$field] = false;
+            } else if ($data[$field] === 'on' || $data[$field] === 'true' || $data[$field] === '1') {
+                $data[$field] = true;
+            } else {
+                $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+
+        // Check if at least one of test_coupon or production_weld is checked
+        if (!($data['test_coupon'] || $data['production_weld'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please select either Test Coupon or Production Weld',
+                'errors' => [
+                    'test_coupon' => ['Please select either Test Coupon or Production Weld']
+                ]
+            ], 422);
+        }
+
+        $request->merge($data);
+
+        $validated = $request->validate([
+            'welder_id' => 'required|exists:welders,id',
+            'company_id' => 'required|exists:companies,id',
+            'wps_followed' => 'required|string|max:255',
+            'revision_no' => 'nullable|string|max:255',
+            'test_date' => 'required|date',
+            'base_metal_spec' => 'required|string|max:255',
+            'diameter' => 'required_if:pipe,true|nullable|string|max:255',
+            'thickness' => 'required|string|max:255',
+            'dia_thickness' => 'nullable|string|max:255',
+
+            // Specimen type
+            'test_coupon' => 'boolean',
+            'production_weld' => 'boolean',
+            'plate' => 'boolean',
+            'pipe' => 'boolean',
+            'plate_specimen' => 'boolean',
+            'pipe_specimen' => 'boolean',
+
+            // Pipe information
+            'pipe_diameter_type' => 'required_if:pipe,true|nullable|string|max:255',
+            'pipe_diameter_manual' => 'nullable|string|max:255',
+
+            // Metal specifications
+            'base_metal_p_no' => 'required|string|max:255',
+            'base_metal_p_no_manual' => 'nullable|string|max:255',
+
+            'p_number_range' => 'nullable|string|max:255',
+            'p_number_range_manual' => 'nullable|string|max:255',
+
+            // Thickness information
+
+            'gtaw_process' => 'required',
+            'gtaw_thickness' => 'required|string|max:255',
+
+            // Position and backing information
+            'test_position' => 'required|string|max:255',
+            'position_range' => 'nullable|string|max:255',
+            'position_range_manual' => 'nullable|string',
+            'backing' => 'required|string|max:255',
+            'backing_manual' => 'nullable|string|max:255',
+
+            // Filler information
+            'filler_spec' => 'required|string|max:255',
+            'filler_spec_manual' => 'nullable|string|max:255',
+            'filler_spec_range' => 'nullable|string|max:255',
+            'filler_class' => 'required|string|max:255',
+            'filler_class_manual' => 'nullable|string|max:255',
+            'filler_class_range' => 'nullable|string|max:255',
+            'filler_f_no' => 'required|string|max:255',
+            'filler_f_no_manual' => 'nullable|string|max:255',
+
+            // Vertical progression
+            'vertical_progression' => 'required|string|max:255',
+
+            // Inspector information
+            'inspector_name' => 'required|string|max:255',
+            'inspector_date' => 'nullable|date',
+
+            // Photo and signatures
+            'photo' => 'nullable|image|max:2048',
+            'certification_text' => 'nullable|string|max:500',
+            'signature_data' => 'nullable|string',
+            'inspector_signature_data' => 'nullable|string',
+
+            // Additional welding variables - all optional
+            'oscillation' => 'nullable|string|max:255',
+            'fuel_gas' => 'nullable|string|max:255',
+            'fuel_gas_range' => 'nullable|string|max:255',
+            'backing_gas' => 'required|string|max:255',
+            'backing_gas_range' => 'required|string|max:255',
+            'gtaw_polarity' => 'required|string|max:255',
+            'gtaw_polarity_range' => 'required|string|max:255',
+            'transfer_mode' => 'nullable|string|max:255',
+            'transfer_mode_range' => 'nullable|string|max:255',
+            'gtaw_current' => 'nullable|string|max:255',
+            'gtaw_current_range' => 'nullable|string|max:255',
+            'equipment_type' => 'nullable|string|max:255',
+            'equipment_type_range' => 'nullable|string|max:255',
+            'technique' => 'nullable|string|max:255',
+            'technique_range' => 'nullable|string|max:255',
+            'oscillation_value' => 'nullable|string|max:255',
+            'oscillation_range' => 'nullable|string|max:255',
+            'operation_mode' => 'nullable|string|max:255',
+            'operation_mode_range' => 'nullable|string|max:255',
+            'consumable_insert' => 'nullable|string|max:255',
+            'consumable_insert_range' => 'nullable|string|max:255',
+            'filler_product_form' => 'nullable|string|max:255',
+            'filler_product_form_range' => 'nullable|string|max:255',
+            'deposit_thickness' => 'nullable|string|max:255',
+            'deposit_thickness_range' => 'nullable|string|max:255',
+
+            // Test result fields
+            'rt' => 'boolean',
+            'ut' => 'boolean',
+            'vt_report_no' => 'required|string|max:255',
+            'rt_report_no' => 'required|string|max:255',
+            'rt_doc_no' => 'nullable|string|max:255',
+            'visual_examination_result' => 'nullable|string|in:ACC,REJ',
+
+            // Additional test types and results
+            'additional_type_1' => 'nullable|string|max:255',
+            'additional_result_1' => 'nullable|string|max:255',
+            'additional_type_2' => 'nullable|string|max:255',
+            'additional_result_2' => 'nullable|string|max:255',
+
+            // Bend test fields
+            'transverse_face_root' => 'boolean',
+            'longitudinal_bends' => 'boolean',
+            'side_bends' => 'boolean',
+            'pipe_bend_corrosion' => 'boolean',
+            'plate_bend_corrosion' => 'boolean',
+            'pipe_macro_fusion' => 'boolean',
+            'plate_macro_fusion' => 'boolean',
+
+            // Additional test results
+            'fillet_fracture_test' => 'nullable|string|max:255',
+            'defects_length' => 'nullable|string|max:255',
+            'fillet_welds_plate' => 'boolean',
+            'fillet_welds_pipe' => 'boolean',
+            'macro_exam' => 'nullable|string|max:255',
+            'fillet_size' => 'nullable|string|max:255',
+            'other_tests' => 'nullable|string|max:255',
+            'concavity_convexity' => 'nullable|string|max:255',
+
+            // Personnel fields
+            'evaluated_by' => 'required|string|max:255',
+            'evaluated_company' => 'nullable|string|max:255',
+            'mechanical_tests_by' => 'nullable|string|max:255',
+            'lab_test_no' => 'nullable|string|max:255',
+            'supervised_by' => 'required|string|max:255',
+            'supervised_company' => 'required|string|max:255',
+
+            // Confirmation details
+            'confirm_date1' => 'nullable|string|max:255',
+            'confirm_title1' => 'nullable|string|max:255',
+            'confirm_date2' => 'nullable|string|max:255',
+            'confirm_title2' => 'nullable|string|max:255',
+            'confirm_date3' => 'nullable|string|max:255',
+            'confirm_title3' => 'nullable|string|max:255',
+        ]);
+
+        // Use submitted range values if present, otherwise calculate them
+        if (empty($validated['diameter_range']) && !empty($validated['pipe_diameter_type'])) {
+            $validated['diameter_range'] = $this->getDiameterRange($validated['pipe_diameter_type']);
+        }
+
+        if (empty($validated['p_number_range'])) {
+            $validated['p_number_range'] = $this->getPNumberRange($validated['base_metal_p_no']);
+        }
+
+        // Fix for pipe_specimen key - use 'pipe' instead since that's what's in the form
+        // if (empty($validated['position_range'])) {
+        //    // $validated['position_range'] = $this->getPositionRange($validated['test_position'], $validated['pipe']);
+        // }
+
+        if (empty($validated['backing_range'])) {
+            $validated['backing_range'] = $this->getBackingRange($validated['backing']);
+        }
+
+        if (empty($validated['f_number_range'])) {
+            $validated['f_number_range'] = $this->getFNumberRange($validated['filler_f_no']);
+        }
+
+        if (empty($validated['vertical_progression_range'])) {
+            $validated['vertical_progression_range'] = $this->getVerticalProgressionRange($validated['vertical_progression']);
+        }
+
+
+        // Process photo upload if provided
+        if ($request->hasFile('photo')) {
+            // Delete old photo if it exists
+            if ($certificate->photo_path) {
+                Storage::disk('public')->delete($certificate->photo_path);
+            }
+            $photoPath = $request->file('photo')->store('welder-photos', 'public');
+            $validated['photo_path'] = $photoPath;
+        } elseif ($request->has('use_existing_photo') && $request->get('use_existing_photo') === 'true') {
+            // Use the welder's existing photo
+            $welder = Welder::find($validated['welder_id']);
+            if ($welder && $welder->photo_path) {
+                $validated['photo_path'] = $welder->photo_path;
+            }
+        }
+
+        $certificate->update($validated);
+
+        // Check if request is AJAX
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'GTAW Certificate updated successfully.',
+                'redirect' => route('gtaw-certificates.certificate', $certificate->id),
+                'certificate_id' => $certificate->id
+            ]);
+        }
+
+        // Regular form submission response (fallback)
+        return redirect()->route('gtaw-certificates.certificate', $certificate->id)
+            ->with('success', 'GTAW Certificate updated successfully.');
+    }
 
     /**
      * Remove the specified resource from storage.
