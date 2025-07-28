@@ -278,7 +278,7 @@
         </tr>
     </table>
 
-    @include('smaw_certificates.partials.signature-section')
+    @include('fcaw_certificates.partials.signature-section')
 
     {{-- <!-- Final organization section -->
     <table style="width: 100%; table-layout: fixed; margin: 0; border-collapse: collapse; border-top: 1px solid #000;">

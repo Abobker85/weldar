@@ -9,7 +9,7 @@
         </div>
         <div class="cert-center">
             <strong>Welder's name:</strong>
-            @include('components.welder-search', ['selectedWelderId' => $certificate->welder_id ?? null])
+            @include('components.welder-search', ['welders' => $welders, 'selectedWelder' => $selectedWelder ?? null])
         </div>
         <div class="cert-right">
             <strong>Welder ID No:</strong>

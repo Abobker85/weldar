@@ -19,73 +19,68 @@ class GtawCertificateController extends Controller
      */
     public function index(Request $request)
     {
-        $welders = Welder::orderBy('name')->pluck('name', 'id');
-        $companies = Company::orderBy('name')->pluck('name', 'id');
-        
+        // $certificate = GtawCertificate::with('welder', 'company')->findOrFail($id);
+        $welders = Welder::orderBy('name')->get();
+        $companies = Company::orderBy('name')->get();
+
         if ($request->ajax()) {
             $query = GtawCertificate::with('welder', 'company');
             
-            // Search by certificate number
+            // Filter by certificate number
             if ($request->has('certificate_no') && !empty($request->certificate_no)) {
-                $query->where('certificate_no', 'like', '%' . $request->certificate_no . '%');
+            $query->where('certificate_no', 'like', '%' . $request->certificate_no . '%');
             }
             
             // Filter by welder
             if ($request->has('welder_id') && !empty($request->welder_id)) {
-                $query->where('welder_id', $request->welder_id);
+            $query->where('welder_id', $request->welder_id);
             }
             
             // Filter by company
             if ($request->has('company_id') && !empty($request->company_id)) {
-                $query->where('company_id', $request->company_id);
+            $query->where('company_id', $request->company_id);
             }
             
             // Filter by test date range
             if ($request->has('date_from') && !empty($request->date_from)) {
-                $query->whereDate('test_date', '>=', $request->date_from);
+            $query->whereDate('test_date', '>=', $request->date_from);
             }
             
             if ($request->has('date_to') && !empty($request->date_to)) {
-                $query->whereDate('test_date', '<=', $request->date_to);
+            $query->whereDate('test_date', '<=', $request->date_to);
             }
             
-            
-            
-            return DataTables::of($query) // Changed from datatables()->of($query)
-                ->addColumn('welder_name', function($certificate) {
-                    return $certificate->welder ? $certificate->welder->name : 'N/A';
-                })
-                ->addColumn('company_name', function($certificate) {
-                    return $certificate->company ? $certificate->company->name : 'N/A';
-                })
-                ->addColumn('test_date', function($certificate) {
-                    return $certificate->test_date ? $certificate->test_date->format('Y-m-d') : 'N/A';
-                })
-                ->addColumn('test_result', function($certificate) {
-                    if($certificate->test_result) {
-                        return '<span class="badge badge-success">Pass</span>';
-                    } else {
-                        return '<span class="badge badge-danger">Fail</span>';
-                    }
-                })
-                ->addColumn('actions', function($certificate) {
-                    $actions = '<div class="btn-group">';
-                    $actions .= '<a href="' . route('gtaw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank"><i class="fas fa-print"></i></a>';
-                    $actions .= '<a href="' . route('gtaw-certificates.card', $certificate->id) . '" class="btn btn-sm btn-warning" target="_blank"><i class="fas fa-id-card"></i></a>';
-                     $actions .= '<a href="' . route('gtaw-certificates.back-card', $certificate->id) . '" class="btn btn-sm btn-dark" title="Back Card"><i class="fas fa-id-card-alt"></i></a>';
-                    $actions .= '<a href="' . route('gtaw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-info"><i class="fas fa-edit"></i></a>';
-                    $actions .= '<form action="' . route('gtaw-certificates.destroy', $certificate->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this certificate?\');" style="display:inline">';
-                    $actions .= csrf_field();
-                    $actions .= method_field('DELETE');
-                    $actions .= '<button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>';
-                    $actions .= '</form>';
-                    $actions .= '</div>';
-                    
-                    return $actions;
-                })
-                ->rawColumns(['test_result', 'actions'])
-                ->make(true);
+            return DataTables::of($query)
+            ->addColumn('welder_name', function($certificate) {
+                return $certificate->welder ? $certificate->welder->name : 'N/A';
+            })
+            ->addColumn('company_name', function($certificate) {
+                return $certificate->company ? $certificate->company->name : 'N/A';
+            })
+            ->editColumn('test_date', function ($certificate) {
+                return $certificate->test_date ? $certificate->test_date->format('Y-m-d') : 'N/A';
+            })
+            ->addColumn('actions', function ($certificate) {
+                $actions = '<div class="btn-group" role="group">';
+                $actions .= '<a href="' . route('gtaw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank"><i class="fas fa-certificate"></i></a>';
+                //edit 
+                $actions .= '<a href="' . route('gtaw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-primary" target="_blank"><i class="fas fa-edit"></i></a>';
+                $actions .= '<a href="' . route('gtaw-certificates.card', $certificate->id) . '" class="btn btn-sm btn-info" target="_blank"><i class="fas fa-id-card"></i></a>';
+                $actions .= '<a href="' . route('gtaw-certificates.back-card', $certificate->id) . '" class="btn btn-sm btn-warning" target="_blank"><i class="fas fa-id-card-alt"></i></a>';
+                $actions .= '<form action="' . route('gtaw-certificates.destroy', $certificate->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this certificate?\');" style="display:inline">';
+                $actions .= csrf_field();
+                $actions .= method_field('DELETE');
+                $actions .= '<button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>';
+                $actions .= '</form>';
+                $actions .= '</div>';
+
+                return $actions;
+            })
+            ->rawColumns(['actions'])
+            ->make(true);
         }
+
+      
         
         return view('gtaw_certificates.index', compact('welders', 'companies'));
     }
@@ -468,9 +463,10 @@ class GtawCertificateController extends Controller
      */
     public function edit(string $id)
     {
-        $certificate = GtawCertificate::findOrFail($id);
-        $welders = Welder::orderBy('name')->pluck('name', 'id');
-        $companies = Company::orderBy('name')->pluck('name', 'id');
+        $certificate = GtawCertificate::with('welder', 'company')->findOrFail($id);
+        $welders = Welder::orderBy('name')->get();
+        $companies = Company::orderBy('name')->get();
+        $selectedWelder = $certificate->welder;
         
         // Get options from CertificateOptions class
         $pipeDiameterTypes = CertificateOptions::pipeDiameterTypes();
@@ -485,6 +481,7 @@ class GtawCertificateController extends Controller
         return view('gtaw_certificates.edit', compact(
             'certificate',
             'welders',
+            'selectedWelder',
             'companies',
             'pipeDiameterTypes',
             'testPositions',

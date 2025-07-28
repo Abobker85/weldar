@@ -21,7 +21,7 @@
                 <input type="hidden" name="vertical_progression_range" id="vertical_progression_range" value="{{ $certificate->vertical_progression_range }}">
 
                 @include('gtaw_certificates.partials.header')
-                @include('gtaw_certificates.partials.certificate-details', ['certificate' => $certificate])
+                @include('gtaw_certificates.partials.certificate-details', ['certificate' => $certificate, 'welders' => $welders, 'selectedWelder' => $selectedWelder])
                 @include('gtaw_certificates.partials.test-description', ['certificate' => $certificate])
                 @include('gtaw_certificates.partials.welding-variables', ['certificate' => $certificate])
                 @include('gtaw_certificates.partials.position-qualification', ['certificate' => $certificate])
