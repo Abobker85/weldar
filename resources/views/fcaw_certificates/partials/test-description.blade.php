@@ -8,25 +8,25 @@
 <div class="cert-details-row">
     <div class="cert-left" style="width: 50%;">
         <strong>Identification of WPS followed:</strong>
-        <input type="text" class="form-input" name="wps_followed" value="AIC-WPS-PGM-041 Rev.01" required
+        <input type="text" class="form-input" name="wps_followed" value="{{ old('wps_followed', $certificate->wps_followed) }}" required
             style="width: 170px; font-weight: bold;">
     </div>
 
     <div style="width: 120px; border-right: 1px solid #000; padding: 0 10px; text-align: center;">
         <strong>Revision No:</strong>
-        <input type="text" class="form-input" name="revision_no" value="01" required
+        <input type="text" class="form-input" name="revision_no" value="{{ old('revision_no', $certificate->revision_no) }}" required
             style="width: 60px; font-weight: bold;">
     </div>
 
     <div style="width: 120px; border-right: 1px solid #000; padding: 0 10px; text-align: center;">
         <div class="checkbox-container">
-            <input type="checkbox" name="test_coupon" id="test_coupon" checked>
+            <input type="checkbox" name="test_coupon" id="test_coupon" {{ old('test_coupon', $certificate->test_coupon) ? 'checked' : '' }}>
             <label for="test_coupon"><strong>■ Test coupon</strong></label>
         </div>
     </div>
     <div style="flex: 1; padding: 0 10px; text-align: center;">
         <div class="checkbox-container">
-            <input type="checkbox" name="production_weld" id="production_weld">
+            <input type="checkbox" name="production_weld" id="production_weld" {{ old('production_weld', $certificate->production_weld) ? 'checked' : '' }}>
             <label for="production_weld"><strong>□ Production weld</strong></label>
         </div>
     </div>
@@ -35,28 +35,28 @@
 <div class="cert-details-row">
     <div class="cert-left" style="width: 50%;">
         <strong>Base Metal Specification:</strong>
-        <input type="text" class="form-input" name="base_metal_spec" value="ASTM A106 Gr B" required
+        <input type="text" class="form-input" name="base_metal_spec" value="{{ old('base_metal_spec', $certificate->base_metal_spec) }}" required
             style="width: 170px; font-weight: bold;">
     </div>
     <div style="width: 120px; border-right: 1px solid #000; padding: 0 10px; text-align: center;">
         <strong>Date of Test:</strong>
     </div>
     <div style="flex: 1; padding: 0 10px; text-align: center;">
-        <input type="date" class="form-input date-input" name="test_date" value="2025-04-21" required
+        <input type="date" class="form-input date-input" name="test_date" value="{{ old('test_date', $certificate->test_date->format('Y-m-d')) }}" required
             style="font-weight: bold;" onchange="formatDateDisplay(this)">
-        <div id="formatted_date" class="text-muted mt-1" style="font-size: 8px;">9 of July 2025</div>
+        <div id="formatted_date" class="text-muted mt-1" style="font-size: 8px;">{{ old('test_date', $certificate->test_date->format('jS \o\f F Y')) }}</div>
     </div>
 </div>
 
 <div class="cert-details-row">
     <div class="cert-left">
         <strong>Diameter:</strong>
-        <input type="text" class="form-input" name="diameter" id="diameter" value="8 inch"
+        <input type="text" class="form-input" name="diameter" id="diameter" value="{{ old('diameter', $certificate->diameter) }}"
             style="width: 80px; display: inline; font-weight: bold;" required>
     </div>
     <div style="width: 160px; border-right: 1px solid #000; padding: 0 10px; text-align: center; display: flex; align-items: center; gap: 5px; justify-content: center;">
         <strong>Thickness:</strong>
-        <input type="text" class="form-input" name="thickness" id="thickness" value="18.26 mm"
+        <input type="text" class="form-input" name="thickness" id="thickness" value="{{ old('thickness', $certificate->thickness) }}"
             style="width: 100px; display: inline; font-weight: bold;" required>
     </div>
     <div style="flex: 1; padding: 0 10px; text-align: center;">
