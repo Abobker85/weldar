@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welder Performance Qualifications - Create</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            font-size: 9px;
+        }
+
+        .form-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Header with logos - exactly like certificate */
+        .header-row {
+            display: flex;
+            height: 80px;
+            border: 2px solid #000;
+            border-bottom: 1px solid #000;
+        }
+
+        .logo-left, .logo-right {
+            width: 120px;
+            border-right: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .logo-right {
+            border-right: none;
+            border-left: 2px solid #000;
+        }
+
+        .header-center {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+        }
+
+        .header-center h1 {
+            font-size: 16px;
+            margin-bottom: 2px;
+            color: #000;
+        }
+
+        .header-center h2 {
+            font-size: 14px;
+            color: #000;
+        }
+
+        .header-center .contact-info {
+            font-size: 8px;
+            margin: 3px 0;
+            color: #666;
+        }
+
+        /* Certificate details rows - exactly like certificate */
+        .cert-details-row {
+            display: flex;
+            height: 25px;
+            border: 2px solid #000;
+            border-top: none;
+            border-bottom: 1px solid #000;
+            background: #f8f9fa;
+            align-items: center;
+            font-weight: bold;
+            font-size: 9px;
+        }
+
+        .cert-left, .cert-right {
+            width: 200px;
+            border-right: 1px solid #000;
+            padding: 0 10px;
+            text-align: left;
+        }
+
+        .cert-center {
+            flex: 1;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .cert-right {
+            border-right: none;
+            border-left: 1px solid #000;
+            text-align: right;
+        }
+
+        /* Main content table - exactly like certificate */
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+            border: 2px solid #000;
+            border-top: none;
+        }
+
+        .content-table td, .content-table th {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            vertical-align: top;
+        }
+
+        .label-cell {
+            background: #f0f0f0;
+            font-weight: bold;
+            width: 180px;
+        }
+
+        .value-cell {
+            background: white;
+        }
+
+        .value-cell-center {
+            background: white;
+            text-align: center;
+        }
+
+        .photo-cell {
+            width: 90px;
+            height: 120px;
+            text-align: center;
+            vertical-align: middle;
+            background: #f8f9fa;
+            border: 1px solid #000;
+        }
+
+        /* Form inputs styled to match certificate cells */
+        .form-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 9px;
+            font-family: Arial, sans-serif;
+            padding: 2px;
+            outline: none;
+        }
+
+        .form-input:focus {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+        }
+
+        .form-select {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 9px;
+            font-family: Arial, sans-serif;
+            padding: 2px;
+            outline: none;
+        }
+
+        .form-select:focus {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+        }
+
+        /* Photo upload area */
+        .photo-upload {
+            width: 80px;
+            height: 110px;
+            border: 1px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .photo-upload:hover {
+            background: #e9ecef;
+            border-color: #007bff;
+        }
+
+        .photo-upload input[type="file"] {
+            display: none;
+        }
+
+        /* Section headers */
+        .section-header {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            font-size: 10px;
+            padding: 5px;
+        }
+
+        /* Welding variables table */
+        .variables-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8px;
+            border: 2px solid #000;
+            border-top: none;
+        }
+
+        .variables-table td, .variables-table th {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            vertical-align: top;
+        }
+
+        .var-label {
+            background: #f8f9fa;
+            font-weight: bold;
+            width: 200px;
+        }
+
+        .var-value {
+            background: white;
+            text-align: center;
+        }
+
+        .var-range {
+            background: white;
+            text-align: center;
+        }
+
+        /* Results section */
+        .results-section {
+            border: 2px solid #000;
+            border-top: none;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+        }
+
+        .results-table td, .results-table th {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            vertical-align: middle;
+        }
+
+        .test-header {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Signature section */
+        .signature-section {
+            border: 2px solid #000;
+            border-top: none;
+        }
+
+        .cert-statement {
+            text-align: center;
+            padding: 10px;
+            font-size: 9px;
+            border-bottom: 1px solid #000;
+            background: white;
+        }
+
+        .confirmation-header {
+            background: #f0f0f0;
+            text-align: center;
+            font-weight: bold;
+            padding: 5px;
+            border-bottom: 1px solid #000;
+        }
+
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8px;
+        }
+
+        .signature-table td {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            vertical-align: top;
+        }
+
+        .sig-header {
+            background: #f8f9fa;
+            font-weight: bold;
+            text-align: center;
+            height: 25px;
+        }
+
+        .sig-row {
+            height: 30px;
+        }
+
+        /* Form controls */
+        .form-buttons {
+            margin: 20px 0;
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        /* Checkbox styling */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Required field indicator */
+        .required {
+            color: #dc3545;
+        }
+
+        /* Form validation */
+        .is-invalid {
+            border: 1px solid #dc3545 !important;
+            background: #fff5f5 !important;
+        }
+
+        .invalid-feedback {
+            color: #dc3545;
+            font-size: 8px;
+            margin-top: 2px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .header-row {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .logo-left, .logo-right {
+                width: 100%;
+                height: 60px;
+                border-right: none;
+                border-bottom: 1px solid #000;
+            }
+            
+            .cert-details-row {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .cert-left, .cert-right {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #000;
+            }
+        }
+
+        @media print {
+            body { 
+                padding: 0; 
+                background: white;
+            }
+            .form-buttons { 
+                display: none !important; 
+            }
+            .form-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form id="welderQualificationForm" enctype="multipart/form-data">
+            <!-- Header with logos - exactly like certificate -->
+            <div class="header-row">
+                <div class="logo-left">
+                    <div style="font-size: 12px; font-weight: bold; text-align: center; color: #0066cc;">
+                        <div style="background: #0066cc; color: white; padding: 2px 8px; border-radius: 15px; margin-bottom: 3px;">ELITE</div>
+                        <div style="font-size: 8px; color: #666;">ENGINEERING ARABIA</div>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <h1 style="font-size: 16px; margin-bottom: 2px;">Elite Engineering Arabia</h1>
+                    <div class="contact-info" style="font-size: 8px; margin: 2px 0;">
+                        e-mail: ahmed.yousry@eliteengineeringarabia.com &nbsp;&nbsp;&nbsp;&nbsp; www.
+                    </div>
+                    <h2 style="font-size: 14px; font-weight: bold; margin-top: 5px;">WELDER PERFORMANCE QUALIFICATIONS</h2>
+                </div>
+                <div class="logo-right">
+                    <div style="font-size: 14px; font-weight: bold; text-align: center;">
+                        <span style="color: #dc3545; font-size: 16px;">AIC</span><span style="color: #999; font-size: 12px;">steel</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificate details rows -->
+            <div class="cert-details-row">
+                <div class="cert-left">
+                    Certificate No:
+                    <input type="text" class="form-input" name="certificate_no" id="certificate_no" value="EEA-AIC-WQT-0566" style="width: 120px; display: inline; font-weight: bold;" readonly>
+                </div>
+                <div class="cert-center">
+                    <strong>Welder's name:</strong>
+                    <select class="form-select" name="welder_id" id="welder_id" required style="font-weight: bold;" onchange="loadWelderData()">
+                        <option value="">-- Select Welder --</option>
+                        <option value="1" 
+                                data-name="Raja Faisal Jahangir Jahangir Ahmed" 
+                                data-welder-no="27792" 
+                                data-iqama="2581413107" 
+                                data-passport="XXXXXXX" 
+                                data-company-id="1" 
+                                data-company-name="Arabian International Company (AIC)">
+                            Raja Faisal Jahangir Jahangir Ahmed
+                        </option>
+                        <option value="2" 
+                                data-name="Muhammad Ali Hassan" 
+                                data-welder-no="27793" 
+                                data-iqama="2581413108" 
+                                data-passport="P1234567" 
+                                data-company-id="1" 
+                                data-company-name="Arabian International Company (AIC)">
+                            Muhammad Ali Hassan
+                        </option>
+                        <option value="3" 
+                                data-name="Ahmed Abdullah" 
+                                data-welder-no="27794" 
+                                data-iqama="2581413109" 
+                                data-passport="P7654321" 
+                                data-company-id="2" 
+                                data-company-name="Saudi Aramco">
+                            Ahmed Abdullah
+                        </option>
+                    </select>
+                </div>
+                <div class="cert-right">
+                    <strong>Welder ID No:</strong>
+                    <input type="text" class="form-input" name="welder_id_no" id="welder_id_no" style="width: 60px; display: inline; font-weight: bold;" readonly>
+                </div>
+            </div>
+
+            <div class="cert-details-row">
+                <div class="cert-left">
+                    <strong>Gov ID Iqama number:</strong>
+                    <input type="text" class="form-input" name="iqama_no" id="iqama_no" style="width: 100px; display: inline; font-weight: bold;" readonly>
+                </div>
+                <div class="cert-center">
+                    <strong>Company:</strong>
+                    <input type="text" class="form-input" name="company_name" id="company_name" style="font-weight: bold;" readonly>
+                    <input type="hidden" name="company_id" id="company_id">
+                </div>
+                <div class="cert-right">
+                    <strong>Passport No:</strong>
+                    <input type="text" class="form-input" name="passport_no" id="passport_no" style="width: 80px; display: inline; font-weight: bold;" readonly>
+                </div>
+            </div>
+
+            <!-- Additional row for Test Description -->
+            <div class="cert-details-row" style="height: 35px;">
+                <div style="width: 100%; text-align: center; padding: 5px; border-right: 1px solid #000; background: #f0f0f0;">
+                    <strong>Test Description</strong>
+                </div>
+            </div>
+
+            <div class="cert-details-row">
+                <div class="cert-left">
+                    <strong>Identification of WPS followed:</strong>
+                    <input type="text" class="form-input" name="wps_followed" value="AIC-WPS-PGM-041 Rev.01" required style="font-weight: bold;">
+                </div>
+                <div style="width: 120px; border-right: 1px solid #000; padding: 0 10px; text-align: center;">
+                    <div class="checkbox-container">
+                        <input type="checkbox" name="test_coupon" id="test_coupon" checked>
+                        <label for="test_coupon"><strong>■ Test coupon</strong></label>
+                    </div>
+                </div>
+                <div style="flex: 1; padding: 0 10px; text-align: center;">
+                    <div class="checkbox-container">
+                        <input type="checkbox" name="production_weld" id="production_weld">
+                        <label for="production_weld"><strong>□ Production weld</strong></label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cert-details-row">
+                <div class="cert-left">
+                    <strong>Base Metal Specification:</strong>
+                    <input type="text" class="form-input" name="base_metal_spec" value="ASTM A106 Gr B" required style="font-weight: bold;">
+                </div>
+                <div style="width: 120px; border-right: 1px solid #000; padding: 0 10px; text-align: center;">
+                    <strong>Date of Test:</strong>
+                </div>
+                <div style="flex: 1; padding: 0 10px; text-align: center;">
+                    <input type="date" class="form-input" name="test_date" value="2025-04-21" required style="font-weight: bold;">
+                </div>
+            </div>
+
+            <div class="cert-details-row">
+                <div class="cert-left">
+                    <strong>Dia / Thickness:</strong>
+                    <input type="text" class="form-input" name="dia_thickness" value="8 inch/18.26 mm" style="font-weight: bold;">
+                </div>
+                <div style="width: 120px; border-right: 1px solid #000; padding: 0 10px; text-align: center;">
+                    <!-- Empty cell -->
+                </div>
+                <div style="flex: 1; padding: 0 10px; text-align: center;">
+                    <!-- Photo cell will be in main content table -->
+                </div>
+            </div>
+
+            <!-- Main content table -->
+            <table class="content-table">
+                <tr>
+                    <td class="label-cell">Identification of WPS followed:</td>
+                    <td class="value-cell">
+                        <input type="text" class="form-input" name="wps_followed" placeholder="AIC-WPS-SCM-041 Rev.01" required>
+                    </td>
+                    <td class="label-cell">Test coupon</td>
+                    <td class="value-cell-center">
+                        <div class="checkbox-container">
+                            <input type="checkbox" name="production_weld" id="production_weld">
+                            <label for="production_weld">Production weld</label>
+                        </div>
+                    </td>
+                    <td rowspan="4" class="photo-cell">
+                        <div class="photo-upload" onclick="document.getElementById('welder_photo').click()">
+                            <div id="photo-preview" style="font-size: 8px; color: #666;">
+                                Click to upload<br>welder photo
+                            </div>
+                            <input type="file" id="welder_photo" name="welder_photo" accept="image/*" onchange="previewPhoto(this)">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label-cell">Base Metal Specification:</td>
+                    <td class="value-cell">
+                        <input type="text" class="form-input" name="base_metal_spec" placeholder="ASTM A106 Gr B" required>
+                    </td>
+                    <td class="label-cell">Date of Test:</td>
+                    <td class="value-cell-center">
+                        <input type="date" class="form-input" name="test_date" required>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label-cell">Dia / Thickness:</td>
+                    <td class="value-cell">
+                        <input type="text" class="form-input" name="dia_thickness" placeholder="8 inch/18.26 mm">
+                    </td>
+                    <td class="label-cell"></td>
+                    <td class="value-cell-center"></td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="section-header">Testing Variables and Qualification Limits</td>
+                </tr>
+            </table>
+
+            <!-- Welding Variables Table -->
+            <table class="variables-table">
+                <tr>
+                    <td class="var-label">Welding Variables (QW-350)</td>
+                    <td class="var-value" style="width: 150px;"><strong>Actual Values</strong></td>
+                    <td class="var-range" style="width: 200px;"><strong>Range Qualified</strong></td>
+                </tr>
+                <tr>
+                    <td class="var-label">Welding process(es):</td>
+                    <td class="var-value">
+                        <select class="form-select" name="welding_process" id="welding_process" onchange="updateProcessFields()" disabled>
+                            <option value="SMAW (Filling/Cap)" selected>SMAW (Filling/Cap)</option>
+                        </select>
+                        <small style="color: #666; font-size: 7px;">* Fixed for SMAW Filling/Cap process only</small>
+                    </td>
+                    <td class="var-range">
+                        <span id="process_range">SMAW</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Type (i.e., manual, semi-automatic) used:</td>
+                    <td class="var-value">
+                        <select class="form-select" name="welding_type">
+                            <option value="Manual">Manual</option>
+                            <option value="Semi-automatic">Semi-automatic</option>
+                            <option value="Automatic">Automatic</option>
+                        </select>
+                    </td>
+                    <td class="var-range">Manual</td>
+                </tr>
+                <tr>
+                    <td class="var-label">Backing (with/without):</td>
+                    <td class="var-value">
+                        <select class="form-select" name="backing" id="backing" onchange="updateBackingRange()">
+                            <option value="With Backing">With Backing</option>
+                            <option value="Without Backing">Without Backing</option>
+                            <option value="__manual__">Manual Entry</option>
+                        </select>
+                        <input type="text" class="form-input" name="backing_manual" id="backing_manual" 
+                               placeholder="Enter custom backing type" style="display: none; margin-top: 2px;">
+                    </td>
+                    <td class="var-range">
+                        <span id="backing_range">With Backing</span>
+                        <input type="text" class="form-input" name="backing_range_manual" id="backing_range_manual" 
+                               placeholder="Enter qualified range" style="display: none; margin-top: 2px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">
+                        <div class="checkbox-container">
+                            <input type="checkbox" name="plate" id="plate">
+                            <label for="plate">Plate</label>
+                            <input type="checkbox" name="pipe" id="pipe" checked onchange="updateDiameterRange()">
+                            <label for="pipe">Pipe</label>
+                        </div>
+                        (enter diameter if pipe or tube)
+                    </td>
+                    <td class="var-value">
+                        <select class="form-select" name="pipe_diameter_type" id="pipe_diameter_type" onchange="updateDiameterRange()">
+                            <option value="8_nps">8" NPS (Outside diameter 219.1 mm)</option>
+                            <option value="6_nps">6" NPS (Outside diameter 168.3 mm)</option>
+                            <option value="4_nps">4" NPS (Outside diameter 114.3 mm)</option>
+                            <option value="2_nps">2" NPS (Outside diameter 60.3 mm)</option>
+                            <option value="1_nps">1" NPS (Outside diameter 33.4 mm)</option>
+                            <option value="__manual__">Manual Entry</option>
+                        </select>
+                        <input type="text" class="form-input" name="pipe_diameter_manual" id="pipe_diameter_manual" 
+                               placeholder="Enter diameter (e.g., 10 inch NPS)" style="display: none; margin-top: 2px;">
+                    </td>
+                    <td class="var-range">
+                        <span id="diameter_range">Outside diameter 2 7/8 inch (73 mm) to unlimited</span>
+                        <input type="text" class="form-input" name="diameter_range_manual" id="diameter_range_manual" 
+                               placeholder="Enter qualified range" style="display: none; margin-top: 2px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Base metal P-Number to P-Number:</td>
+                    <td class="var-value">
+                        <select class="form-select" name="base_metal_p_no" id="base_metal_p_no" onchange="updatePNumberRange()">
+                            <option value="P NO.1 TO P NO.1">P NO.1 TO P NO.1</option>
+                            <option value="P NO.1 TO P NO.8">P NO.1 TO P NO.8</option>
+                            <option value="P NO.8 TO P NO.8">P NO.8 TO P NO.8</option>
+                            <option value="P NO.43 TO P NO.43">P NO.43 TO P NO.43</option>
+                            <option value="__manual__">Manual Entry</option>
+                        </select>
+                        <input type="text" class="form-input" name="base_metal_p_no_manual" id="base_metal_p_no_manual" 
+                               placeholder="Enter P-Number range" style="display: none; margin-top: 2px;">
+                    </td>
+                    <td class="var-range">
+                        <span id="p_number_range">P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49</span>
+                        <input type="text" class="form-input" name="p_number_range_manual" id="p_number_range_manual" 
+                               placeholder="Enter qualified range" style="display: none; margin-top: 2px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Filler metal or electrode specification(s) (SFA) (info. only):</td>
+                    <td class="var-value">
+                        <select class="form-select" name="filler_spec" id="filler_spec" onchange="toggleManualEntry('filler_spec')">
+                            <option value="5.1">5.1</option>
+                            <option value="A5.1">A5.1</option>
+                            <option value="A5.18">A5.18</option>
+                            <option value="A5.20">A5.20</option>
+                            <option value="__manual__">Manual Entry</option>
+                        </select>
+                        <input type="text" class="form-input" name="filler_spec_manual" id="filler_spec_manual" 
+                               placeholder="Enter SFA specification" style="display: none; margin-top: 2px;">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="filler_spec_range" id="filler_spec_range" 
+                               placeholder="Enter qualified range" value="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Filler metal or electrode classification(s) (info. only):</td>
+                    <td class="var-value">
+                        <select class="form-select" name="filler_class" id="filler_class" onchange="toggleManualEntry('filler_class')">
+                            <option value="E7018-1">E7018-1</option>
+                            <option value="E7018">E7018</option>
+                            <option value="E6010">E6010</option>
+                            <option value="E6013">E6013</option>
+                            <option value="ER70S-2">ER70S-2</option>
+                            <option value="ER70S-6">ER70S-6</option>
+                            <option value="__manual__">Manual Entry</option>
+                        </select>
+                        <input type="text" class="form-input" name="filler_class_manual" id="filler_class_manual" 
+                               placeholder="Enter classification" style="display: none; margin-top: 2px;">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="filler_class_range" id="filler_class_range" 
+                               placeholder="Enter qualified range" value="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Filler metal F-Number(s):</td>
+                    <td class="var-value">
+                        <select class="form-select" name="filler_f_no" id="filler_f_no" onchange="updateFNumberRange()">
+                            <option value="F4_with_backing">F-No.4 with Backing</option>
+                            <option value="F5_with_backing">F-No.5 with Backing</option>
+                            <option value="F4_without_backing">F-No.4 without Backing</option>
+                            <option value="F5_without_backing">F-No.5 without Backing</option>
+                            <option value="F43">F-No.43</option>
+                            <option value="__manual__">Manual Entry</option>
+                        </select>
+                        <input type="text" class="form-input" name="filler_f_no_manual" id="filler_f_no_manual" 
+                               placeholder="Enter F-Number" style="display: none; margin-top: 2px;">
+                    </td>
+                    <td class="var-range">
+                        <span id="f_number_range">F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing & F-No.4 With Backing</span>
+                        <input type="text" class="form-input" name="f_number_range_manual" id="f_number_range_manual" 
+                               placeholder="Enter qualified range" style="display: none; margin-top: 2px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Consumable insert (GTAW, PAW, LBW):</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="consumable_insert" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="consumable_insert_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Filler Metal Product Form (QW-404.23) (GTAW or PAW):</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="filler_product_form" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="filler_product_form_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Deposit thickness for each process:</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="deposit_thickness" placeholder="4mm &14.26 mm">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="deposit_thickness_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">
+                        Process 1 __ GTAW __ 3 layers minimum
+                        <div class="checkbox-container" style="display: inline-block; margin-left: 10px;">
+                            <input type="checkbox" name="gtaw_yes" id="gtaw_yes">
+                            <label for="gtaw_yes">YES</label>
+                            <input type="checkbox" name="gtaw_no" id="gtaw_no">
+                            <label for="gtaw_no">NO</label>
+                        </div>
+                    </td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="gtaw_thickness" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="gtaw_thickness_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">
+                        Process 2 __ SMAW __ 3 layers minimum
+                        <div class="checkbox-container" style="display: inline-block; margin-left: 10px;">
+                            <input type="checkbox" name="smaw_yes" id="smaw_yes" checked>
+                            <label for="smaw_yes">YES</label>
+                            <input type="checkbox" name="smaw_no" id="smaw_no">
+                            <label for="smaw_no">NO</label>
+                        </div>
+                    </td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="smaw_thickness" placeholder="14.26 mm">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="smaw_thickness_range" placeholder="Max. to be welded">
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Position Qualification Section -->
+            <table class="variables-table">
+                <tr>
+                    <td class="section-header" colspan="3">Position Qualification</td>
+                </tr>
+                <tr>
+                    <td rowspan="3" class="var-label" style="vertical-align: middle;">Position(s):</td>
+                    <td class="var-value">
+                        <select class="form-select" name="test_position" id="test_position" onchange="updatePositionRange()">
+                            <option value="">-- Select Position --</option>
+                            <option value="1G">1G</option>
+                            <option value="2G">2G</option>
+                            <option value="3G">3G</option>
+                            <option value="4G">4G</option>
+                            <option value="5G">5G</option>
+                            <option value="6G" selected>6G</option>
+                        </select>
+                    </td>
+                    <td class="var-range" style="font-weight: bold; font-size: 8px;">
+                        Groove Plate and Pipe Over 24 in. (610 mm) O.D. in all Position
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-value"></td>
+                    <td class="var-range" style="font-weight: bold; font-size: 8px;">
+                        Groove Pipe ≤24 in. (610 mm) O.D. in all Position
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-value"></td>
+                    <td class="var-range" style="font-weight: bold; font-size: 8px;">
+                        Fillet or Tack Plate and Pipe in all Position
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Vertical progression (uphill or downhill):</td>
+                    <td class="var-value">
+                        <select class="form-select" name="vertical_progression" id="vertical_progression" onchange="updateVerticalProgressionRange()">
+                            <option value="Uphill" selected>Uphill</option>
+                            <option value="Downhill">Downhill</option>
+                        </select>
+                    </td>
+                    <td class="var-range" id="vertical_progression_range">Uphill</td>
+                </tr>
+                <tr>
+                    <td class="var-label">Type of fuel gas (OFW):</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="fuel_gas" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="fuel_gas_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Use of backing gas (GTAW, PAW, GMAW, LBW):</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="backing_gas" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="backing_gas_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Transfer mode (spray, globular, or pulse to short circuit-GMAW):</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="transfer_mode" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="transfer_mode_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">GTAW current type and polarity (AC, DCEP, DCEN) For LBW or LLBW:</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="gtaw_current" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="gtaw_current_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Type of equipment</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="equipment_type" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="equipment_type_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Technique (keyhole LBW or melt-in)</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="technique" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="technique_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">
+                        Torch/Gun/Beam oscillation
+                        <div class="checkbox-container" style="display: inline-block; margin-left: 10px;">
+                            <input type="checkbox" name="oscillation_yes" id="oscillation_yes">
+                            <label for="oscillation_yes">YES</label>
+                            <input type="checkbox" name="oscillation_no" id="oscillation_no">
+                            <label for="oscillation_no">NO</label>
+                        </div>
+                    </td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="oscillation" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="oscillation_range" placeholder="------">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="var-label">Mode of operation (pulsed or continuous):</td>
+                    <td class="var-value">
+                        <input type="text" class="form-input" name="operation_mode" placeholder="------">
+                    </td>
+                    <td class="var-range">
+                        <input type="text" class="form-input" name="operation_mode_range" placeholder="------">
+                    </td>
+                </tr>
+            </table>
+
+            <!-- RESULTS Section -->
+            <div class="results-section">
+                <table class="results-table">
+                    <tr>
+                        <td colspan="4" class="section-header">RESULTS</td>
+                    </tr>
+                    
+                    <!-- Visual examination row -->
+                    <tr>
+                        <td class="var-label" colspan="2">Visual examination of completed weld (QW-302.4)</td>
+                        <td class="var-value" style="text-align: center; font-weight: bold;" colspan="2">
+                            <select class="form-select" name="visual_examination_result">
+                                <option value="ACC">ACC (Report No.EEA-AIC-VT-0566)</option>
+                                <option value="REJ">REJ</option>
+                            </select>
+                        </td>
+                    </tr>
+                    
+                    <!-- Bend Tests Section -->
+                    <tr>
+                        <td class="var-label" colspan="1" style="width: 33.33%;">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="transverse_face_root" id="transverse_face_root">
+                                <label for="transverse_face_root">□ Transverse face and root bends [QW-462.3(a)]</label>
+                            </div>
+                        </td>
+                        <td class="var-label" colspan="1" style="width: 33.33%;">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="longitudinal_bends" id="longitudinal_bends">
+                                <label for="longitudinal_bends">□ Longitudinal bends [QW-462.3(b)]</label>
+                            </div>
+                        </td>
+                        <td class="var-label" colspan="2" style="width: 33.34%;">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="side_bends" id="side_bends">
+                                <label for="side_bends">□ Side bends [QW-462.2]</label>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Pipe and Plate Bend Specimens - Centered -->
+                    <tr>
+                        <td class="var-label" colspan="4" style="text-align: center;">
+                            <div class="checkbox-container" style="justify-content: center;">
+                                <input type="checkbox" name="pipe_bend_corrosion" id="pipe_bend_corrosion">
+                                <label for="pipe_bend_corrosion">□ Pipe bend specimen, corrosion-resistant weld metal overlay [QW-462.5(c)]</label>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="var-label" colspan="4" style="text-align: center;">
+                            <div class="checkbox-container" style="justify-content: center;">
+                                <input type="checkbox" name="plate_bend_corrosion" id="plate_bend_corrosion">
+                                <label for="plate_bend_corrosion">□ Plate bend specimen, corrosion-resistant weld metal overlay [QW-462.5(c)]</label>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Macro Tests -->
+                    <tr>
+                        <td class="var-label" colspan="2">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="pipe_macro_fusion" id="pipe_macro_fusion">
+                                <label for="pipe_macro_fusion">□ Pipe specimen, macro test for fusion [QW-462.5(c)]</label>
+                            </div>
+                        </td>
+                        <td class="var-label" colspan="2">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="plate_macro_fusion" id="plate_macro_fusion">
+                                <label for="plate_macro_fusion">□ Plate specimen, macro test for fusion [QW-462.5(c)]</label>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- TYPE/RESULT Headers -->
+                    <tr>
+                        <td class="test-header" style="width: 25%;">TYPE</td>
+                        <td class="test-header" style="width: 25%;">RESULT</td>
+                        <td class="test-header" style="width: 25%;">TYPE</td>
+                        <td class="test-header" style="width: 25%;">RESULT</td>
+                    </tr>
+                    
+                    <!-- Visual examination -->
+                    <tr>
+                        <td class="var-label">Visual examination of completed weld (QW-302.4)</td>
+                        <td class="var-value" style="text-align: center; font-weight: bold;">ACC</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="additional_type_1" placeholder="................">
+                        </td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="additional_result_1" placeholder="...........">
+                        </td>
+                    </tr>
+                    
+                    <!-- Alternative Volumetric Examination Results -->
+                    <tr>
+                        <td class="var-label">Alternative Volumetric Examination Results (QW-191):</td>
+                        <td class="var-value" style="text-align: center; font-weight: bold;">ACC</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="additional_type_2" placeholder="................">
+                        </td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="additional_result_2" placeholder="...........">
+                        </td>
+                    </tr>
+                    
+                    <!-- Alternative Volumetric Examination Results with report -->
+                    <tr>
+                        <td class="var-label">Alternative Volumetric Examination Results (QW-191):</td>
+                        <td class="var-value" style="text-align: center; font-weight: bold;">
+                            ACC (Report No.EEA-AIC-RT-0566 ( Doc No.# : SO-629764)
+                        </td>
+                        <td class="var-value" style="text-align: center;">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="rt" id="rt" checked>
+                                <label for="rt">■ RT</label>
+                            </div>
+                        </td>
+                        <td class="var-value" style="text-align: center;">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="ut" id="ut">
+                                <label for="ut">□ UT</label>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Fillet weld-fracture test -->
+                    <tr>
+                        <td class="var-label">Fillet weld-fracture test (QW-181.2):</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="fillet_fracture_test" placeholder="................">
+                        </td>
+                        <td class="var-label">Length and percent of defects</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="defects_length" placeholder="...........">
+                        </td>
+                    </tr>
+                    
+                    <!-- Fillet welds row -->
+                    <tr>
+                        <td class="var-label">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="fillet_welds_plate" id="fillet_welds_plate">
+                                <label for="fillet_welds_plate">□ Fillet welds in plate [QW-462.4(b)]</label>
+                            </div>
+                        </td>
+                        <td class="var-value"></td>
+                        <td class="var-label">
+                            <div class="checkbox-container">
+                                <input type="checkbox" name="fillet_welds_pipe" id="fillet_welds_pipe">
+                                <label for="fillet_welds_pipe">□ Fillet welds in pipe [QW-462.4(c)]</label>
+                            </div>
+                        </td>
+                        <td class="var-value"></td>
+                    </tr>
+                    
+                    <!-- Macro examination row -->
+                    <tr>
+                        <td class="var-label">Macro examination (QW-184)</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="macro_exam" placeholder="................">
+                        </td>
+                        <td class="var-label">Fillet size (in.)</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="fillet_size" placeholder="............">
+                        </td>
+                    </tr>
+                    
+                    <!-- Other tests row -->
+                    <tr>
+                        <td class="var-label">Other tests</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="other_tests" placeholder="................">
+                        </td>
+                        <td class="var-label">Concavity or convexity (in.)</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="concavity_convexity" placeholder="................">
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Personnel Information -->
+                <table class="results-table">
+                    <tr>
+                        <td class="var-label">Film or specimens evaluated by</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="evaluated_by" value="Kalith Majeedh">
+                        </td>
+                        <td class="var-label">Company</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="evaluated_company" placeholder="SOGEC">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="var-label">Mechanical tests conducted by</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="mechanical_tests_by" placeholder="...........">
+                        </td>
+                        <td class="var-label">Laboratory test no.</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="lab_test_no" placeholder=".....">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="var-label">Welding supervised by</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="supervised_by" value="Ahmed Yousry">
+                        </td>
+                        <td class="var-label">Company</td>
+                        <td class="var-value" style="text-align: center;">
+                            <input type="text" class="form-input" name="supervised_company" placeholder="ELITE">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Certification Statement -->
+            <div class="signature-section">
+                <div class="cert-statement">
+                    <strong>We certify that the statements in this record are correct and that the test coupons were prepared, welded, and tested in accordance with the requirements of Section IX of the ASME BOILER AND PRESSURE VESSEL CODE.</strong>
+                </div>
+                
+                <div class="confirmation-header">
+                    Confirmation of the validity by the employer/Welding coordinator for the following 6 month
+                </div>
+                
+                <table class="signature-table">
+                    <tr>
+                        <td class="sig-header">Date</td>
+                        <td class="sig-header">Signature</td>
+                        <td class="sig-header">Position or Title</td>
+                    </tr>
+                    <tr class="sig-row">
+                        <td><input type="date" class="form-input" name="confirm_date1"></td>
+                        <td></td>
+                        <td><input type="text" class="form-input" name="confirm_title1" placeholder="Position"></td>
+                    </tr>
+                    <tr class="sig-row">
+                        <td><input type="date" class="form-input" name="confirm_date2"></td>
+                        <td></td>
+                        <td><input type="text" class="form-input" name="confirm_title2" placeholder="Position"></td>
+                    </tr>
+                    <tr class="sig-row">
+                        <td><input type="date" class="form-input" name="confirm_date3"></td>
+                        <td></td>
+                        <td><input type="text" class="form-input" name="confirm_title3" placeholder="Position"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Final signature section -->
+            <div class="signature-section">
+                <table class="signature-table">
+                    <tr>
+                        <td colspan="3" class="sig-header">Organization</td>
+                        <td class="sig-header">QR CODE</td>
+                    </tr>
+                    <tr>
+                        <td class="var-label">Test Witnessed by:</td>
+                        <td class="var-value">ELITE ENGINEERING ARABIA</td>
+                        <td class="var-value">Reviewed / Approved by:</td>
+                        <td rowspan="6" style="text-align: center; width: 80px;">
+                            <div style="width: 80px; height: 80px; border: 1px solid #000; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 8px;">
+                                QR Code<br>Will be<br>Generated
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="var-label">Name:</td>
+                        <td class="var-value">
+                            <input type="text" class="form-input" name="inspector_name" placeholder="Ahmed Yousry">
+                        </td>
+                        <td class="var-label">Name:</td>
+                    </tr>
+                    <tr>
+                        <td class="var-label">Signature:</td>
+                        <td class="var-value" style="height: 25px;"></td>
+                        <td class="var-label">Signature:</td>
+                    </tr>
+                    <tr>
+                        <td class="var-label">Stamp:</td>
+                        <td class="var-value" style="height: 25px;"></td>
+                        <td class="var-label">Stamp:</td>
+                    </tr>
+                    <tr>
+                        <td class="var-label">Date:</td>
+                        <td class="var-value">
+                            <input type="date" class="form-input" name="inspector_date" value="2025-01-12">
+                        </td>
+                        <td class="var-label">Date:</td>
+                    </tr>
+                </table>
+            </div>
+        </form>
+
+        <!-- Form Controls -->
+        <div class="form-buttons">
+            <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                Reset Form
+            </button>
+            <button type="button" class="btn btn-primary" onclick="validateForm()">
+                Validate & Preview
+            </button>
+            <button type="button" class="btn btn-success" onclick="submitForm()">
+                Save & Generate Certificate
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Photo preview functionality
+        function previewPhoto(input) {
+            const preview = document.getElementById('photo-preview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" style="width: 80px; height: 110px; object-fit: cover;">`;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Load welder data when selected
+        function loadWelderData() {
+            const welderSelect = document.getElementById('welder_id');
+            const selectedOption = welderSelect.options[welderSelect.selectedIndex];
+            
+            if (selectedOption.value) {
+                // Auto-populate welder information
+                document.getElementById('welder_id_no').value = selectedOption.getAttribute('data-welder-no') || '';
+                document.getElementById('iqama_no').value = selectedOption.getAttribute('data-iqama') || '';
+                document.getElementById('passport_no').value = selectedOption.getAttribute('data-passport') || '';
+                document.getElementById('company_name').value = selectedOption.getAttribute('data-company-name') || '';
+                document.getElementById('company_id').value = selectedOption.getAttribute('data-company-id') || '';
+                
+                // Generate certificate number based on company
+                generateCertificateNumber();
+                
+                // Update photo placeholder to show welder name
+                const photoPreview = document.getElementById('photo-preview');
+                if (photoPreview) {
+                    photoPreview.innerHTML = `Upload photo for<br>${selectedOption.getAttribute('data-name')}`;
+                }
+                
+                console.log('Welder data loaded:', {
+                    name: selectedOption.getAttribute('data-name'),
+                    welderNo: selectedOption.getAttribute('data-welder-no'),
+                    iqama: selectedOption.getAttribute('data-iqama'),
+                    passport: selectedOption.getAttribute('data-passport'),
+                    company: selectedOption.getAttribute('data-company-name')
+                });
+                
+            } else {
+                // Clear all fields if no welder selected
+                document.getElementById('welder_id_no').value = '';
+                document.getElementById('iqama_no').value = '';
+                document.getElementById('passport_no').value = '';
+                document.getElementById('company_name').value = '';
+                document.getElementById('company_id').value = '';
+                document.getElementById('certificate_no').value = '';
+                
+                const photoPreview = document.getElementById('photo-preview');
+                if (photoPreview) {
+                    photoPreview.innerHTML = 'Click to upload<br>welder photo';
+                }
+            }
+        }
+
+        // Auto-generate certificate number based on company
+        function generateCertificateNumber() {
+            const companyId = document.getElementById('company_id').value;
+            const companyName = document.getElementById('company_name').value;
+            
+            if (companyId) {
+                const date = new Date();
+                const year = date.getFullYear().toString().substr(-2);
+                const sequence = Math.floor(Math.random() * 9000) + 1000; // Random 4-digit number for demo
+                
+                let companyCode = 'EEA'; // Default
+                if (companyName.includes('AIC')) companyCode = 'EEA';
+                else if (companyName.includes('Aramco')) companyCode = 'SA';
+                else if (companyName.includes('SABIC')) companyCode = 'SB';
+                
+                const certNumber = `${companyCode}-AIC-WQT-${sequence}`;
+                document.getElementById('certificate_no').value = certNumber;
+                
+                console.log('Generated certificate number:', certNumber);
+            }
+        }
+
+        // Update position qualification range (simplified)
+        function updatePositionRange() {
+            const positionSelect = document.getElementById('test_position');
+            
+            if (!positionSelect) {
+                console.log('Position select element not found');
+                return;
+            }
+            
+            const position = positionSelect.value;
+            
+            // Get all three range cells with bold styling
+            const rangeCells = document.querySelectorAll('.var-range[style*="font-weight: bold"]');
+            
+            if (rangeCells.length !== 3) {
+                console.log('Range cells not found');
+                return;
+            }
+            
+            // Define position qualification rules
+            const positionRules = {
+                '1G': {
+                    groove_over_24: 'F for Groove Plate and Pipe Over 24 in. (610 mm) O.D.',
+                    groove_under_24: 'F for Groove Pipe ≤24 in. (610 mm) O.D.',
+                    fillet: 'F for Fillet or Tack Plate and Pipe'
+                },
+                '2G': {
+                    groove_over_24: 'F&H for Groove Plate and Pipe Over 24 in. (610 mm) O.D.',
+                    groove_under_24: 'F&H for Groove Pipe ≤24 in. (610 mm) O.D.',
+                    fillet: 'F&H for Fillet or Tack Plate and Pipe'
+                },
+                '3G': {
+                    groove_over_24: 'F&V for Groove Plate and Pipe Over 24 in. (610 mm) O.D.',
+                    groove_under_24: 'F for Groove Pipe ≤24 in. (610 mm) O.D.',
+                    fillet: 'F, H & V for Fillet or Tack Plate and Pipe'
+                },
+                '4G': {
+                    groove_over_24: 'F&O for Groove Plate and Pipe Over 24 in. (610 mm) O.D.',
+                    groove_under_24: 'F for Groove Pipe ≤24 in. (610 mm) O.D.',
+                    fillet: 'F, H & O for Fillet or Tack Plate and Pipe'
+                },
+                '5G': {
+                    groove_over_24: 'F,V&O for Groove Plate and Pipe Over 24 in. (610 mm) O.D.',
+                    groove_under_24: 'F,V&O for Groove Pipe ≤24 in. (610 mm) O.D.',
+                    fillet: 'All positions for Fillet or Tack Plate and Pipe'
+                },
+                '6G': {
+                    groove_over_24: 'Groove Plate and Pipe Over 24 in. (610 mm) O.D. in all Position',
+                    groove_under_24: 'Groove Pipe ≤24 in. (610 mm) O.D. in all Position',
+                    fillet: 'Fillet or Tack Plate and Pipe in all Position'
+                }
+            };
+            
+            if (position && positionRules[position]) {
+                const rules = positionRules[position];
+                
+                // Update the three range cells
+                rangeCells[0].textContent = rules.groove_over_24;
+                rangeCells[1].textContent = rules.groove_under_24;
+                rangeCells[2].textContent = rules.fillet;
+                
+                console.log(`Position updated to: ${position}`);
+            } else if (position === '') {
+                // Reset to default 6G values when no position selected
+                rangeCells[0].textContent = 'Groove Plate and Pipe Over 24 in. (610 mm) O.D. in all Position';
+                rangeCells[1].textContent = 'Groove Pipe ≤24 in. (610 mm) O.D. in all Position';
+                rangeCells[2].textContent = 'Fillet or Tack Plate and Pipe in all Position';
+            }
+        }
+
+        // Update backing range
+        function updateBackingRange() {
+            const backing = document.getElementById('backing').value;
+            const backingRange = document.getElementById('backing_range');
+            const manualInput = document.getElementById('backing_manual');
+            const manualRangeInput = document.getElementById('backing_range_manual');
+            
+            if (backing === '__manual__') {
+                manualInput.style.display = 'block';
+                manualRangeInput.style.display = 'block';
+                backingRange.style.display = 'none';
+                manualInput.focus();
+            } else {
+                manualInput.style.display = 'none';
+                manualRangeInput.style.display = 'none';
+                backingRange.style.display = 'block';
+                
+                if (backing === 'With Backing') {
+                    backingRange.textContent = 'With Backing';
+                } else if (backing === 'Without Backing') {
+                    backingRange.textContent = 'Without Backing';
+                }
+            }
+        }
+
+        // Update diameter range based on pipe size
+        function updateDiameterRange() {
+            const diameterType = document.getElementById('pipe_diameter_type').value;
+            const diameterRange = document.getElementById('diameter_range');
+            const manualInput = document.getElementById('pipe_diameter_manual');
+            const manualRangeInput = document.getElementById('diameter_range_manual');
+            
+            if (diameterType === '__manual__') {
+                manualInput.style.display = 'block';
+                manualRangeInput.style.display = 'block';
+                diameterRange.style.display = 'none';
+                manualInput.focus();
+                return;
+            } else {
+                manualInput.style.display = 'none';
+                manualRangeInput.style.display = 'none';
+                diameterRange.style.display = 'block';
+            }
+            
+            // Extract diameter in mm from the selection
+            const diameterRules = {
+                '8_nps': { mm: 219.1, range: 'Outside diameter 2 7/8 inch (73 mm) to unlimited' },
+                '6_nps': { mm: 168.3, range: 'Outside diameter 2 7/8 inch (73 mm) to unlimited' },
+                '4_nps': { mm: 114.3, range: 'Outside diameter 2 7/8 inch (73 mm) to unlimited' },
+                '2_nps': { mm: 60.3, range: 'Outside diameter 1 inch (25mm) to unlimited' },
+                '1_nps': { mm: 33.4, range: 'Outside diameter 1 inch (25mm) to unlimited' }
+            };
+            
+            if (diameterRules[diameterType]) {
+                diameterRange.textContent = diameterRules[diameterType].range;
+            }
+        }
+
+        // Update P-Number range with correct rules
+        function updatePNumberRange() {
+            const pNumber = document.getElementById('base_metal_p_no').value;
+            const pNumberRange = document.getElementById('p_number_range');
+            const manualInput = document.getElementById('base_metal_p_no_manual');
+            const manualRangeInput = document.getElementById('p_number_range_manual');
+            
+            if (pNumber === '__manual__') {
+                // Show manual entry fields
+                manualInput.style.display = 'block';
+                manualRangeInput.style.display = 'block';
+                pNumberRange.style.display = 'none';
+                manualInput.focus();
+                return;
+            } else {
+                // Hide manual entry fields
+                manualInput.style.display = 'none';
+                manualRangeInput.style.display = 'none';
+                pNumberRange.style.display = 'block';
+            }
+            
+            // Define P-Number qualification rules as per your specifications
+            const pNumberRules = {
+                'P NO.1 TO P NO.1': 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49',
+                'P NO.1 TO P NO.8': 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49',
+                'P NO.8 TO P NO.8': 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49',
+                'P NO.43 TO P NO.43': 'P-No. 1 through P-No. 15F, P-No. 34, and P-No. 41 through P-No. 49'
+            };
+            
+            // Update the range text
+            if (pNumberRules[pNumber]) {
+                pNumberRange.textContent = pNumberRules[pNumber];
+                console.log(`P-Number updated: ${pNumber} → ${pNumberRules[pNumber]}`);
+            } else {
+                // Default range
+                pNumberRange.textContent = 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49';
+            }
+        }
+
+        // Update F-Number range
+        function updateFNumberRange() {
+            const fNumber = document.getElementById('filler_f_no').value;
+            const fNumberRange = document.getElementById('f_number_range');
+            const manualInput = document.getElementById('filler_f_no_manual');
+            const manualRangeInput = document.getElementById('f_number_range_manual');
+            
+            if (fNumber === '__manual__') {
+                manualInput.style.display = 'block';
+                manualRangeInput.style.display = 'block';
+                fNumberRange.style.display = 'none';
+                manualInput.focus();
+                return;
+            } else {
+                manualInput.style.display = 'none';
+                manualRangeInput.style.display = 'none';
+                fNumberRange.style.display = 'block';
+            }
+            
+            const fNumberRules = {
+                'F4_with_backing': 'F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing & F-No.4 With Backing',
+                'F5_with_backing': 'F-No.1 with Backing & F-No.5 With Backing',
+                'F4_without_backing': 'F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing & F-No.4 With and Without Backing',
+                'F5_without_backing': 'F-No.1 with Backing & F-No.5 With and without Backing',
+                'F43': 'F-No. 34 and all F-No. 41 through F-No. 46'
+            };
+            
+            fNumberRange.textContent = fNumberRules[fNumber] || 'F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing & F-No.4 With Backing';
+        }
+
+        // Update vertical progression range (fixed)
+        function updateVerticalProgressionRange() {
+            const progressionSelect = document.getElementById('vertical_progression');
+            const progressionRange = document.getElementById('vertical_progression_range');
+            
+            if (!progressionSelect || !progressionRange) {
+                console.log('Vertical progression elements not found');
+                return;
+            }
+            
+            const progression = progressionSelect.value;
+            
+            // Update the range text based on selection
+            if (progression === 'Uphill') {
+                progressionRange.textContent = 'Upward';
+            } else if (progression === 'Downhill') {
+                progressionRange.textContent = 'Downward';
+            }
+            
+            console.log(`Vertical progression updated: ${progression} → ${progressionRange.textContent}`);
+        }
+
+        // Toggle manual entry for specification fields
+        function toggleManualEntry(fieldName) {
+            const select = document.getElementById(fieldName);
+            const manualInput = document.getElementById(fieldName + '_manual');
+            
+            if (select.value === '__manual__') {
+                manualInput.style.display = 'block';
+                manualInput.focus();
+            } else {
+                manualInput.style.display = 'none';
+            }
+        }
+
+        // Update process fields
+        function updateProcessFields() {
+            const process = document.querySelector('select[name="welding_process"]').value;
+            const processRange = document.getElementById('process_range');
+            
+            if (processRange) {
+                processRange.textContent = 'SMAW';
+            }
+            
+            setDefaultSMAWValues();
+        }
+
+        // Set default SMAW values
+        function setDefaultSMAWValues() {
+            const defaults = {
+                'smaw_thickness': '14.26',
+                'position_range_manual': 'All Position Groove Plate and Pipe Over 24 in. (610 mm) O.D. | All Position Groove Pipe ≤24 in. (610 mm) O.D. | All Position Fillet or Tack Plate and Pipe'
+            };
+            
+            Object.entries(defaults).forEach(([fieldName, value]) => {
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                if (field && !field.value) {
+                    field.value = value;
+                }
+            });
+            
+            // Set default selections
+            const backingSelect = document.getElementById('backing');
+            if (backingSelect) backingSelect.value = 'With Backing';
+            
+            const pipeSelect = document.getElementById('pipe_diameter_type');
+            if (pipeSelect) pipeSelect.value = '8_nps';
+            
+            const pNumberSelect = document.getElementById('base_metal_p_no');
+            if (pNumberSelect) pNumberSelect.value = 'P NO.1 TO P NO.1';
+            
+            const fillerSpecSelect = document.getElementById('filler_spec');
+            if (fillerSpecSelect) fillerSpecSelect.value = '5.1';
+            
+            const fillerClassSelect = document.getElementById('filler_class');
+            if (fillerClassSelect) fillerClassSelect.value = 'E7018-1';
+            
+            const fillerFNoSelect = document.getElementById('filler_f_no');
+            if (fillerFNoSelect) fillerFNoSelect.value = 'F4_with_backing';
+            
+            const testPositionSelect = document.getElementById('test_position');
+            if (testPositionSelect) testPositionSelect.value = '6G';
+            
+            const verticalProgressionSelect = document.getElementById('vertical_progression');
+            if (verticalProgressionSelect) verticalProgressionSelect.value = 'Uphill';
+            
+            // Update ranges
+            updateBackingRange();
+            updateDiameterRange();
+            updatePNumberRange();
+            updateFNumberRange();
+            updatePositionRange();
+            updateVerticalProgressionRange();
+            
+            // Check default checkboxes
+            const smawYes = document.getElementById('smaw_yes');
+            if (smawYes) smawYes.checked = true;
+            
+            const pipeSpecimen = document.getElementById('pipe_specimen');
+            if (pipeSpecimen) pipeSpecimen.checked = true;
+        }
+
+        // Form validation
+        function validateForm() {
+            const requiredFields = [
+                { name: 'welder_id', label: 'Welder Selection' },
+                { name: 'wps_followed', label: 'WPS Number' },
+                { name: 'base_metal_spec', label: 'Base Metal Specification' },
+                { name: 'test_date', label: 'Test Date' }
+            ];
+            
+            let isValid = true;
+            let missingFields = [];
+            
+            requiredFields.forEach(field => {
+                const element = document.querySelector(`[name="${field.name}"]`);
+                if (element && (!element.value || element.value.trim() === '')) {
+                    element.classList.add('is-invalid');
+                    isValid = false;
+                    missingFields.push(field.label);
+                } else if (element) {
+                    element.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                alert(`Please complete the following required fields:\n\n• ${missingFields.join('\n• ')}`);
+                return false;
+            }
+            
+            alert('✅ Form validation passed!\n\nAll required fields are completed for SMAW qualification.');
+            return true;
+        }
+
+        // Submit form
+        function submitForm() {
+            if (!validateForm()) {
+                return false;
+            }
+            
+            const formData = new FormData(document.getElementById('welderQualificationForm'));
+            
+            console.log('🔥 SMAW Qualification Form Data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+            
+            const welderName = document.querySelector('#welder_id option:checked')?.text || 'Not selected';
+            
+            alert(`🎉 SMAW Qualification Certificate Created Successfully!
+            
+📋 Summary:
+• Welder: ${welderName}
+• Process: SMAW (Filling/Cap)
+• Certificate No: ${document.getElementById('certificate_no').value}
+• Company: ${document.getElementById('company_name').value}
+• Test Date: ${document.querySelector('[name="test_date"]').value}
+
+✅ Certificate is ready for approval and printing!`);
+            
+            return true;
+        }
+
+        // Reset form
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+                document.getElementById('welderQualificationForm').reset();
+                document.getElementById('photo-preview').innerHTML = 'Click to upload<br>welder photo';
+                
+                document.querySelectorAll('.is-invalid').forEach(field => {
+                    field.classList.remove('is-invalid');
+                });
+                
+                setCurrentDate();
+                setDefaultSMAWValues();
+            }
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelector('input[name="test_date"]').value = today;
+            document.querySelector('input[name="inspector_date"]').value = today;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            const testPositionSelect = document.getElementById('test_position');
+            if (testPositionSelect) {
+                testPositionSelect.addEventListener('change', updatePositionRange);
+            }
+
+            const plateSpecimen = document.getElementById('plate_specimen');
+            const pipeSpecimen = document.getElementById('pipe_specimen');
+            
+            if (plateSpecimen) {
+                plateSpecimen.addEventListener('change', function() {
+                    if (this.checked && pipeSpecimen) {
+                        pipeSpecimen.checked = false;
+                    }
+                    updatePositionRange();
+                });
+            }
+
+            if (pipeSpecimen) {
+                pipeSpecimen.addEventListener('change', function() {
+                    if (this.checked && plateSpecimen) {
+                        plateSpecimen.checked = false;
+                    }
+                    updatePositionRange();
+                });
+            }
+
+            const verticalProgressionSelect = document.getElementById('vertical_progression');
+            if (verticalProgressionSelect) {
+                verticalProgressionSelect.addEventListener('change', updateVerticalProgressionRange);
+            }
+        }
+
+        // Initialize form
+        document.addEventListener('DOMContentLoaded', function() {
+            setCurrentDate();
+            setDefaultSMAWValues();
+            updateProcessFields();
+            setupEventListeners();
+            
+            console.log('🔥 SMAW Welder Qualification Form initialized!');
+            console.log('📋 Form configured for SMAW (Filling/Cap) process only');
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        submitForm();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        resetForm();
+                        break;
+                    case 'v':
+                        e.preventDefault();
+                        validateForm();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

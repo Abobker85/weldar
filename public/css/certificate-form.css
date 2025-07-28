@@ -1,0 +1,904 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    padding: 20px;
+    font-size: 9px;
+}
+
+.form-container {
+    max-width: 210mm;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 0;
+}
+
+/* Header with logos - exactly like certificate */
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0; /* Removed margin-bottom */
+    height: 80px;
+    border: 2px solid #000;
+    border-bottom: 1px solid #000;
+}
+
+.logo-left,
+.logo-right {
+    width: 120px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    text-align: center;
+    padding: 5px;
+}
+
+/* Update logo sizing */
+.logo-left img,
+.logo-right img {
+    max-width: 90px;
+    max-height: 50px;
+}
+
+.header-center {
+    flex: 1;
+    text-align: center;
+}
+
+.header-center h1 {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 5px 0;
+}
+
+.header-center h2 {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+}
+
+.contact-info {
+    font-size: 10px;
+    color: #555;
+}
+
+.no-logo {
+    width: 100%;
+    height: 100%;
+    border: 1px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #999;
+}
+
+/* Fix for the form layout issues */
+.cert-details-row {
+    display: flex;
+    min-height: 25px;
+    border: 2px solid #000;
+    border-top: none;
+    border-bottom: 1px solid #000;
+    background: #f8f9fa;
+    align-items: center;
+    font-weight: bold;
+    font-size: 9px;
+    flex-wrap: wrap;
+    position: relative; /* Add positioning context */
+}
+
+.cert-left,
+.cert-right {
+    width: 200px;
+    min-width: 180px;
+    border-right: 1px solid #000;
+    padding: 5px 10px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cert-center {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+    padding: 5px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.cert-right {
+    border-right: none;
+    border-left: 1px solid #000;
+    text-align: right;
+    justify-content: flex-end;
+}
+
+/* Improved certificate details layout */
+.cert-details-row.with-photo {
+    position: relative;
+    padding-right: 100px; /* Make space for the photo */
+}
+
+.cert-details-row.two-row-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 120px; /* Enough height for both rows */
+}
+
+.detail-row {
+    display: flex;
+    width: 100%;
+    min-height: 50px;
+    align-items: center;
+}
+
+.detail-row .cert-left,
+.detail-row .cert-center,
+.detail-row .cert-right {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+}
+
+/* Photo container styling */
+.photo-container {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    z-index: 5;
+}
+
+/* Improved photo upload appearance */
+.photo-upload {
+    width: 80px;
+    height: 110px;
+    border: 1px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 0;
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.photo-upload:hover {
+    background: #e9ecef;
+    border-color: #007bff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.photo-upload input[type="file"] {
+    display: none;
+}
+
+/* Fix for variables table */
+.variables-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8px;
+    border: 2px solid #000;
+    border-top: 1px solid #000;
+    margin-top: 0;
+}
+
+.variables-table td,
+.variables-table th {
+    border: 1px solid #000;
+    padding: 2px 4px;
+    vertical-align: top;
+    word-wrap: break-word;
+}
+
+/* Fix for section headers */
+.section-header {
+    background: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+    font-size: 10px;
+    padding: 5px;
+    border: 1px solid #000;
+}
+
+/* Section header styling */
+.section-header-row {
+    height: 35px;
+    border: 2px solid #000;
+    border-top: none;
+    border-bottom: 1px solid #000;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.section-title {
+    width: 100%;
+    text-align: center;
+    padding: 5px;
+    font-size: 10px;
+}
+
+/* Test description specific styles */
+.wps-field {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 50%; /* Adjust width to accommodate the long input */
+}
+
+.wps-input {
+    width: 150px !important;
+    font-weight: bold;
+}
+
+.test-type-container {
+    border-right: 1px solid #000;
+    padding: 0 10px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 130px;
+}
+
+.test-type-container:last-child {
+    border-right: none;
+    flex: 1;
+}
+
+/* Fix for form buttons */
+.form-buttons {
+    margin: 20px 0;
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border: none;
+}
+
+/* Welding variables table */
+.var-label {
+    background: #f8f9fa;
+    font-weight: bold;
+    width: 200px;
+}
+
+.var-value {
+    background: white;
+    text-align: center;
+}
+
+.var-range {
+    background: white;
+    text-align: center;
+}
+
+/* Results section */
+.results-section {
+    border: 2px solid #000;
+    border-top: none;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9px;
+}
+
+.results-table td,
+.results-table th {
+    border: 1px solid #000;
+    padding: 3px 5px;
+    vertical-align: middle;
+}
+
+.test-header {
+    background: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Signature section */
+.signature-section {
+    border: 2px solid #000;
+    border-top: none;
+}
+
+.cert-statement {
+    text-align: center;
+    padding: 10px;
+    font-size: 9px;
+    border-bottom: 1px solid #000;
+    background: white;
+}
+
+.confirmation-header {
+    background: #f0f0f0;
+    text-align: center;
+    font-weight: bold;
+    padding: 5px;
+    border-bottom: 1px solid #000;
+}
+
+.signature-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8px;
+}
+
+.signature-table td {
+    border: 1px solid #000;
+    padding: 3px 5px;
+    vertical-align: top;
+}
+
+.sig-header {
+    background: #f8f9fa;
+    font-weight: bold;
+    text-align: center;
+    height: 25px;
+}
+
+.sig-row {
+    height: 30px;
+}
+
+/* Form controls */
+.form-buttons {
+    margin: 20px 0;
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.btn {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+/* Checkbox styling */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Required field indicator */
+.required {
+    color: #dc3545;
+}
+
+/* Form validation */
+.is-invalid {
+    border-color: #dc3545 !important;
+    padding-right: calc(1.5em + 0.75rem) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right calc(0.375em + 0.1875rem) center !important;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem) !important;
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #dc3545;
+}
+
+/* Notification styling */
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.alert {
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+.fade {
+    transition: opacity 0.15s linear;
+}
+
+.fade.show {
+    opacity: 1;
+}
+
+/* Improved Select2 styling for welder search */
+.select2-container--default .select2-selection--single {
+    height: 30px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 9px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 28px;
+    padding-left: 8px;
+    font-size: 9px;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 28px;
+}
+
+.select2-dropdown {
+    border: 1px solid #ddd;
+    font-size: 9px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    border: 1px solid #ddd;
+    font-size: 9px;
+    padding: 4px;
+}
+
+.select2-container--default .select2-results__option {
+    padding: 4px 8px;
+    font-size: 9px;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #007bff;
+}
+
+/* Improved welder search container */
+.welder-select-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+
+.welder-search {
+    width: 100%;
+    padding: 5px 8px;
+    font-size: 9px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    transition: border-color 0.3s;
+}
+
+.welder-search:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.welder-results {
+    position: absolute;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 0 0 3px 3px;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.welder-item {
+    padding: 6px 10px;
+    font-size: 9px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+
+.welder-item:hover {
+    background: #f0f8ff;
+}
+
+.welder-item:last-child {
+    border-bottom: none;
+}
+
+/* Report number styling */
+.report-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 9px;
+}
+
+.report-group, .doc-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 9px;
+}
+
+.rt-report {
+    width: 140px !important;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 9px;
+    background-color: #f8f9fa;
+    text-align: center;
+    font-weight: bold;
+}
+
+.doc-number {
+    width: 100px !important;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 9px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Disabled form elements with visual indication they're read-only */
+select:disabled, input:disabled, input:read-only {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+    cursor: not-allowed;
+    border-color: #ddd !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .cert-details-row {
+        flex-direction: column;
+        height: auto;
+        padding: 5px;
+    }
+
+    .cert-left,
+    .cert-right,
+    .cert-center {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #000;
+        margin-bottom: 5px;
+        text-align: center;
+    }
+
+    .cert-right {
+        border-left: none;
+        margin-bottom: 0;
+    }
+
+    .welder-select-container {
+        max-width: 100%;
+    }
+
+    .content-table {
+        font-size: 8px;
+    }
+
+    .photo-cell {
+        width: 100%;
+        height: auto;
+        padding: 10px;
+    }
+
+    .header-row {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .logo-left,
+    .logo-right {
+        width: 100%;
+        height: 60px;
+        border-right: none;
+        border-bottom: 1px solid #000;
+    }
+}
+
+@media print {
+    body {
+        padding: 0;
+        background: white;
+    }
+
+    .form-buttons {
+        display: none !important;
+    }
+
+    .form-container {
+        box-shadow: none;
+    }
+}
+
+/* Welder search styles */
+.welder-details {
+    display: none;
+    padding: 8px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    margin-top: 5px;
+    font-size: 9px;
+    border-radius: 4px;
+}
+
+.welder-photo-preview {
+    width: 80px;
+    height: 110px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Certification text editor styling */
+.certification-text-container {
+    position: relative;
+    width: 100%;
+}
+
+.certification-text-editor {
+    width: 100%;
+    min-height: 60px;
+    padding: 8px 10px;
+    font-size: 9px;
+    font-family: Arial, sans-serif;
+    border: 1px dashed transparent;
+    background-color: transparent;
+    resize: vertical;
+    outline: none;
+    text-align: center;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.certification-text-editor:hover {
+    border-color: #ccc;
+    background-color: #f8f9fa;
+}
+
+.certification-text-editor:focus {
+    border-color: #007bff;
+    background-color: #fff;
+}
+
+/* Custom certification text input styling */
+.custom-certification-wrapper {
+    display: inline-block;
+    margin-left: 5px;
+}
+
+.custom-certification-input {
+    width: 100%;
+    min-width: 200px;
+    padding: 2px 5px;
+    font-size: 9px;
+    font-family: Arial, sans-serif;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background-color: #f8f9fa;
+    transition: all 0.3s;
+}
+
+.custom-certification-input:focus {
+    border-color: #007bff;
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.custom-certification-input::placeholder {
+    color: #aaa;
+    font-style: italic;
+}
+
+/* Stamp section styling */
+.stamp-section {
+    padding: 10px;
+    text-align: center;
+}
+
+.stamp-upload-container {
+    display: inline-block;
+    position: relative;
+}
+
+.stamp-placeholder {
+    width: 80px;
+    height: 80px;
+    border: 2px dashed #ccc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #f8f9fa;
+    margin: 0 auto;
+    font-size: 8px;
+    color: #666;
+}
+
+.stamp-placeholder:hover {
+    border-color: #007bff;
+    background: #e9ecef;
+}
+
+.stamp-placeholder img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 50%;
+    object-fit: contain;
+}
+
+.stamp-upload-container input[type="file"] {
+    display: none;
+}
+
+/* Stamp styling - updated to make it smaller */
+.stamp-block {
+    width: 80px;
+    height: 80px;
+    border: 1px dashed #ccc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.official-stamp {
+    max-width: 70px;
+    max-height: 70px;
+    border-radius: 50%;
+    object-fit: contain;
+}
+
+.no-stamp {
+    color: #999;
+    font-size: 10px;
+    text-align: center;
+}
+
+/* Fix width consistency between sections */
+.signature-section {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 2px solid #000;
+    border-top: none;
+}
+
+.results-section {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 2px solid #000;
+    border-top: none;
+}
+
+.confirmation-header {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 5px;
+}
+
+.final-signatures, 
+.cert-statement {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.signature-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* Signature form container consistent with main form container */
+.signature-form-container {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background: white;
+}
+
+.cert-statement, 
+.confirmation-header, 
+.signature-table {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+/* Ensure the signature section matches the width of other sections */
+.signature-section {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+/* Signature Pad Styles */
+.signature-container {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+}
+
+.signature-pad-container {
+    position: relative;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    margin: 10px 0;
+}
+
+.signature-pad {
+    width: 100%;
+    height: 200px;
+    touch-action: none;
+}
+
+.signature-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}

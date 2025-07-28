@@ -1,0 +1,114 @@
+/* FCAW Certificate specific styles */
+
+.variables-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #000;
+    font-size: 10px;
+}
+
+.variables-table tr td {
+    border: 1px solid #000;
+    padding: 5px;
+}
+
+.variables-table .var-label {
+    width: 45%;
+    vertical-align: middle;
+}
+
+.variables-table .var-value {
+    width: 25%;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.variables-table .var-range {
+    width: 30%;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.variables-table input[type="text"],
+.variables-table select {
+    width: 100%;
+    padding: 3px 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.checkbox-container input[type="checkbox"] {
+    margin-right: 3px;
+}
+
+.checkbox-container label {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.section-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 5px;
+    margin-top: 10px;
+    margin-bottom: 0;
+    background-color: #f0f0f0;
+    border: 1px solid #000;
+}
+
+.results-header {
+    text-align: center;
+    font-weight: bold;
+    background-color: #f0f0f0;
+    padding: 5px;
+    border: 1px solid #000;
+    margin-top: 0;
+}
+
+/* Specific row colors */
+.row-blue {
+    background-color: #f0f8ff;
+}
+
+.row-yellow {
+    background-color: #ffff00;
+}
+
+.row-orange {
+    background-color: #ffcc66;
+}
+
+.row-light-blue {
+    background-color: #a6e6f7;
+}
+
+.row-green {
+    background-color: #ccffcc;
+}
+
+.row-pink {
+    background-color: #ffcccc;
+}
+
+.row-dark-pink {
+    background-color: #ffb6c1;
+}
+
+.row-purple {
+    background-color: #dcd0ff;
+}
+
+.row-light-yellow {
+    background-color: #ffff99;
+}
+
+.row-red {
+    background-color: #ff6666;
+}
