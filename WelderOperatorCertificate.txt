@@ -1,0 +1,82 @@
+[Issuing Body Name/Logo]
+
+**Welder Operator Certificate – SAW**
+
+---
+
+**Certificate Number:** CERT-XXXX-YYYY
+**Date of Issue:** DD Month YYYY
+**Date of Expiration:** DD Month YYYY (Recommended: 2 years from issue date)
+
+---
+
+**This is to certify that:**
+
+**Full Name of Welder:** _________________________________________________________
+**ID/Passport Number:** _________________________________________________________
+
+Has been certified as a Welder Operator in accordance with **[Relevant Industry Standard, e.g., AWS D1.1, ASME Section IX, ISO 9606-1]**.
+
+This certification demonstrates the operator's proficiency in setting up, monitoring, and performing welding operations as detailed below.
+
+---
+
+**Certification Scope & Qualifications**
+
+**Welding Processes Covered:**
+*   [ ] GMAW (Gas Metal Arc Welding)  iconography: [Gas Cylinder Icon]
+*   [ ] GTAW (Gas Tungsten Arc Welding) iconography: [Gas Cylinder Icon]
+*   [ ] FCAW (Flux-Cored Arc Welding) iconography: [Wire Spool Icon]
+*   [ ] SAW (Submerged Arc Welding)
+
+**Materials Qualified:**
+*   Material Types: _________________________ (e.g., Carbon Steel, Stainless Steel, Aluminum)
+
+**Thickness Range Qualified:**
+*   Thickness Range: _________________________ (e.g., 3mm - 25mm)
+
+**Joint Types Qualified:**
+*   Joint Types: _________________________ (e.g., Butt, Fillet, Lap)
+
+**Positions Qualified:**
+*   Welding Positions: _________________________ (e.g., 1G, 2F, 3G, 4G, 5G, 6G)
+
+**Consumables/Filler Metals Used:**
+*   Consumable Specifications: _________________________ (e.g., AWS A5.1 E7018, ER70S-6)
+
+---
+
+**Equipment & Process Parameters**
+
+**Equipment Operated/Familiarity:**
+*   Types of Welding Machines: _________________________ (e.g., MIG, TIG, Submerged Arc)
+*   Control Panels/Automated Systems: _________________________
+*   *Basic machine maintenance and troubleshooting awareness demonstrated.*
+
+**Key Welding Parameters Qualified:**
+*   Voltage Range: _________________________
+*   Amperage Range: _________________________
+*   Wire Feed Speed: _________________________
+*   Travel Speed: _________________________
+*   Gas Flow Rate: _________________________
+*   Preheat/Interpass Temperature: _________________________
+
+---
+
+**Test Results & Performance**
+
+Successfully demonstrated proficiency in practical welding tests as per **[Standard Reference]**.
+
+---
+
+**Certification Authority**
+
+**Signature:** _________________________________________
+
+**Printed Name:** _________________________________________
+**Title:** _________________________________________
+
+**(Space for Official Seal/Stamp)**
+
+---
+*Visual Style Note: Consider a distinct border design or a subtle color scheme (e.g., shades of blue or grey) to differentiate this certificate from other welding certifications.*
