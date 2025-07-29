@@ -30,6 +30,7 @@ Route::get('/welders/{id}/all-certificates/numbers', [ApiController::class, 'get
 // Legacy routes maintained for backward compatibility
 Route::get('/companies/{id}/code', [ApiController::class, 'getSmawCertificateNumber'])->name('api.smaw.certificate.code');
 Route::get('/companies/{id}/fcaw-code', [ApiController::class, 'getFcawCertificateNumber'])->name('api.fcaw.certificate.code');
+Route::get('/companies/{id}/saw-code', [ApiController::class, 'getSawCertificateNumber'])->name('api.saw.certificate.code');
 
 // Get SMAW certificate number for a company
 Route::get('/companies/{id}/code', function (Request $request, $id) {
@@ -83,6 +84,39 @@ Route::get('/companies/{id}/fcaw-code', function (Request $request, $id) {
     
     $newCertNo = $certificatePrefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     
+    return response()->json([
+        'prefix' => $newCertNo,
+        'company_code' => $companyCode,
+    ]);
+});
+
+// Get SAW certificate number for a company
+Route::get('/companies/{id}/saw-code', function (Request $request, $id) {
+    $company = Company::findOrFail($id);
+    $systemCode = AppSetting::getValue('doc_prefix', 'EEA');
+    $companyCode = $company->code ? $systemCode . '-' . $company->code : $systemCode . '-AIC';
+    $certificatePrefix = $companyCode . '-SAW-';
+
+    // Check if SawCertificate model exists
+    if (!class_exists('\\App\\Models\\SawCertificate')) {
+        return response()->json([
+            'prefix' => $certificatePrefix . '0001',
+            'company_code' => $companyCode,
+        ]);
+    }
+
+    $lastCert = \App\Models\SawCertificate::where('certificate_no', 'like', $certificatePrefix . '%')
+        ->orderBy('certificate_no', 'desc')
+        ->first();
+
+    $newNumber = 1;
+    if ($lastCert) {
+        $lastNumber = (int) substr($lastCert->certificate_no, -4);
+        $newNumber = $lastNumber + 1;
+    }
+
+    $newCertNo = $certificatePrefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
     return response()->json([
         'prefix' => $newCertNo,
         'company_code' => $companyCode,

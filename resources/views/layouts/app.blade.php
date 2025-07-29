@@ -138,7 +138,7 @@
                             </a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{ request()->routeIs('qualification-tests.*') || request()->routeIs('smaw-certificates.*') || request()->routeIs('gtaw-certificates.*') || request()->routeIs('gtaw-smaw-certificates.*') || request()->routeIs('fcaw-certificates.*') ? 'active' : '' }}" href="#" id="qualificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle {{ request()->routeIs('qualification-tests.*') || request()->routeIs('smaw-certificates.*') || request()->routeIs('gtaw-certificates.*') || request()->routeIs('gtaw-smaw-certificates.*') || request()->routeIs('fcaw-certificates.*') || request()->routeIs('saw-certificates.*') ? 'active' : '' }}" href="#" id="qualificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-certificate"></i> Qualifications
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="qualificationsDropdown">
@@ -147,6 +147,7 @@
                                 <li><a class="dropdown-item {{ request()->routeIs('gtaw-certificates.*') ? 'active' : '' }}" href="{{ route('gtaw-certificates.index') }}">GTAW Certificates</a></li>
                                 <li><a class="dropdown-item {{ request()->routeIs('gtaw-smaw-certificates.*') ? 'active' : '' }}" href="{{ route('gtaw-smaw-certificates.index') }}">GTAW-SMAW Certificates</a></li>
                                 <li><a class="dropdown-item {{ request()->routeIs('fcaw-certificates.*') ? 'active' : '' }}" href="{{ route('fcaw-certificates.index') }}">FCAW Certificates</a></li>
+                                <li><a class="dropdown-item {{ request()->routeIs('saw-certificates.*') ? 'active' : '' }}" href="{{ route('saw-certificates.index') }}">SAW Certificates</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
