@@ -546,14 +546,14 @@ class SmawCertificateController extends Controller
         // Transform boolean checkbox values to ensure they're properly processed
         $booleanFields = [
             'smaw_yes', 'plate_specimen', 'pipe_specimen', 'test_coupon', 'production_weld',
-            'rt', 'ut', 'fillet_welds_plate', 'fillet_welds_pipe', 
+            'rt', 'ut', 'fillet_welds_plate', 'fillet_welds_pipe',
             'pipe_macro_fusion', 'plate_macro_fusion', 'test_result',
-            'plate', 'pipe', 'transverse_face_root', 'longitudinal_bends', 
+            'plate', 'pipe', 'transverse_face_root', 'longitudinal_bends',
             'side_bends', 'pipe_bend_corrosion', 'plate_bend_corrosion'
         ];
-        
+
         $data = $request->all();
-        
+
         // Set default false values for boolean fields if they're not present in request
         foreach ($booleanFields as $field) {
             if (!isset($data[$field])) {
@@ -564,21 +564,21 @@ class SmawCertificateController extends Controller
                 $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
             }
         }
-        
+
         // Check if at least one of test_coupon or production_weld is checked
         if (!($data['test_coupon'] || $data['production_weld'])) {
             return redirect()->back()->withInput()->withErrors(['test_type' => 'You must select either Test Coupon or Production Weld']);
         }
-        
+
         $request->merge($data);
-        
+
         // Handle the problematic fields with default values if they're missing
         $problematicFields = [
             'wps_followed' => 'WPS-001',
             'test_date' => now()->format('Y-m-d'),
             'base_metal_spec' => 'A106 Gr.B'
         ];
-        
+
         foreach ($problematicFields as $field => $defaultValue) {
             if (empty($data[$field])) {
                 $data[$field] = $defaultValue;
@@ -593,13 +593,13 @@ class SmawCertificateController extends Controller
             $data['wps_followed'] = str_replace('-FIXED', '', $data['wps_followed']);
             $request->merge(['wps_followed' => $data['wps_followed']]);
         }
-        
+
         if (strpos($data['base_metal_spec'] ?? '', '-FIXED') !== false) {
             // If we detect our fixed value, strip off the -FIXED suffix
             $data['base_metal_spec'] = str_replace('-FIXED', '', $data['base_metal_spec']);
             $request->merge(['base_metal_spec' => $data['base_metal_spec']]);
         }
-        
+
         $validated = $request->validate([
             'welder_id' => 'required|exists:welders,id',
             'company_id' => 'required|exists:companies,id',
@@ -632,17 +632,17 @@ class SmawCertificateController extends Controller
             'filler_f_no_manual' => 'nullable|string|max:255',
             'vertical_progression' => 'required|string|max:255',
             'test_result' => 'boolean',
-            
+
             // Inspection details
             'inspector_name' => 'required|string|max:255',
             'inspector_date' => 'nullable|date',
-            
+
             // Photo and signatures
             'photo' => 'nullable|image|max:2048',
             'certification_text' => 'nullable|string|max:500',
             'signature_data' => 'nullable|string',
             'inspector_signature_data' => 'nullable|string',
-            
+
             // Additional welding variables
             'oscillation' => 'nullable|string|max:255',
             'fuel_gas' => 'nullable|string|max:255',
@@ -667,7 +667,7 @@ class SmawCertificateController extends Controller
             'filler_product_form_range' => 'nullable|string|max:255',
             'deposit_thickness' => 'nullable|string|max:255',
             'deposit_thickness_range' => 'nullable|string|max:255',
-            
+
             // Test result fields
             'rt' => 'boolean',
             'ut' => 'boolean',
@@ -675,7 +675,7 @@ class SmawCertificateController extends Controller
             'rt_report_no' => 'required|string|max:255',
             'rt_doc_no' => 'nullable|string|max:255',
             'visual_examination_result' => 'nullable|string|in:ACC,REJ',
-            
+
             // Personnel information
             'evaluated_by' => 'required|string|max:255',
             'evaluated_company' => 'nullable|string|max:255',
@@ -683,13 +683,13 @@ class SmawCertificateController extends Controller
             'lab_test_no' => 'nullable|string|max:255',
             'supervised_by' => 'required|string|max:255',
             'supervised_company' => 'nullable|string|max:255',
-            
+
             // Additional test types and results
             'additional_type_1' => 'nullable|string|max:255',
             'additional_result_1' => 'nullable|string|max:255',
             'additional_type_2' => 'nullable|string|max:255',
             'additional_result_2' => 'nullable|string|max:255',
-            
+
             // Confirmation dates
             'confirm_date1' => 'nullable|date',
             'confirm_title1' => 'nullable|string|max:255',
@@ -697,81 +697,81 @@ class SmawCertificateController extends Controller
             'confirm_title2' => 'nullable|string|max:255',
             'confirm_date3' => 'nullable|date',
             'confirm_title3' => 'nullable|string|max:255',
-            
+
             // Range fields
             'diameter_range' => 'nullable|string',
             'p_number_range' => 'nullable|string',
             'position_range' => 'nullable|string',
-            'backing_range' => 'nullable|string', 
+            'backing_range' => 'nullable|string',
             'f_number_range' => 'nullable|string',
             'vertical_progression_range' => 'nullable|string',
         ]);
-        
+
         // Find the certificate to update
         $certificate = SmawCertificate::findOrFail($id);
-        
+
         // Log range values from request for debugging
         Log::info('SMAW Certificate update - Range values from request:', [
             'diameter_range' => $validated['diameter_range'] ?? 'not set',
             'p_number_range' => $validated['p_number_range'] ?? 'not set',
             'position_range' => $validated['position_range'] ?? 'not set',
-            'backing_range' => $validated['backing_range'] ?? 'not set', 
+            'backing_range' => $validated['backing_range'] ?? 'not set',
             'f_number_range' => $validated['f_number_range'] ?? 'not set',
             'vertical_progression_range' => $validated['vertical_progression_range'] ?? 'not set',
         ]);
-        
+
         // Use submitted range values if present, otherwise calculate them
         if (empty($validated['diameter_range']) && !empty($validated['pipe_diameter_type'])) {
             $validated['diameter_range'] = $this->getDiameterRange($validated['pipe_diameter_type']);
             Log::info("Setting diameter_range to: {$validated['diameter_range']}");
         }
-        
+
         if (empty($validated['p_number_range']) && !empty($validated['base_metal_p_no'])) {
             $validated['p_number_range'] = $this->getPNumberRange($validated['base_metal_p_no']);
             Log::info("Setting p_number_range to: {$validated['p_number_range']}");
         }
-        
+
         if (empty($validated['position_range']) && !empty($validated['test_position'])) {
             $isPipe = isset($validated['pipe_specimen']) && $validated['pipe_specimen'];
             $validated['position_range'] = $this->getPositionRange($validated['test_position'], $isPipe);
             Log::info("Setting position_range to: {$validated['position_range']}");
         }
-        
+
         if (empty($validated['backing_range']) && !empty($validated['backing'])) {
             $validated['backing_range'] = $this->getBackingRange($validated['backing']);
             Log::info("Setting backing_range to: {$validated['backing_range']}");
         }
-        
+
         if (empty($validated['f_number_range']) && !empty($validated['filler_f_no'])) {
             $validated['f_number_range'] = $this->getFNumberRange($validated['filler_f_no']);
             Log::info("Setting f_number_range to: {$validated['f_number_range']}");
         }
-        
+
         if (empty($validated['vertical_progression_range']) && !empty($validated['vertical_progression'])) {
             $validated['vertical_progression_range'] = $this->getVerticalProgressionRange($validated['vertical_progression']);
             Log::info("Setting vertical_progression_range to: {$validated['vertical_progression_range']}");
         }
-        
+
         // Final check to ensure we have range values
         $rangeFields = [
             'diameter_range', 'p_number_range', 'position_range',
             'backing_range', 'f_number_range', 'vertical_progression_range'
         ];
-        
+
         foreach ($rangeFields as $field) {
             if (empty($validated[$field])) {
                 Log::warning("$field is still empty after processing, setting default value");
                 $validated[$field] = 'Default range value set by server';
             }
         }
-        
+
         // Process photo upload if provided
         if ($request->hasFile('photo')) {
             // Delete old photo if exists
             if ($certificate->photo_path && Storage::disk('public')->exists($certificate->photo_path)) {
                 Storage::disk('public')->delete($certificate->photo_path);
             }
-            
+
             $photoPath = $request->file('photo')->store('welder-photos', 'public');
             $validated['photo_path'] = $photoPath;
         } elseif ($request->has('use_existing_photo') && $request->get('use_existing_photo') === 'true') {
@@ -781,15 +781,15 @@ class SmawCertificateController extends Controller
                 $validated['photo_path'] = $welder->photo_path;
             }
         }
-        
+
         // Update the certificate
         $certificate->update($validated);
-        
+
         // Check if request is AJAX
         if ($request->ajax()) {
             // Log successful update for debugging
             Log::info("Certificate {$id} updated successfully via AJAX");
-            
+
             // Include more data in the response to help with debugging
             return response()->json([
                 'success' => true,
@@ -803,7 +803,7 @@ class SmawCertificateController extends Controller
                 ]
             ]);
         }
-        
+
         // Regular form submission response (fallback)
         return redirect()->route('smaw-certificates.certificate', $certificate->id)
             ->with('success', 'SMAW Certificate updated successfully.');
