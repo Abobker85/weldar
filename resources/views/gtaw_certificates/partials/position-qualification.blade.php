@@ -39,12 +39,12 @@
         <td class="var-value">
             <select class="form-select" name="vertical_progression" id="vertical_progression" onchange="updateVerticalProgressionRange()">
                 <option value="None" {{ ($certificate->vertical_progression ?? 'None') == 'None' ? 'selected' : '' }}>None</option>
-                <option value="Upward" {{ ($certificate->vertical_progression ?? '') == 'Upward' ? 'selected' : '' }}>Upward</option>
-                <option value="Downward" {{ ($certificate->vertical_progression ?? '') == 'Downward' ? 'selected' : '' }}>Downward</option>
+                <option value="Uphill" {{ in_array($certificate->vertical_progression ?? '', ['Uphill', 'Upward']) ? 'selected' : '' }}>Uphill</option>
+                <option value="Downhill" {{ in_array($certificate->vertical_progression ?? '', ['Downhill', 'Downward']) ? 'selected' : '' }}>Downhill</option>
             </select>
         </td>
         <td class="var-range">
-            <span id="vertical_progression_range_span">{{ $certificate->vertical_progression_range ?? 'Upward' }}</span>
+            <span id="vertical_progression_range_span">{{ $certificate->vertical_progression_range ?? 'Uphill' }}</span>
         </td>
     </tr>
     <!-- Remaining position qualification rows -->

@@ -271,7 +271,33 @@ function setDefaultSMAWValues() {
     document.getElementById('filler_class').value = 'E7018-1';
     document.getElementById('filler_f_no').value = 'F4_with_backing';
     document.getElementById('test_position').value = '6G';
-    document.getElementById('vertical_progression').value = 'Uphill';
+    
+    // Set appropriate vertical progression value based on options in the dropdown
+    const verticalProgressionSelect = document.getElementById('vertical_progression');
+    if (verticalProgressionSelect) {
+        // Check if 'Uphill' or 'Upward' exists as an option
+        let hasUphill = false;
+        let hasUpward = false;
+        for (let i = 0; i < verticalProgressionSelect.options.length; i++) {
+            if (verticalProgressionSelect.options[i].value === 'Uphill') {
+                hasUphill = true;
+            } else if (verticalProgressionSelect.options[i].value === 'Upward') {
+                hasUpward = true;
+            }
+        }
+        
+        // Set value based on available options
+        if (hasUphill) {
+            verticalProgressionSelect.value = 'Uphill';
+        } else if (hasUpward) {
+            verticalProgressionSelect.value = 'Upward';
+        } else {
+            // Default to first option if neither exists
+            if (verticalProgressionSelect.options.length > 0) {
+                verticalProgressionSelect.selectedIndex = 1; // Skip the first option if it's empty
+            }
+        }
+    }
 
     // Update all dependent fields
     updateProcessFields();
@@ -337,29 +363,52 @@ function updateFNumberRange() {
     const manualInput = document.getElementById('filler_f_no_manual');
     const manualRangeInput = document.getElementById('f_number_range_manual');
 
-    if (fNo === '__manual__') {
-        manualInput.style.display = 'block';
-        manualRangeInput.style.display = 'block';
-        fNumberRange.style.display = 'none';
-        manualInput.focus();
+    // Check if elements exist before proceeding
+    if (!fNumberRange) {
+        console.error('Element f_number_range_span not found in the DOM');
         return;
     }
 
-    manualInput.style.display = 'none';
-    manualRangeInput.style.display = 'none';
+    if (fNo === '__manual__') {
+        if (manualInput) manualInput.style.display = 'block';
+        if (manualRangeInput) manualRangeInput.style.display = 'block';
+        fNumberRange.style.display = 'none';
+        if (manualInput) manualInput.focus();
+        return;
+    }
+
+    if (manualInput) manualInput.style.display = 'none';
+    if (manualRangeInput) manualRangeInput.style.display = 'none';
     fNumberRange.style.display = 'block';
 
     const fNumberRanges = {
         'F-No.6': 'All F-No. 6',
-       
+        'F5_with_backing': 'F-No.1 with Backing & F-No.5 With Backing',
+        'F4_without_backing': 'F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing & F-No.4 With and Without Backing',
+        'F5_without_backing': 'F-No.1 with Backing & F-No.5 With and without Backing',
+        'F43': 'F-No. 34 and all F-No. 41 through F-No. 46',
+        // Add any other F-Number options here
     };
 
-    fNumberRange.textContent = fNumberRanges[fNo] || '';
+    fNumberRange.textContent = fNumberRanges[fNo] || 'F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing & F-No.4 With Backing';
     
     // Update the hidden field for form submission
     const fNumberRangeHidden = document.getElementById('f_number_range');
     if (fNumberRangeHidden) {
         fNumberRangeHidden.value = fNumberRange.textContent;
+        console.log('Updated f_number_range to: ' + fNumberRange.textContent);
+    }
+    
+    // Ensure the select has a valid option selected
+    const fillerFNoSelect = document.getElementById('filler_f_no');
+    if (fillerFNoSelect && (!fillerFNoSelect.value || fillerFNoSelect.value === '')) {
+        // If no option is selected, select the first non-empty option
+        for (let i = 0; i < fillerFNoSelect.options.length; i++) {
+            if (fillerFNoSelect.options[i].value) {
+                fillerFNoSelect.selectedIndex = i;
+                break;
+            }
+        }
     }
 }
 
@@ -378,27 +427,55 @@ function toggleManualEntry(fieldType) {
 
 // Update vertical progression range
 function updateVerticalProgressionRange() {
-    const progression = document.getElementById('vertical_progression').value;
+    console.log('==== updateVerticalProgressionRange called ====');
+    
+    // Get select element
+    const verticalProgressionSelect = document.getElementById('vertical_progression');
+    
+    // Check if element exists and is a select element
+    if (!verticalProgressionSelect) {
+        console.error('Element vertical_progression not found in the DOM');
+        return;
+    }
+    
+    // Check if it's a select element with options
+    if (!verticalProgressionSelect.options) {
+        console.error('Element vertical_progression is not a select element or has no options property');
+        return;
+    }
+    
+    // Add debugging to show what options are available
+    console.log('Available options in dropdown:');
+    Array.from(verticalProgressionSelect.options).forEach((opt, idx) => {
+        console.log(`Option ${idx}: value=${opt.value}, text=${opt.text}, selected=${opt.selected}`);
+    });
+    
+    const progression = verticalProgressionSelect.value;
+    console.log('Current dropdown selected value:', progression);
+    
     const rangeElement = document.getElementById('vertical_progression_range_span');
 
-    // Check if element exists before setting properties
+    // Check if range element exists before setting properties
     if (!rangeElement) {
         console.error('Element vertical_progression_range_span not found in the DOM');
         return;
     }
 
-    // Set range text
+    // Set range text based on selected value, handling both terminologies
+    let rangeText;
     if (progression === 'None') {
-        rangeElement.textContent = 'None';
+        rangeText = 'None';
     } else if (progression === 'Uphill' || progression === 'Upward') {
-        rangeElement.textContent = 'Uphill';
+        rangeText = 'Uphill';
     } else if (progression === 'Downhill' || progression === 'Downward') {
-        rangeElement.textContent = 'Downhill';
-        console.log('Vertical progression set to None');
-        return;
+        rangeText = 'Downhill';
+    } else {
+        rangeText = progression; // Use the actual value if none of the above
     }
-    const rangeText = progression === 'Upward' ? 'Upward' : 'Downward';
 
+    console.log('Range text determined as:', rangeText);
+
+    // Update the displayed text
     rangeElement.textContent = rangeText;
     
     // Update the hidden field for form submission
@@ -406,7 +483,43 @@ function updateVerticalProgressionRange() {
     if (rangeHiddenField) {
         rangeHiddenField.value = rangeText;
         console.log('Updated vertical_progression_range to: ' + rangeText);
+    } else {
+        console.error('Range hidden field not found in DOM!');
     }
+    
+    // Update the hidden input field that tracks vertical_progression
+    const hiddenField = document.getElementById('vertical_progression_hidden');
+    if (hiddenField) {
+        hiddenField.value = progression;
+        console.log('Updated vertical_progression_hidden to: ' + progression);
+        
+        // Add extra debugging to check what's going on
+        console.log('After updating hidden fields in updateVerticalProgressionRange:');
+        console.log('- select value:', progression);
+        console.log('- hidden field value:', hiddenField.value);
+        console.log('- range field value:', rangeHiddenField ? rangeHiddenField.value : 'not found');
+    } else {
+        console.error('Vertical progression hidden field not found in DOM!');
+    }
+    
+    // Set the selected value in the dropdown if it's empty
+    if (!progression) {
+        console.log('No progression value selected, trying to set from range text:', rangeText);
+        
+        // Find and select appropriate option based on the range text
+        for (let i = 0; i < verticalProgressionSelect.options.length; i++) {
+            const optValue = verticalProgressionSelect.options[i].value;
+            if ((rangeText === 'Uphill' && (optValue === 'Uphill' || optValue === 'Upward')) ||
+                (rangeText === 'Downhill' && (optValue === 'Downhill' || optValue === 'Downward')) ||
+                (rangeText === 'None' && optValue === 'None')) {
+                verticalProgressionSelect.selectedIndex = i;
+                console.log('Selected option index', i, 'with value', optValue);
+                break;
+            }
+        }
+    }
+    
+    console.log('==== updateVerticalProgressionRange completed ====');
 }
 
 // Reset form to default values
@@ -1204,7 +1317,27 @@ function setupEventListeners() {
     
     const verticalProgression = document.getElementById('vertical_progression');
     if (verticalProgression) {
-        verticalProgression.addEventListener('change', updateVerticalProgressionRange);
+        console.log('Setting up vertical_progression change event with current value:', verticalProgression.value);
+        
+        // Add a wrapper to log more info
+        verticalProgression.addEventListener('change', function(e) {
+            console.log('Vertical progression changed to:', this.value);
+            console.log('Event triggered from:', e.target);
+            
+            // Call the actual handler
+            updateVerticalProgressionRange();
+            
+            // Debug state after update
+            const hiddenField = document.getElementById('vertical_progression_hidden');
+            const rangeField = document.getElementById('vertical_progression_range');
+            
+            console.log('After change event processing:');
+            console.log('- dropdown value:', this.value);
+            console.log('- hidden field value:', hiddenField ? hiddenField.value : 'not found');
+            console.log('- range field value:', rangeField ? rangeField.value : 'not found');
+        });
+    } else {
+        console.error('Vertical progression dropdown not found in DOM during initialization!');
     }
     
     const pipeDiameterType = document.getElementById('pipe_diameter_type');

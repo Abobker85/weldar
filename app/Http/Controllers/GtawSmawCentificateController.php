@@ -70,13 +70,14 @@ class GtawSmawCentificateController extends Controller
                 })
                 ->addColumn('actions', function($certificate) {
                     $actions = '<div class="btn-group">';
-                    $actions .= '<a href="' . route('gtaw-smaw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank"><i class="fas fa-certificate"></i></a>';
-                    $actions .= '<a href="' . route('gtaw-smaw-certificates.card', $certificate->id) . '" class="btn btn-sm btn-info" target="_blank"><i class="fas fa-id-card"></i></a>';
-                    $actions .= '<a href="' . route('gtaw-smaw-certificates.back-card', $certificate->id) . '" class="btn btn-sm btn-warning" target="_blank"><i class="fas fa-id-card-alt"></i></a>';
-                    $actions .= '<form action="' . route('gtaw-smaw-certificates.destroy', $certificate->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this certificate?\');">';
+                    $actions .= '<a href="' . route('gtaw-smaw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank" title="Print Certificate"><i class="fas fa-certificate"></i></a>';
+                    $actions .= '<a href="' . route('gtaw-smaw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-primary" title="Edit Certificate"><i class="fas fa-edit"></i></a>';
+                    $actions .= '<a href="' . route('gtaw-smaw-certificates.card', $certificate->id) . '" class="btn btn-sm btn-info" target="_blank" title="ID Card"><i class="fas fa-id-card"></i></a>';
+                    $actions .= '<a href="' . route('gtaw-smaw-certificates.back-card', $certificate->id) . '" class="btn btn-sm btn-warning" target="_blank" title="Back Card"><i class="fas fa-id-card-alt"></i></a>';
+                    $actions .= '<form action="' . route('gtaw-smaw-certificates.destroy', $certificate->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this certificate?\');" class="d-inline">';
                     $actions .= csrf_field();
                     $actions .= method_field('DELETE');
-                    $actions .= '<button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>';
+                    $actions .= '<button type="submit" class="btn btn-sm btn-danger" title="Delete Certificate"><i class="fas fa-trash"></i></button>';
                     $actions .= '</form>';
                     $actions .= '</div>';
                     
@@ -472,6 +473,180 @@ class GtawSmawCentificateController extends Controller
     }
 
   
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $certificate = GtawSmawCentificate::findOrFail($id);
+        $companies = Company::orderBy('name')->get();
+        $welders = Welder::with('company')->orderBy('name')->get();
+        $selectedWelder = $certificate->welder;
+        
+        // Get options from CertificateOptions class
+        $pipeDiameterTypes = CertificateOptions::pipeDiameterTypes();
+        $testPositions = CertificateOptions::testPositions();
+        $baseMetalPNumbers = CertificateOptions::baseMetalPNumbers();
+        $fillerSpecs = CertificateOptions::fillerSpecs();
+        $fillerClasses = CertificateOptions::fillerClasses();
+        $fillerFNumbers = CertificateOptions::fillerFNumbers();
+        $backingTypes = CertificateOptions::backingTypes();
+        $verticalProgressions = CertificateOptions::verticalProgressions();
+        
+        // Use the existing certificate number
+        $newCertNo = $certificate->certificate_no;
+        
+        // Use existing report numbers
+        $vtReportNo = $certificate->vt_report_no ?? '';
+        $rtReportNo = $certificate->rt_report_no ?? '';
+        
+        return view('gtaw_smaw_certificates.edit', compact(
+            'certificate',
+            'companies', 
+            'welders',
+            'selectedWelder',
+            'pipeDiameterTypes',
+            'testPositions',
+            'baseMetalPNumbers',
+            'fillerSpecs',
+            'fillerClasses',
+            'fillerFNumbers',
+            'backingTypes',
+            'verticalProgressions',
+            'newCertNo',
+            'vtReportNo',
+            'rtReportNo'
+        ));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        $certificate = GtawSmawCentificate::findOrFail($id);
+        
+        // Transform boolean checkbox values
+        $booleanFields = [
+            'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen',
+            'rt', 'ut', 'fillet_welds_plate', 'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
+            'transverse_face_root', 'longitudinal_bends', 'side_bends',
+            'pipe_bend_corrosion', 'plate_bend_corrosion', 'gtaw_process', 'smaw_process', 'gtaw_yes', 'gtaw_no',
+        ];
+        
+        $data = $request->all();
+        
+        // Debug - log request content type and headers to help diagnose AJAX issues
+        \Illuminate\Support\Facades\Log::debug('Update request content type: ' . $request->header('Content-Type'));
+        \Illuminate\Support\Facades\Log::debug('Update request is AJAX: ' . ($request->ajax() ? 'Yes' : 'No'));
+        \Illuminate\Support\Facades\Log::debug('Update request X-Requested-With: ' . $request->header('X-Requested-With'));
+        
+        // Set default false values for boolean fields
+        foreach ($booleanFields as $field) {
+            if (!isset($data[$field])) {
+                $data[$field] = false;
+            } else if ($data[$field] === 'on' || $data[$field] === 'true' || $data[$field] === '1') {
+                $data[$field] = true;
+            } else {
+                $data[$field] = false;
+            }
+        }
+        
+        // Validate the request
+        $validator = \Illuminate\Support\Facades\Validator::make($data, [
+            'welder_id' => 'required|exists:welders,id',
+            'company_id' => 'required|exists:companies,id',
+            'wps_followed' => 'required|string|max:255',
+            'test_date' => 'required|date',
+            'inspector_name' => 'required|string|max:255',
+            'inspector_date' => 'required|date',
+            'inspector_signature_data' => 'nullable|string',
+        ]);
+        
+        if ($validator->fails()) {
+            // For AJAX requests, return JSON response
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            // For regular form submissions
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+        
+        try {
+            // Begin transaction
+            \Illuminate\Support\Facades\DB::beginTransaction();
+            
+            // Process photo upload if provided
+            if ($request->hasFile('photo')) {
+                // Delete the old photo if exists
+                if ($certificate->photo_path) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($certificate->photo_path);
+                }
+                
+                $photoPath = $request->file('photo')->store('welder-photos', 'public');
+                $data['photo_path'] = $photoPath;
+            } elseif ($request->has('use_existing_photo') && $request->get('use_existing_photo') === 'true') {
+                // Use the welder's existing photo
+                $welder = Welder::find($data['welder_id']);
+                if ($welder && $welder->photo_path) {
+                    $data['photo_path'] = $welder->photo_path;
+                }
+            }
+            
+            // Update the certificate with all form data to ensure we don't miss any fields
+            $certificate->update($data);
+            
+            // Commit transaction
+            \Illuminate\Support\Facades\DB::commit();
+            
+            // Debug - Log successful update
+            \Illuminate\Support\Facades\Log::info('GTAW SMAW Certificate updated successfully', ['id' => $certificate->id]);
+            
+            // For AJAX requests, return JSON response
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'GTAW SMAW Certificate updated successfully',
+                    'redirect' => route('gtaw-smaw-certificates.certificate', ['id' => $certificate->id])
+                ]);
+            }
+            
+            // For regular form submissions
+            return redirect()->route('gtaw-smaw-certificates.certificate', ['id' => $certificate->id])
+                ->with('success', 'GTAW SMAW Certificate updated successfully.');
+                
+        } catch (\Exception $e) {
+            // Rollback transaction on error
+            \Illuminate\Support\Facades\DB::rollBack();
+            
+            // Log the error with more context
+            \Illuminate\Support\Facades\Log::error('Error updating GTAW SMAW Certificate', [
+                'certificate_id' => $id,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString()
+            ]);
+            
+            // For AJAX requests, return JSON response
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while updating the certificate: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            // For regular form submissions
+            return redirect()->back()
+                ->with('error', 'An error occurred while updating the certificate: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
 
     /**
      * Remove the specified resource from storage.

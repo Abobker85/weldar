@@ -53,7 +53,16 @@ function updateTestFields() {
  */
 function updateVerticalProgressionTerminology() {
     const verticalProgression = document.getElementById('vertical_progression');
-    if (!verticalProgression) return;
+    if (!verticalProgression) {
+        console.log('Vertical progression element not found in updateVerticalProgressionTerminology');
+        return;
+    }
+    
+    // Check if this is a select element (it should be)
+    if (!verticalProgression.options) {
+        console.log('Vertical progression element does not have options property - may be wrong element type');
+        return;
+    }
     
     // Get all options
     const options = verticalProgression.options;
@@ -66,6 +75,16 @@ function updateVerticalProgressionTerminology() {
         } else if (options[i].value === 'Downward') {
             options[i].value = 'Downhill';
             options[i].text = 'Downhill';
+        }
+    }
+    
+    // Also update the hidden field if it exists
+    const hiddenField = document.getElementById('vertical_progression_hidden');
+    if (hiddenField) {
+        if (hiddenField.value === 'Upward') {
+            hiddenField.value = 'Uphill';
+        } else if (hiddenField.value === 'Downward') {
+            hiddenField.value = 'Downhill';
         }
     }
     

@@ -261,7 +261,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize vertical progression
     const verticalProgression = document.getElementById('vertical_progression').value;
-    const verticalProgressionRangeText = verticalProgression === 'Upward' ? 'Upward' : 'Downward';
+    let verticalProgressionRangeText;
+    
+    if (verticalProgression === 'None') {
+        verticalProgressionRangeText = 'None';
+    } else if (verticalProgression === 'Upward' || verticalProgression === 'Uphill') {
+        verticalProgressionRangeText = 'Uphill';
+    } else if (verticalProgression === 'Downward' || verticalProgression === 'Downhill') {
+        verticalProgressionRangeText = 'Downhill';
+    } else {
+        verticalProgressionRangeText = verticalProgression;
+    }
     
     const verticalProgressionSpan = document.getElementById('vertical_progression_range_span');
     if (verticalProgressionSpan) {

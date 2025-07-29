@@ -464,6 +464,10 @@ class GtawCertificateController extends Controller
     public function edit(string $id)
     {
         $certificate = GtawCertificate::with('welder', 'company')->findOrFail($id);
+       // dd($certificate->vertical_progression_range);
+
+
+    
         $welders = Welder::orderBy('name')->get();
         $companies = Company::orderBy('name')->get();
         $selectedWelder = $certificate->welder;
