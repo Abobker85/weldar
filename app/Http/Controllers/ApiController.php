@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\AppSetting;
 use App\Models\SmawCertificate;
 use App\Models\FcawCertificate;
+use App\Models\SawCertificate;
 
 class ApiController extends Controller
 {
@@ -57,6 +58,7 @@ class ApiController extends Controller
             $response['smaw_certificate'] = $this->generateCertificateNumber($companyCode, 'SMAW');
             $response['gtaw_certificate'] = $this->generateCertificateNumber($companyCode, 'GTAW');
             $response['fcaw_certificate'] = $this->generateCertificateNumber($companyCode, 'FCAW');
+            $response['saw_certificate'] = $this->generateCertificateNumber($companyCode, 'SAW');
             $response['gtaw_smaw_certificate'] = $this->generateCertificateNumber($companyCode, 'GTAW-SMAW');
             
             // Generate report numbers
@@ -96,6 +98,42 @@ class ApiController extends Controller
         
         $newCertNo = $certificatePrefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
         
+        return response()->json([
+            'prefix' => $newCertNo,
+            'company_code' => $companyCode,
+        ]);
+    }
+
+    /**
+     * Get SAW certificate number for a company
+     */
+    public function getSawCertificateNumber($id)
+    {
+        $company = Company::findOrFail($id);
+        $systemCode = AppSetting::getValue('doc_prefix', 'EEA');
+        $companyCode = $company->code ? $systemCode . '-' . $company->code : $systemCode . '-AIC';
+        $certificatePrefix = $companyCode . '-SAW-';
+
+        // Check if SawCertificate model exists
+        if (!class_exists('\\App\\Models\\SawCertificate')) {
+            return response()->json([
+                'prefix' => $certificatePrefix . '0001',
+                'company_code' => $companyCode,
+            ]);
+        }
+
+        $lastCert = SawCertificate::where('certificate_no', 'like', $certificatePrefix . '%')
+            ->orderBy('certificate_no', 'desc')
+            ->first();
+
+        $newNumber = 1;
+        if ($lastCert) {
+            $lastNumber = (int) substr($lastCert->certificate_no, -4);
+            $newNumber = $lastNumber + 1;
+        }
+
+        $newCertNo = $certificatePrefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
         return response()->json([
             'prefix' => $newCertNo,
             'company_code' => $companyCode,
@@ -142,7 +180,7 @@ class ApiController extends Controller
      * Generate certificate number based on certificate type
      * 
      * @param string $companyCode Company code
-     * @param string $certType Certificate type (SMAW, GTAW, FCAW, GTAW-SMAW)
+     * @param string $certType Certificate type (SMAW, GTAW, FCAW, GTAW-SMAW, SAW)
      * @return string Generated certificate number
      */
     public function generateCertificateNumber($companyCode, $certType)
@@ -160,6 +198,9 @@ class ApiController extends Controller
                 break;
             case 'FCAW':
                 $modelClass = 'App\\Models\\FcawCertificate';
+                break;
+            case 'SAW':
+                $modelClass = 'App\\Models\\SawCertificate';
                 break;
             case 'GTAW-SMAW':
                 $modelClass = 'App\\Models\\GtawSmawCentificate';
@@ -201,6 +242,7 @@ class ApiController extends Controller
             'App\\Models\\SmawCertificate',
             'App\\Models\\GtawCertificate', 
             'App\\Models\\FcawCertificate',
+            'App\\Models\\SawCertificate',
             'App\\Models\\GtawSmawCentificate'
         ];
         
@@ -253,6 +295,7 @@ class ApiController extends Controller
             'smaw_certificate_no' => $this->generateCertificateNumber($companyCode, 'SMAW'),
             'gtaw_certificate_no' => $this->generateCertificateNumber($companyCode, 'GTAW'),
             'fcaw_certificate_no' => $this->generateCertificateNumber($companyCode, 'FCAW'),
+            'saw_certificate_no' => $this->generateCertificateNumber($companyCode, 'SAW'),
             'gtaw_smaw_certificate_no' => $this->generateCertificateNumber($companyCode, 'GTAW-SMAW'),
             
             // Report numbers
