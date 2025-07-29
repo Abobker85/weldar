@@ -17,6 +17,7 @@ use App\Http\Controllers\SmawCertificateController;
 use App\Http\Controllers\GtawCertificateController;
 use App\Http\Controllers\GtawSmawCentificateController;
 use App\Http\Controllers\FcawCertificateController;
+use App\Http\Controllers\SawCertificateController;
 use Illuminate\Http\Request;
 
 // Authentication Routes
@@ -155,6 +156,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('fcaw-certificate-verification', [FcawCertificateController::class, 'verifyByCertificateNo'])->name('fcaw-certificates.verify-by-certificate-no');
     Route::get('fcaw-certificates-preview', [FcawCertificateController::class, 'preview'])->name('fcaw-certificates.preview');
     Route::get('welders/{id}/fcaw-details', [App\Http\Controllers\ApiController::class, 'getWelder'])->name('fcaw.welder-details');
+
+    // SAW Certificate routes
+    Route::resource('saw-certificates', SawCertificateController::class);
+    Route::get('saw-certificates/{id}/certificate', [SawCertificateController::class, 'generateCertificate'])->name('saw-certificates.certificate');
+    Route::get('saw-certificates/{id}/card', [SawCertificateController::class, 'generateCard'])->name('saw-certificates.card');
+    Route::get('saw-certificates/{id}/back-card', [SawCertificateController::class, 'generateBackCard'])->name('saw-certificates.back-card');
+    Route::get('saw-certificates/{id}/verify/{code}', [SawCertificateController::class, 'verify'])->name('saw-certificates.verify');
+    Route::get('saw-certificate-verification', [SawCertificateController::class, 'showVerificationForm'])->name('saw-certificates.verification-form');
+    Route::post('saw-certificate-verification', [SawCertificateController::class, 'verifyByCertificateNo'])->name('saw-certificates.verify-by-certificate-no');
+    Route::get('saw-certificates-preview', [SawCertificateController::class, 'preview'])->name('saw-certificates.preview');
+    Route::get('welders/{id}/saw-details', [App\Http\Controllers\ApiController::class, 'getWelder'])->name('saw.welder-details');
 
     // Profile routes
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
