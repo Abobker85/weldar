@@ -16,7 +16,7 @@ use Carbon\Carbon;
 use App\Models\AppSetting;
 use SimpleSoftwareIO\QrCode\Facades\QrCode as FacadesQrCode;
 
-class SawCertificateController extends Controller
+class SmawCertificateController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -82,7 +82,7 @@ class SawCertificateController extends Controller
                 ->make(true);
         }
 
-        return view('saw_certificates.index', compact('welders', 'companies'));
+        return view('smaw_certificates.index', compact('welders', 'companies'));
     }
 
     /**
@@ -133,7 +133,7 @@ class SawCertificateController extends Controller
         $vtReportNo = $systemCode . '-' . $companyCode . '-VT-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
         $rtReportNo = $systemCode . '-' . $companyCode . '-RT-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
 
-        return view('saw_certificates.create', compact(
+        return view('smaw_certificates.create', compact(
             'companies',
             'welders',
             'user',
@@ -224,12 +224,13 @@ class SawCertificateController extends Controller
             'rt_doc_no' => 'nullable|string|max:255',
 
             // Personnel Information
-            'film_evaluated_by' => 'nullable|string|max:255',
-            'evaluated_company' => 'nullable|string|max:255',
-            'mechanical_tests_by' => 'nullable|string|max:255',
+            'evaluated_by' => 'required|string|max:255',
+            'evaluated_company' => 'required|string|max:255',
+            'mechanical_tests_by' => 'required|string|max:255',
             'lab_test_no' => 'nullable|string|max:255',
             'welding_supervised_by' => 'required|string|max:255',
-            'supervised_company' => 'nullable|string|max:255',
+            'supervised_company' => 'required|string|max:255',
+            'certification_text' => 'required|string|max:500',
 
             // Organization Section
             'test_witnessed_by' => 'nullable|string|max:255',
@@ -291,8 +292,8 @@ class SawCertificateController extends Controller
             if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => true,
-                    'message' => 'SAW Certificate created successfully.',
-                    'redirect' => route('saw-certificates.certificate', $certificate),
+                    'message' => 'SMAW Certificate created successfully.',
+                    'redirect' => route('smaw-certificates.certificate', $certificate),
                     'certificate' => $certificate
                 ]);
             }
@@ -328,7 +329,7 @@ class SawCertificateController extends Controller
     public function show($id)
     {
         $certificate = SawCertificate::with(['welder', 'company', 'createdBy'])->findOrFail($id);
-        return view('saw_certificates.show', compact('certificate'));
+        return view('smaw_certificates.show', compact('certificate'));
     }
 
     /**
@@ -348,7 +349,7 @@ class SawCertificateController extends Controller
         $vtReportNo = $certificate->vt_report_no ?? '';
         $rtReportNo = $certificate->rt_report_no ?? '';
 
-        return view('saw_certificates.edit', compact(
+        return view('smaw_certificates.edit', compact(
             'certificate',
             'companies',
             'welders',
@@ -396,6 +397,11 @@ class SawCertificateController extends Controller
             'dia_thickness' => 'required|string|max:255',
             'welding_supervised_by' => 'required|string|max:255',
             'witness_date' => 'required|date',
+            'evaluated_by' => 'required|string|max:255',
+            'evaluated_company' => 'required|string|max:255',
+            'mechanical_tests_by' => 'required|string|max:255',
+            'supervised_company' => 'required|string|max:255',
+            'certification_text' => 'required|string|max:500',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -423,7 +429,7 @@ class SawCertificateController extends Controller
             }
             
             $photo = $request->file('photo');
-            $photoPath = $photo->store('saw_certificates/photos', 'public');
+            $photoPath = $photo->store('smaw_certificates/photos', 'public');
             $validated['photo_path'] = $photoPath;
         }
 
@@ -441,13 +447,13 @@ class SawCertificateController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'SAW Certificate updated successfully.',
-                    'redirect' => route('saw-certificates.certificate', $certificate)
+                    'message' => 'SMAW Certificate updated successfully.',
+                    'redirect' => route('smaw-certificates.certificate', $certificate)
                 ]);
             }
 
-            return redirect()->route('saw-certificates.certificate', $certificate)
-                            ->with('success', 'SAW Certificate updated successfully.');
+            return redirect()->route('smaw-certificates.certificate', $certificate)
+                            ->with('success', 'SMAW Certificate updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -479,8 +485,8 @@ class SawCertificateController extends Controller
 
             $certificate->delete();
 
-            return redirect()->route('saw-certificates.index')
-                            ->with('success', 'SAW Certificate deleted successfully.');
+            return redirect()->route('smaw-certificates.index')
+                            ->with('success', 'SMAW Certificate deleted successfully.');
         } catch (\Exception $e) {
             return redirect()->back()
                             ->with('error', 'Error deleting certificate: ' . $e->getMessage());
@@ -498,7 +504,7 @@ class SawCertificateController extends Controller
         $verificationUrl = route('saw-certificates.verify', ['id' => $certificate->id, 'code' => $certificate->verification_code]);
         $qrCodeUrl = 'data:image/png;base64,' . base64_encode(FacadesQrCode::format('png')->size(200)->generate($verificationUrl));
 
-        return view('saw_certificates.certificate', compact('certificate', 'qrCodeUrl'));
+        return view('smaw_certificates.certificate', compact('certificate', 'qrCodeUrl'));
     }
 
     /**
@@ -550,7 +556,7 @@ class SawCertificateController extends Controller
         $isValid = true;
         $message = 'Certificate is valid and authentic.';
 
-        return view('saw_certificates.verify', compact('certificate', 'isValid', 'message'));
+        return view('smaw_certificates.verify', compact('certificate', 'isValid', 'message'));
     }
 
     /**
@@ -558,7 +564,7 @@ class SawCertificateController extends Controller
      */
     public function showVerificationForm()
     {
-        return view('saw_certificates.verification_form');
+        return view('smaw_certificates.verification_form');
     }
 
     /**
@@ -573,14 +579,14 @@ class SawCertificateController extends Controller
         $certificate = SawCertificate::where('certificate_no', $validated['certificate_no'])->first();
 
         if (!$certificate) {
-            return view('saw_certificates.verify', [
+            return view('smaw_certificates.verify', [
                 'isValid' => false,
                 'message' => 'Certificate not found. Please check the certificate number and try again.',
                 'certificate' => null
             ]);
         }
 
-        return redirect()->route('saw-certificates.verify', [
+        return redirect()->route('smaw-certificates.verify', [
             'id' => $certificate->id,
             'code' => $certificate->verification_code
         ]);

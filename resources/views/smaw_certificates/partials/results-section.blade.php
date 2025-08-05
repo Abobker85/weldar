@@ -210,31 +210,32 @@
         <tr>
             <td class="var-label">Film or specimens evaluated by</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="evaluated_by" value="Kalith Majeedh" required>
+                <input type="text" class="form-input" name="evaluated_by" id="evaluated_by" value="{{ isset($certificate) ? $certificate->evaluated_by : 'Kalith Majeedh' }}" required>
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="evaluated_company" id="evaluated_company" value="SOGEC">
+                <input type="text" class="form-input" name="evaluated_company" id="evaluated_company" value="{{ isset($certificate) ? $certificate->evaluated_company : 'SOGEC' }}" required>
             </td>
         </tr>
         <tr>
             <td class="var-label">Mechanical tests conducted by</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="mechanical_tests_by" id="mechanical_tests_by">
+                <input type="text" class="form-input" name="mechanical_tests_by" id="mechanical_tests_by" value="{{ isset($certificate) ? $certificate->mechanical_tests_by : '' }}" required>
             </td>
             <td class="var-label">Laboratory test no.</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="lab_test_no" id="lab_test_no" placeholder="Enter lab test number">
+                <input type="text" class="form-input" name="lab_test_no" id="lab_test_no" value="{{ isset($certificate) ? $certificate->lab_test_no : '' }}" placeholder="Enter lab test number">
             </td>
         </tr>
         <tr>
             <td class="var-label">Welding supervised by</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="supervised_by" value="Ahmed Yousry" required>
+                <input type="text" class="form-input" name="supervised_by" value="{{ isset($certificate) ? $certificate->supervised_by : 'Ahmed Yousry' }}" required>
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="supervised_company" value="{{ \App\Models\AppSetting::getValue('system_name', 'ELITE') }}" readonly>
+                <input type="text" class="form-input" name="supervised_company" value="Elite Engineering Arabia" disabled>
+                <input type="hidden" name="supervised_company" value="Elite Engineering Arabia">
             </td>
         </tr>
     </table>
@@ -244,7 +245,7 @@
         <strong>We certify that the statements in this record are correct and that the test coupons were prepared, welded, and tested in accordance with the requirements of Section IX of the ASME BOILER AND PRESSURE VESSEL CODE.</strong>
         <span class="custom-certification-wrapper">
             <input type="text" name="certification_text" id="certification_text" class="custom-certification-input" 
-                value="{{ $certificate->certification_text ?? '' }}" placeholder="Add custom certification text here">
+                value="{{ isset($certificate) ? $certificate->certification_text : '' }}" placeholder="Add custom certification text here" required>
         </span>
     </div>
 
@@ -373,37 +374,41 @@ function updateTestFields() {
     const mechanicalTestsBy = document.getElementById('mechanical_tests_by');
     const labTestNo = document.getElementById('lab_test_no');
     const evaluatedCompany = document.getElementById('evaluated_company');
+    const evaluatedBy = document.getElementById('evaluated_by');
     const rtDocNo = document.getElementById('rt_doc_no');
     
     if (rtChecked || utChecked) {
         // If either RT or UT is checked, disable mechanical tests fields but keep them submittable
         mechanicalTestsBy.disabled = true;
         labTestNo.disabled = true;
-        evaluatedCompany.disabled = true;
         
         // Make RT doc number field required
         if (rtDocNo) {
             rtDocNo.setAttribute('required', 'required');
         }
         
-        // Empty the values for these fields
+        // Empty the values for the mechanical test fields only
         mechanicalTestsBy.value = '';
         labTestNo.value = '';
-        evaluatedCompany.value = '';
         
-        // Remove required attribute
+        // Keep evaluated fields required and enabled
+        evaluatedBy.disabled = false;
+        evaluatedCompany.disabled = false;
+        evaluatedBy.setAttribute('required', 'required');
+        evaluatedCompany.setAttribute('required', 'required');
+        
+        // Remove required attribute from mechanical tests
         mechanicalTestsBy.removeAttribute('required');
         labTestNo.removeAttribute('required');
-        evaluatedCompany.removeAttribute('required');
         
         // Set placeholder to indicate why it's disabled
         mechanicalTestsBy.placeholder = "Not required with RT/UT";
         labTestNo.placeholder = "Not required with RT/UT";
-        evaluatedCompany.placeholder = "Not required with RT/UT";
     } else {
-        // If neither RT nor UT is checked, enable the fields
+        // If neither RT nor UT is checked, enable all the fields
         mechanicalTestsBy.disabled = false;
         labTestNo.disabled = false;
+        evaluatedBy.disabled = false;
         evaluatedCompany.disabled = false;
         
         // Make RT doc number field optional
@@ -411,10 +416,14 @@ function updateTestFields() {
             rtDocNo.removeAttribute('required');
         }
         
+        // Set all required fields
+        mechanicalTestsBy.setAttribute('required', 'required');
+        evaluatedBy.setAttribute('required', 'required');
+        evaluatedCompany.setAttribute('required', 'required');
+        
         // Reset placeholders
         mechanicalTestsBy.placeholder = "";
         labTestNo.placeholder = "Enter lab test number";
-        evaluatedCompany.placeholder = "SOGEC";
     }
 }
 
