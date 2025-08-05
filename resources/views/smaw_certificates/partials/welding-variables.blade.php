@@ -8,21 +8,23 @@
     <tr>
         <td class="var-label">Welding process(es):</td>
         <td class="var-value">
-            <select class="form-select" name="welding_process" id="welding_process"
-                onchange="updateProcessFields()" disabled>
+            <select class="form-select" id="welding_process_display" disabled>
                 <option value="SMAW" selected>SMAW</option>
             </select>
+            <input type="hidden" name="welding_process" value="SMAW">
         </td>
         <td class="var-range">
             <span id="process_range_span">SMAW</span>
+            <input type="hidden" name="welding_process_range" value="SMAW">
         </td>
     </tr>
     <tr>
         <td class="var-label">Type (i.e., manual, semi-automatic) used:</td>
         <td class="var-value">
-            <select class="form-select" name="welding_type">
+            <select class="form-select" disabled>
                 <option value="Manual">Manual</option>
             </select>
+            <input type="hidden" name="welding_type" value="Manual">
         </td>
         <td class="var-range">Manual</td>
     </tr>

@@ -615,9 +615,11 @@ class SmawCertificateController extends Controller
             $data['passes_range'] = $this->getPassesRange($data['passes_per_side'] ?? 'multiple passes per side');
         }
 
-        // Set welding type range (usually same as actual for SAW)
-        $data['welding_type_range'] = $data['welding_type'] ?? 'Machine';
-        $data['welding_process_range'] = $data['welding_process'] ?? 'SAW';
+        // For SMAW certificates, these values are fixed
+        $data['welding_type'] = 'Manual';
+        $data['welding_type_range'] = 'Manual';
+        $data['welding_process'] = 'SMAW';
+        $data['welding_process_range'] = 'SMAW';
         $data['visual_control_range'] = $data['visual_control_type'] ?? 'Direct Visual Control';
 
         // Set joint tracking range
