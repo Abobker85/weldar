@@ -189,13 +189,44 @@
                     if (backingRangeInput) backingRangeInput.value = backingRangeText;
                 }
 
-                // P-Number range - use fixed range text instead of mapping
-                const pNumberRangeText = 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49';
-                const pNumberRangeSpan = document.getElementById('p_number_range_span');
-                const pNumberRangeInput = document.getElementById('p_number_range');
+                // Function to update P-Number range
+                function updatePNumberRange() {
+                    const baseMetalPNo = document.getElementById('base_metal_p_no');
+                    const pNumberRangeSpan = document.getElementById('p_number_range_span');
+                    const pNumberRangeInput = document.getElementById('p_number_range');
+                    let rangeText = '';
 
-                if (pNumberRangeSpan) pNumberRangeSpan.textContent = pNumberRangeText;
-                if (pNumberRangeInput) pNumberRangeInput.value = pNumberRangeText;
+                    // Get selected value or use default
+                    if (baseMetalPNo && baseMetalPNo.value) {
+                        if (baseMetalPNo.value === '__manual__') {
+                            const manualInput = document.getElementById('base_metal_p_no_manual');
+                            rangeText = manualInput && manualInput.value ? manualInput.value : '';
+                        } else {
+                            rangeText = baseMetalPNo.value;
+                        }
+                    } else {
+                        rangeText = 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49';
+                    }
+
+                    // Update both span and hidden input
+                    if (pNumberRangeSpan) pNumberRangeSpan.textContent = rangeText;
+                    if (pNumberRangeInput) pNumberRangeInput.value = rangeText;
+                }
+
+                // Call the function on page load
+                updatePNumberRange();
+
+                // Add event listener to base_metal_p_no
+                const baseMetalPNo = document.getElementById('base_metal_p_no');
+                if (baseMetalPNo) {
+                    baseMetalPNo.addEventListener('change', updatePNumberRange);
+                }
+
+                // Add event listener for manual input
+                const baseMetalPNoManual = document.getElementById('base_metal_p_no_manual');
+                if (baseMetalPNoManual) {
+                    baseMetalPNoManual.addEventListener('input', updatePNumberRange);
+                }
 
                 // Call the update functions to set other range values
                 if (typeof updateDiameterRange === 'function') updateDiameterRange();

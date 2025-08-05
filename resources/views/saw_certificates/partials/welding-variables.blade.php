@@ -98,9 +98,8 @@
         </td>
         <td class="var-range">
             <span id="p_number_range_span">{{ old('p_number_range', $certificate->p_number_range) }}</span>
-             <input type="text" class="form-input" name="p_number_range"
-                id="p_number_range" placeholder="Enter qualified range"
-                style="display: none; margin-top: 2px;" value="{{ old('p_number_range', $certificate->p_number_range) }}">
+            <input type="hidden" name="p_number_range"
+                id="p_number_range" value="{{ old('p_number_range', $certificate->p_number_range) }}">
             <input type="text" class="form-input" name="p_number_range_manual"
                 id="p_number_range_manual" placeholder="Enter qualified range"
                 style="display: none; margin-top: 2px;" value="{{ old('p_number_range_manual', $certificate->p_number_range_manual) }}">

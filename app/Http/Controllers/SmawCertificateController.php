@@ -195,8 +195,8 @@ class SmawCertificateController extends Controller
             'dia_thickness' => 'required|string|max:255',
 
             // Base Metal Information
-            'base_metal_p_no_from' => 'required|string|max:255',
-            'base_metal_p_no_to' => 'required|string|max:255',
+            'base_metal_p_no_from' => 'nullable|string|max:255',
+            'base_metal_p_no_to' => 'nullable|string|max:255',
             'plate_specimen' => 'boolean',
             'pipe_specimen' => 'boolean',
             'pipe_diameter' => 'nullable|string|max:255',
@@ -208,13 +208,13 @@ class SmawCertificateController extends Controller
             // Testing Variables
             'welding_type' => 'required|string|max:255',
             'welding_process' => 'required|string|max:255',
-            'visual_control_type' => 'required|string|max:255',
-            'joint_tracking' => 'required|string|max:255',
+            'visual_control_type' => 'nullable|string|max:255',
+            'joint_tracking' => 'nullable|string|max:255',
             'test_position' => 'required|string|max:255',
             'position_range' => 'nullable|string',
             'backing' => 'required|string|max:255',
             'backing_range' => 'nullable|string',
-            'passes_per_side' => 'required|string|max:255',
+            'passes_per_side' => 'nullable|string|max:255',
 
             // Test Results
             'visual_examination_result' => 'nullable|string|max:255',
@@ -226,9 +226,9 @@ class SmawCertificateController extends Controller
             // Personnel Information
             'evaluated_by' => 'required|string|max:255',
             'evaluated_company' => 'required|string|max:255',
-            'mechanical_tests_by' => 'required_if:rt,0,ut,0|nullable|string|max:255',
+            'mechanical_tests_by' => 'required_if:rt_selected,0,ut_selected,0|nullable|string|max:255',
             'lab_test_no' => 'nullable|string|max:255',
-            'welding_supervised_by' => 'required|string|max:255',
+            'welding_supervised_by' => 'nullable|string|max:255',
             'supervised_company' => 'required|string|max:255',
             'certification_text' => 'required|string|max:500',
 
@@ -236,7 +236,7 @@ class SmawCertificateController extends Controller
             'test_witnessed_by' => 'nullable|string|max:255',
             'witness_name' => 'nullable|string|max:255',
             'witness_signature' => 'nullable|string',
-            'witness_date' => 'required|date',
+            'witness_date' => 'nullable|date',
 
             // File uploads
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',

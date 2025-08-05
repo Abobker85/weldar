@@ -17,7 +17,7 @@
     <tr>
         <td class="var-label" style="background: #f8f9fa; font-weight: bold; border: 1px solid #000; padding: 5px;">Name:</td>
         <td class="var-value" style="border: 1px solid #000; padding: 5px;">
-            <input type="text" class="form-input" name="inspector_name" id="inspector_name" value="{{ $certificate->inspector_name ?? 'Ibrahim Abdullah' }}" style="width: 100%">
+            <input type="text" class="form-input" name="inspector_name" id="inspector_name" value="{{ isset($certificate) ? ($certificate->inspector_name ?? 'Ibrahim Abdullah') : 'Ibrahim Abdullah' }}" style="width: 100%">
         </td>
         <td class="var-label" style="background: #f9f9fa; font-weight: bold; border: 1px solid #000; padding: 5px;">Name:</td>
     </tr>
@@ -26,11 +26,11 @@
         <td class="var-value" style="height: 25px; border: 1px solid #000; padding: 5px; position: relative;">
             <button type="button" class="btn btn-sm btn-primary" id="inspector-sign-btn" style="position: relative; z-index: 10;">Sign</button>
             <div id="inspector-signature-preview" style="display: inline-block; height: 40px; margin-left: 10px;">
-                @if($certificate->inspector_signature_data)
+                @if(isset($certificate) && $certificate->inspector_signature_data)
                     <img src="{{ $certificate->inspector_signature_data }}" alt="Inspector Signature" style="max-height: 40px;">
                 @endif
             </div>
-            <input type="hidden" name="inspector_signature_data" id="inspector_signature_data" value="{{ $certificate->inspector_signature_data ?? '' }}">
+            <input type="hidden" name="inspector_signature_data" id="inspector_signature_data" value="{{ isset($certificate) ? ($certificate->inspector_signature_data ?? '') : '' }}">
         </td>
         <td class="var-label" style="background: #f9f9fa; font-weight: bold; border: 1px solid #000; padding: 5px;">Signature:</td>
     </tr>
@@ -47,7 +47,7 @@
     <tr>
         <td class="var-label" style="background: #f8f9fa; font-weight: bold; border: 1px solid #000; padding: 5px;">Date:</td>
         <td class="var-value" style="border: 1px solid #000; padding: 5px;">
-            <input type="date" class="form-input" name="inspector_date" value="{{ ($certificate->inspector_date ?? null) ? $certificate->inspector_date->format('Y-m-d') : date('Y-m-d') }}" style="width: 100%">
+            <input type="date" class="form-input" name="inspector_date" value="{{ isset($certificate) && isset($certificate->inspector_date) ? $certificate->inspector_date->format('Y-m-d') : date('Y-m-d') }}" style="width: 100%">
         </td>
         <td class="var-label" style="background: #f9f9fa; font-weight: bold; border: 1px solid #000; padding: 5px;">Date:</td>
     </tr>

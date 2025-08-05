@@ -156,14 +156,16 @@
             <td class="var-value" style="text-align: center;">
                 <div class="checkbox-container">
                     <input type="checkbox" name="rt_selected" id="rt_selected" 
-                        {{ old('rt_selected', $certificate->rt_selected ?? false) ? 'checked' : '' }}>
+                        {{ old('rt_selected', $certificate->rt_selected ?? false) ? 'checked' : '' }}
+                        onchange="updateTestFields()">
                     <label for="rt_selected">■ RT</label>
                 </div>
             </td>
             <td class="var-value" style="text-align: center;">
                 <div class="checkbox-container">
                     <input type="checkbox" name="ut_selected" id="ut_selected" 
-                        {{ old('ut_selected', $certificate->ut_selected ?? false) ? 'checked' : '' }}>
+                        {{ old('ut_selected', $certificate->ut_selected ?? false) ? 'checked' : '' }}
+                        onchange="updateTestFields()">
                     <label for="ut_selected">□ UT</label>
                 </div>
             </td>
@@ -248,7 +250,7 @@
         <tr>
             <td class="var-label">Mechanical tests conducted by</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="mechanical_tests_by" 
+                <input type="text" class="form-input" name="mechanical_tests_by" id="mechanical_tests_by"
                     value="{{ old('mechanical_tests_by', $certificate->mechanical_tests_by ?? '') }}" 
                     placeholder="…..........">
             </td>
@@ -269,9 +271,29 @@
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
                 <input type="text" class="form-input" name="supervised_company" 
-                    value="{{ old('supervised_company', $certificate->supervised_company ?? '') }}" 
-                    placeholder="Company Name">
+                    value="Elite Engineering Arabia" 
+                    placeholder="Elite Engineering Arabia" disabled>
+                <input type="hidden" name="supervised_company" value="Elite Engineering Arabia">
             </td>
         </tr>
     </table>
 </div>
+
+<script>
+function updateTestFields() {
+    const rtSelected = document.getElementById('rt_selected').checked;
+    const utSelected = document.getElementById('ut_selected').checked;
+    const mechanicalTestsBy = document.getElementById('mechanical_tests_by');
+    
+    if (rtSelected || utSelected) {
+        mechanicalTestsBy.removeAttribute('required');
+    } else {
+        mechanicalTestsBy.setAttribute('required', 'required');
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateTestFields();
+});
+</script>
