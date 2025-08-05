@@ -276,6 +276,22 @@ class SmawCertificateController extends Controller
 
         // Add current user as creator
         $validated['created_by'] = Auth::id();
+        
+        // Extract thickness from dia_thickness
+        if (isset($validated['dia_thickness'])) {
+            // Try to extract the thickness value from the dia_thickness string
+            // Assuming format like "8 inch x 18.26 mm"
+            if (preg_match('/x\s*([\d.]+)\s*mm/i', $validated['dia_thickness'], $matches)) {
+                $validated['thickness'] = $matches[1];
+            } elseif (preg_match('/([\d.]+)\s*mm/i', $validated['dia_thickness'], $matches)) {
+                $validated['thickness'] = $matches[1];
+            } else {
+                // If no thickness value can be extracted, use a default value
+                $validated['thickness'] = '0';
+            }
+        } else {
+            $validated['thickness'] = '0'; // Default value if dia_thickness is not set
+        }
 
         // Generate automatic ranges based on selections
         $validated = $this->generateQualificationRanges($validated);
@@ -419,6 +435,22 @@ class SmawCertificateController extends Controller
 
         $validated = $validator->validated();
 
+        // Extract thickness from dia_thickness
+        if (isset($validated['dia_thickness'])) {
+            // Try to extract the thickness value from the dia_thickness string
+            // Assuming format like "8 inch x 18.26 mm"
+            if (preg_match('/x\s*([\d.]+)\s*mm/i', $validated['dia_thickness'], $matches)) {
+                $validated['thickness'] = $matches[1];
+            } elseif (preg_match('/([\d.]+)\s*mm/i', $validated['dia_thickness'], $matches)) {
+                $validated['thickness'] = $matches[1];
+            } else {
+                // If no thickness value can be extracted, use a default value
+                $validated['thickness'] = '0';
+            }
+        } else {
+            $validated['thickness'] = '0'; // Default value if dia_thickness is not set
+        }
+        
         // Handle photo upload
         if ($request->hasFile('photo')) {
             $certificate = SawCertificate::findOrFail($id);
