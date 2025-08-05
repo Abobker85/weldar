@@ -6,10 +6,10 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>FCAW Welder Qualification Certificates</div>
+                    <div>SAW Welder Qualification Certificates</div>
                     <div>
-                        <a href="{{ route('fcaw-certificates.create') }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> New FCAW Certificate
+                        <a href="{{ route('saw-certificates.create') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> New SAW Certificate
                         </a>
                     </div>
                 </div>
@@ -96,7 +96,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: "{{ route('fcaw-certificates.index') }}",
+                url: "{{ route('saw-certificates.index') }}",
                 data: function(d) {
                     d.certificate_no = $('#certificate_no').val();
                     d.welder_id = $('#welder_id').val();
