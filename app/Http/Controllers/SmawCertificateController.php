@@ -226,7 +226,7 @@ class SmawCertificateController extends Controller
             // Personnel Information
             'evaluated_by' => 'required|string|max:255',
             'evaluated_company' => 'required|string|max:255',
-            'mechanical_tests_by' => 'required|string|max:255',
+            'mechanical_tests_by' => 'required_if:rt,0,ut,0|nullable|string|max:255',
             'lab_test_no' => 'nullable|string|max:255',
             'welding_supervised_by' => 'required|string|max:255',
             'supervised_company' => 'required|string|max:255',
@@ -399,7 +399,7 @@ class SmawCertificateController extends Controller
             'witness_date' => 'required|date',
             'evaluated_by' => 'required|string|max:255',
             'evaluated_company' => 'required|string|max:255',
-            'mechanical_tests_by' => 'required|string|max:255',
+            'mechanical_tests_by' => 'required_if:rt,0,ut,0|nullable|string|max:255',
             'supervised_company' => 'required|string|max:255',
             'certification_text' => 'required|string|max:500',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',

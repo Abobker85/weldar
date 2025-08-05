@@ -220,7 +220,7 @@
         <tr>
             <td class="var-label">Mechanical tests conducted by</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="mechanical_tests_by" id="mechanical_tests_by" value="{{ isset($certificate) ? $certificate->mechanical_tests_by : '' }}" required>
+                <input type="text" class="form-input" name="mechanical_tests_by" id="mechanical_tests_by" value="{{ isset($certificate) ? $certificate->mechanical_tests_by : '' }}">
             </td>
             <td class="var-label">Laboratory test no.</td>
             <td class="var-value" style="text-align: center;">
@@ -416,8 +416,10 @@ function updateTestFields() {
             rtDocNo.removeAttribute('required');
         }
         
-        // Set all required fields
+        // Set mechanical tests as required only when RT/UT is not selected
         mechanicalTestsBy.setAttribute('required', 'required');
+        
+        // Always keep these fields required
         evaluatedBy.setAttribute('required', 'required');
         evaluatedCompany.setAttribute('required', 'required');
         
