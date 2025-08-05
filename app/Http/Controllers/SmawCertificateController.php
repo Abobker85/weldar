@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SawCertificate;
+use App\Models\SmawCertificate;
 use App\Models\Company;
 use App\Models\Welder;
 use App\Models\User;
@@ -30,7 +30,7 @@ class SmawCertificateController extends Controller
         // If this is a DataTables AJAX request
         if ($request->ajax()) {
             // Start query for certificates with related data
-            $query = SawCertificate::with(['welder', 'company', 'createdBy']);
+            $query = SmawCertificate::with(['welder', 'company', 'createdBy']);
 
             // Apply filters
             if ($request->filled('certificate_no')) {
@@ -68,10 +68,10 @@ class SmawCertificateController extends Controller
                 })
                 ->addColumn('actions', function($certificate) {
                     $actions = '<div class="btn-group" role="group">';
-                    $actions .= '<a href="' . route('saw-certificates.show', $certificate->id) . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>';
-                    $actions .= '<a href="' . route('saw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>';
-                    $actions .= '<a href="' . route('saw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank"><i class="fas fa-file-pdf"></i></a>';
-                    $actions .= '<form action="' . route('saw-certificates.destroy', $certificate->id) . '" method="POST" class="d-inline delete-form">';
+                    $actions .= '<a href="' . route('smaw-certificates.show', $certificate->id) . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>';
+                    $actions .= '<a href="' . route('smaw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>';
+                    $actions .= '<a href="' . route('smaw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank"><i class="fas fa-file-pdf"></i></a>';
+                    $actions .= '<form action="' . route('smaw-certificates.destroy', $certificate->id) . '" method="POST" class="d-inline delete-form">';
                     $actions .= csrf_field() . method_field('DELETE');
                     $actions .= '<button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure you want to delete this certificate?\')"><i class="fas fa-trash"></i></button>';
                     $actions .= '</form>';
@@ -116,7 +116,7 @@ class SmawCertificateController extends Controller
         $prefix = $systemCode . '-' . $companyCode . '-WQT-';
 
         // Find last certificate number for this company
-        $lastCert = SawCertificate::where('certificate_no', 'like', $prefix . '%')
+        $lastCert = SmawCertificate::where('certificate_no', 'like', $prefix . '%')
             ->orderBy('certificate_no', 'desc')
             ->first();
 
@@ -182,7 +182,7 @@ class SmawCertificateController extends Controller
         // Create a validator instance with the transformed data
         $validator = Validator::make($data, [
             // Basic Certificate Information
-            'certificate_no' => 'required|string|max:50|unique:saw_certificates,certificate_no',
+            'certificate_no' => 'required|string|max:50|unique:smaw_certificates,certificate_no',
             'welder_id' => 'required|exists:welders,id',
             'company_id' => 'required|exists:companies,id',
             'wps_followed' => 'required|string|max:255',
@@ -265,7 +265,7 @@ class SmawCertificateController extends Controller
         // Handle photo upload
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
-            $photoPath = $photo->store('saw_certificates/photos', 'public');
+            $photoPath = $photo->store('smaw_certificates/photos', 'public');
             $validated['photo_path'] = $photoPath;
         }
 
@@ -300,7 +300,7 @@ class SmawCertificateController extends Controller
         try {
             DB::beginTransaction();
 
-            $certificate = SawCertificate::create($validated);
+            $certificate = SmawCertificate::create($validated);
 
             DB::commit();
 
@@ -315,8 +315,8 @@ class SmawCertificateController extends Controller
             }
 
             // Standard redirect for non-AJAX requests
-            return redirect()->route('saw-certificates.certificate', $certificate)
-                            ->with('success', 'SAW Certificate created successfully.');
+            return redirect()->route('smaw-certificates.certificate', $certificate)
+                            ->with('success', 'SMAW Certificate created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -344,7 +344,7 @@ class SmawCertificateController extends Controller
      */
     public function show($id)
     {
-        $certificate = SawCertificate::with(['welder', 'company', 'createdBy'])->findOrFail($id);
+        $certificate = SmawCertificate::with(['welder', 'company', 'createdBy'])->findOrFail($id);
         return view('smaw_certificates.show', compact('certificate'));
     }
 
@@ -353,7 +353,7 @@ class SmawCertificateController extends Controller
      */
     public function edit($id)
     {
-        $certificate = SawCertificate::findOrFail($id);
+        $certificate = SmawCertificate::findOrFail($id);
         $companies = Company::orderBy('name')->get();
         $welders = Welder::orderBy('name')->get();
         $selectedWelder = $certificate->welder;
@@ -404,15 +404,15 @@ class SmawCertificateController extends Controller
         }
 
         $validator = Validator::make($data, [
-            'certificate_no' => 'required|string|max:50|unique:saw_certificates,certificate_no,' . $id,
+            'certificate_no' => 'required|string|max:50|unique:smaw_certificates,certificate_no,' . $id,
             'welder_id' => 'required|exists:welders,id',
             'company_id' => 'required|exists:companies,id',
             'wps_followed' => 'required|string|max:255',
             'test_date' => 'required|date',
             'base_metal_spec' => 'required|string|max:255',
             'dia_thickness' => 'required|string|max:255',
-            'welding_supervised_by' => 'required|string|max:255',
-            'witness_date' => 'required|date',
+            'welding_supervised_by' => 'sometimes|string|max:255',
+            'witness_date' => 'sometimes|date',
             'evaluated_by' => 'required|string|max:255',
             'evaluated_company' => 'required|string|max:255',
             'mechanical_tests_by' => 'required_if:rt,0,ut,0|nullable|string|max:255',
@@ -453,7 +453,7 @@ class SmawCertificateController extends Controller
         
         // Handle photo upload
         if ($request->hasFile('photo')) {
-            $certificate = SawCertificate::findOrFail($id);
+            $certificate = SmawCertificate::findOrFail($id);
             
             // Delete old photo if exists
             if ($certificate->photo_path) {
@@ -471,7 +471,7 @@ class SmawCertificateController extends Controller
         try {
             DB::beginTransaction();
 
-            $certificate = SawCertificate::findOrFail($id);
+            $certificate = SmawCertificate::findOrFail($id);
             $certificate->update($validated);
 
             DB::commit();
@@ -507,7 +507,7 @@ class SmawCertificateController extends Controller
      */
     public function destroy($id)
     {
-        $certificate = SawCertificate::findOrFail($id);
+        $certificate = SmawCertificate::findOrFail($id);
 
         try {
             // Delete photo if it exists
@@ -530,10 +530,10 @@ class SmawCertificateController extends Controller
      */
     public function generateCertificate(string $id)
     {
-        $certificate = SawCertificate::with('welder.company', 'company')->findOrFail($id);
+        $certificate = SmawCertificate::with('welder.company', 'company')->findOrFail($id);
 
         // Generate QR Code for certificate verification
-        $verificationUrl = route('saw-certificates.verify', ['id' => $certificate->id, 'code' => $certificate->verification_code]);
+        $verificationUrl = route('smaw-certificates.verify', ['id' => $certificate->id, 'code' => $certificate->verification_code]);
         $qrCodeUrl = 'data:image/png;base64,' . base64_encode(FacadesQrCode::format('png')->size(200)->generate($verificationUrl));
 
         return view('smaw_certificates.certificate', compact('certificate', 'qrCodeUrl'));
@@ -579,7 +579,7 @@ class SmawCertificateController extends Controller
      */
     public function verify($id, $code)
     {
-        $certificate = SawCertificate::with(['welder', 'company'])->findOrFail($id);
+        $certificate = SmawCertificate::with(['welder', 'company'])->findOrFail($id);
 
         if ($certificate->verification_code !== $code) {
             return abort(404);
@@ -608,7 +608,7 @@ class SmawCertificateController extends Controller
             'certificate_no' => 'required|string',
         ]);
 
-        $certificate = SawCertificate::where('certificate_no', $validated['certificate_no'])->first();
+        $certificate = SmawCertificate::where('certificate_no', $validated['certificate_no'])->first();
 
         if (!$certificate) {
             return view('smaw_certificates.verify', [
