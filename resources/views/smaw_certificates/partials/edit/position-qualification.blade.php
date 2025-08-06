@@ -8,15 +8,25 @@
         <td class="var-value">
             <div class="form-group">
                 <label for="test_position">Test Position:</label>
+                <!-- Debug: {{ $certificate->test_position }} -->
                 <select class="form-select" name="test_position" id="test_position" required
                     onchange="updatePositionRange()" data-saved-value="{{ $certificate->test_position ?? '' }}">
-                    <option value="" disabled {{ empty($certificate->test_position) ? 'selected' : '' }}>-- Select Position --</option>
-                    <option value="6G" {{ ($certificate->test_position ?? '') == '6G' ? 'selected' : '' }}>6G</option>
-                    <option value="5G" {{ ($certificate->test_position ?? '') == '5G' ? 'selected' : '' }}>5G</option>
-                    <option value="1G" {{ ($certificate->test_position ?? '') == '1G' ? 'selected' : '' }}>1G</option>
+                    <option value="" disabled>-- Select Position --</option>
+                    @php
+                    $test_position = $certificate->test_position ?? '';
+                    @endphp
+                    <option value="1G" @if($test_position == '1G') selected @endif>1G</option>
+                    <option value="2G" @if($test_position == '2G') selected @endif>2G</option>
+                    <option value="3G" @if($test_position == '3G') selected @endif>3G</option>
+                    <option value="4G" @if($test_position == '4G') selected @endif>4G</option>
+                    <option value="5G" @if($test_position == '5G') selected @endif>5G</option>
+                    <option value="6G" @if($test_position == '6G') selected @endif>6G</option>
+                    <option value="1F" @if($test_position == '1F') selected @endif>1F</option>
+                    <option value="2F" @if($test_position == '2F') selected @endif>2F</option>
+                    <option value="3F" @if($test_position == '3F') selected @endif>3F</option>
+                    <option value="4F" @if($test_position == '4F') selected @endif>4F</option>
                 </select>
                 <input type="hidden" name="position_range" id="position_range" value="{{ $certificate->position_range ?? '' }}">
-                <span id="position_range_span" style="display: block; font-size: 10px; color: #666; margin-top: 4px;">{{ $certificate->position_range ?? '' }}</span>
             </div>
         </td>
         <td class="var-range" style="font-weight: bold; font-size: 8px;">
@@ -36,16 +46,25 @@
         </td>
     </tr>
    <tr>
-        <td class="var-label">Vertical progression (uphill or downhill) :</td>
+        <td class="var-label">Vertical progression (uphill or downhill):</td>
         <td class="var-value">
-            <select class="form-select" name="vertical_progression" id="vertical_progression" onchange="updateVerticalProgressionRange()">
-                <option value="None"  selected>None</option>
-                <option value="Uphill">Uphill</option>
-                <option value="Downhill">Downhill</option>
+            <select class="form-select" name="vertical_progression" id="vertical_progression" 
+                onchange="updateVerticalProgressionRange()" data-saved-value="{{ $certificate->vertical_progression ?? 'Uphill' }}">
+                <option value="Uphill" {{ ($certificate->vertical_progression ?? 'Uphill') === 'Uphill' ? 'selected' : '' }}>Uphill</option>
+                <option value="Downhill" {{ ($certificate->vertical_progression ?? 'Uphill') === 'Downhill' ? 'selected' : '' }}>Downhill</option>
+                <option value="__manual__" {{ !in_array(($certificate->vertical_progression ?? 'Uphill'), ['Uphill', 'Downhill']) && !empty($certificate->vertical_progression) ? 'selected' : '' }}>Manual Entry</option>
             </select>
+            <input type="text" class="form-input" name="vertical_progression_manual" id="vertical_progression_manual"
+                placeholder="Enter vertical progression" 
+                value="{{ !in_array(($certificate->vertical_progression ?? 'Uphill'), ['Uphill', 'Downhill']) ? ($certificate->vertical_progression ?? '') : '' }}"
+                style="{{ !in_array(($certificate->vertical_progression ?? 'Uphill'), ['Uphill', 'Downhill']) && !empty($certificate->vertical_progression) ? 'display: block;' : 'display: none;' }} margin-top: 2px;">
         </td>
         <td class="var-range">
             <span id="vertical_progression_range_span">Uphill</span>
+            <input type="hidden" name="vertical_progression_range" id="vertical_progression_range" value="Uphill">
+            <input type="text" class="form-input" name="vertical_progression_range_manual"
+                id="vertical_progression_range_manual" placeholder="Enter qualified range"
+                style="display: none; margin-top: 2px;">
         </td>
     </tr>
     <!-- Remaining position qualification rows -->
@@ -130,3 +149,56 @@
         </td>
     </tr>
 </table>
+
+<script>
+// Update vertical progression range based on selected value
+function updateVerticalProgressionRange() {
+    const verticalProgression = document.getElementById('vertical_progression');
+    const verticalProgressionSpan = document.getElementById('vertical_progression_range_span');
+    const verticalProgressionRange = document.getElementById('vertical_progression_range');
+    const verticalProgressionManual = document.getElementById('vertical_progression_manual');
+    const verticalProgressionRangeManual = document.getElementById('vertical_progression_range_manual');
+    
+    if (!verticalProgression) return;
+    
+    if (verticalProgression.value === '__manual__') {
+        if (verticalProgressionManual) verticalProgressionManual.style.display = 'block';
+        if (verticalProgressionRangeManual) verticalProgressionRangeManual.style.display = 'block';
+        if (verticalProgressionSpan) verticalProgressionSpan.style.display = 'none';
+        
+        // When manual is selected, use the manual value
+        if (verticalProgressionRange) {
+            const manualValue = verticalProgressionManual ? verticalProgressionManual.value || 'Uphill' : 'Uphill';
+            verticalProgressionRange.value = manualValue;
+            // Also set the span content (though it's hidden)
+            if (verticalProgressionSpan) verticalProgressionSpan.textContent = manualValue;
+            
+            console.log('Vertical progression set to manual value:', manualValue);
+        }
+    } else {
+        if (verticalProgressionManual) verticalProgressionManual.style.display = 'none';
+        if (verticalProgressionRangeManual) verticalProgressionRangeManual.style.display = 'none';
+        if (verticalProgressionSpan) verticalProgressionSpan.style.display = 'inline';
+        
+        // Set the text based on selection
+        const rangeText = verticalProgression.value === 'Downhill' ? 'Downhill' : 'Uphill';
+        
+        if (verticalProgressionSpan) verticalProgressionSpan.textContent = rangeText;
+        if (verticalProgressionRange) verticalProgressionRange.value = rangeText;
+        
+        console.log('Vertical progression updated to:', rangeText);
+    }
+}
+
+// Initialize vertical progression range on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const verticalProgression = document.getElementById('vertical_progression');
+    if (verticalProgression) {
+        // Initialize the field based on saved value
+        updateVerticalProgressionRange();
+        
+        // Add listener for changes
+        verticalProgression.addEventListener('change', updateVerticalProgressionRange);
+    }
+});
+</script>

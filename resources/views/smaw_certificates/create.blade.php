@@ -23,6 +23,7 @@
                 <input type="hidden" name="backing_range" id="backing_range" value="">
                 <input type="hidden" name="f_number_range" id="f_number_range" value="">
                 <input type="hidden" name="vertical_progression_range" id="vertical_progression_range" value="">
+                <input type="hidden" name="smaw_thickness_range" id="smaw_thickness_range_form" value="">
                 
                 @include('smaw_certificates.partials.header')
                 @include('smaw_certificates.partials.certificate-details')
@@ -43,15 +44,22 @@
             </form>
         </div>
 
+@push('scripts')
         <!-- Add any required third-party libraries before your scripts -->
         <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.all.min.js"></script>
+        
+        <!-- Range calculation and form handling scripts -->
+        <script src="{{ asset('js/smaw/range-functions.js') }}"></script>
+        <script src="{{ asset('js/smaw/thickness-span-capture.js') }}"></script>
+        <script src="{{ asset('js/smaw/vertical-progression-span-capture.js') }}"></script>
         <script src="{{ asset('js/certificate-form.js') }}?v={{ time() }}"></script>
         <script src="{{ asset('js/welder-search.js') }}?v={{ time() }}"></script>
         <script src="{{ asset('js/form-validation.js') }}?v={{ time() }}"></script>
+        <script src="{{ asset('js/smaw/p-number-span-capture.js') }}?v={{ time() }}"></script>
+        <script src="{{ asset('js/smaw/f-number-span-capture.js') }}?v={{ time() }}"></script>
         
-@push('scripts')
         <script>
             // Initialize form when DOM is loaded
             document.addEventListener('DOMContentLoaded', function() {
@@ -147,6 +155,9 @@
                     return false;
                 };
                 
+                // Make sure specimen checkboxes are properly initialized first
+                initializeSpecimenCheckboxes();
+                
                 // Initialize range values on page load
                 setExplicitRangeValues();
                 
@@ -155,19 +166,6 @@
             
             // Function to explicitly set range values
             function setExplicitRangeValues() {
-                // Backing range - update both span and input elements
-                // const backing = document.getElementById('backing').value;
-                // const backingRangeText = (backing === 'With Backing') ? 
-                //     'With backing or backing and gouging' : 
-                //     'Without backing or with backing and gouging';
-                    
-                // Update both the visible span and hidden input
-                // const backingRangeSpan = document.getElementById('backing_range');
-                // const backingRangeInput = document.querySelector('input[name="backing_range"]');
-                
-                // if (backingRangeSpan) backingRangeSpan.textContent = backingRangeText;
-                // if (backingRangeInput) backingRangeInput.value = backingRangeText;
-                
                 // P-Number range
                 const pNo = document.getElementById('base_metal_p_no').value;
                 const pNumberRules = {
@@ -190,12 +188,34 @@
                 // Call the update functions to set other range values
                 updateDiameterRange();
                 updateFNumberRange();
-                updateVerticalProgressionRange();
                 updatePositionRange();
+                
+                // Make sure vertical progression range is explicitly set
+                const verticalProgression = document.getElementById('vertical_progression');
+                if (verticalProgression) {
+                    const verticalProgressionValue = verticalProgression.value;
+                    const verticalProgressionRange = document.getElementById('vertical_progression_range');
+                    const verticalProgressionSpan = document.getElementById('vertical_progression_range_span');
+                    
+                    // Set the value based on the current selection
+                    if (verticalProgressionValue === '__manual__') {
+                        const verticalProgressionManual = document.getElementById('vertical_progression_manual');
+                        const manualValue = verticalProgressionManual?.value || 'Uphill';
+                        
+                        if (verticalProgressionRange) verticalProgressionRange.value = manualValue;
+                        if (verticalProgressionSpan) verticalProgressionSpan.textContent = manualValue;
+                    } else {
+                        const value = verticalProgressionValue === 'Downhill' ? 'Downhill' : 'Uphill';
+                        
+                        if (verticalProgressionRange) verticalProgressionRange.value = value;
+                        if (verticalProgressionSpan) verticalProgressionSpan.textContent = value;
+                    }
+                    
+                    console.log('Set vertical progression range to:', verticalProgressionRange?.value);
+                }
                 
                 // Debug - output all range values to console
                 console.log('Range values after explicit initialization:');
-                // console.log('Backing range:', backingRangeInput ? backingRangeInput.value : 'not set');
                 console.log('P-Number range:', pNumberRangeInput ? pNumberRangeInput.value : 'not set');
                 console.log('Diameter range:', document.getElementById('diameter_range') ? 
                             document.getElementById('diameter_range').value : 'not set');
@@ -205,6 +225,8 @@
                             document.getElementById('vertical_progression_range').value : 'not set');
                 console.log('Position range:', document.getElementById('position_range') ? 
                             document.getElementById('position_range').value : 'not set');
+                console.log('Thickness range:', document.getElementById('smaw_thickness_range') ?
+                            document.getElementById('smaw_thickness_range').value : 'not set');
             }
             
             // Function to display validation errors

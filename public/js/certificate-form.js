@@ -225,13 +225,16 @@ window.handleBackendWelderData = function(data) {
     }
 };
 
-// Define ValidationError class for handling validation errors
-class ValidationError extends Error {
-    constructor(data) {
-        super('Validation error');
-        this.name = 'ValidationError';
-        this.errors = data.errors || {};
+// Define ValidationError class for handling validation errors if it doesn't already exist
+if (typeof ValidationError === 'undefined') {
+    class ValidationError extends Error {
+        constructor(data) {
+            super('Validation error');
+            this.name = 'ValidationError';
+            this.errors = data.errors || {};
+        }
     }
+    window.ValidationError = ValidationError;
 }
 
 // Set current date in the test date field
@@ -616,16 +619,29 @@ function toggleDiameterField() {
     const pipeDiameterManual = document.getElementById('pipe_diameter_manual');
     const diameterRangeSpan = document.getElementById('diameter_range_span');
 
+    // Don't proceed if checkboxes don't exist
+    if (!plateCheckbox || !pipeCheckbox) {
+        console.log('Specimen checkboxes not found');
+        return;
+    }
+
     if (plateCheckbox.checked) {
         pipeCheckbox.checked = false;
-        diameterField.disabled = true;
-        diameterField.value = "N/A";
-        pipeDiameterField.disabled = true;
-
-        // Clear pipe diameter fields when plate is selected
-        pipeDiameterField.value = "";
-        diameterRangeManual.value = "";
-        pipeDiameterManual.value = "";
+        
+        // Disable and clear pipe diameter fields
+        if (diameterField) {
+            diameterField.disabled = true;
+            diameterField.value = "N/A";
+        }
+        
+        if (pipeDiameterField) {
+            pipeDiameterField.disabled = true;
+            // Don't clear the value, just disable it for data persistence
+        }
+        
+        // Clear manual fields
+        if (diameterRangeManual) diameterRangeManual.value = "";
+        if (pipeDiameterManual) pipeDiameterManual.value = "";
         
         // Clear the diameter range span text
         if (diameterRangeSpan) {
@@ -639,23 +655,44 @@ function toggleDiameterField() {
         }
 
         // Update position options based on plate selection
-        updatePositionOptions();
+        if (typeof updatePositionOptions === 'function') {
+            updatePositionOptions();
+        }
     } else {
         pipeCheckbox.checked = true;
-        diameterField.disabled = false;
-        diameterField.value = "8 inch";
-        pipeDiameterField.disabled = false;
+        
+        if (diameterField) {
+            diameterField.disabled = false;
+            diameterField.value = "8 inch";
+        }
+        
+        if (pipeDiameterField) {
+            pipeDiameterField.disabled = false;
 
-        // Restore pipe diameter dropdown when pipe is selected
-        pipeDiameterField.value = "8_nps";
+            // If pipe diameter field has a saved value, restore it
+            if (pipeDiameterField.getAttribute('data-saved-value')) {
+                pipeDiameterField.value = pipeDiameterField.getAttribute('data-saved-value');
+            } else {
+                // Otherwise use default
+                pipeDiameterField.value = "8_nps";
+            }
+        }
         
         // Update diameter range based on selected pipe size
-        updateDiameterRange();
+        if (typeof updateDiameterRange === 'function') {
+            updateDiameterRange();
+        }
 
         // Update position options based on pipe selection
-        updatePositionOptions();
+        if (typeof updatePositionOptions === 'function') {
+            updatePositionOptions();
+        }
     }
-    updateDiaThickness();
+    
+    // Update thickness values if function exists
+    if (typeof updateDiaThickness === 'function') {
+        updateDiaThickness();
+    }
 }
 
 // Update position dropdown based on pipe/plate selection
@@ -1313,8 +1350,23 @@ document.addEventListener('DOMContentLoaded', function() {
     setDefaultSMAWValues();
     updateProcessFields();
     setupEventListeners();
+    
+    // Handle test_position initialization from data attribute
+    const testPositionSelect = document.getElementById('test_position');
+    if (testPositionSelect) {
+        const savedValue = testPositionSelect.getAttribute('data-saved-value');
+        if (savedValue && savedValue.trim() !== '') {
+            console.log('Setting test_position from data-saved-value:', savedValue);
+            testPositionSelect.value = savedValue;
+        }
+    }
+    
+    // Initialize pipe/plate field states and ranges
     toggleDiameterField();
     updatePositionOptions();
+    
+    // Initialize vertical progression range
+    updatePositionVerticalProgressionRange();
     
     // Set default values
     const backingField = document.getElementById('backing');
@@ -1638,7 +1690,75 @@ function ensureHiddenInput(form, name, value) {
         input.name = name;
         form.appendChild(input);
     }
+}
+
+/**
+ * Updates the vertical progression range display based on the selected value
+ */
+function updatePositionVerticalProgressionRange() {
+    const verticalProgression = document.getElementById('vertical_progression')?.value || '';
+    const rangeSpan = document.getElementById('vertical_progression_range_span');
+    
+    let rangeText = '';
+    switch (verticalProgression) {
+        case 'Uphill':
+            rangeText = 'Uphill';
+            break;
+        case 'Downhill':
+            rangeText = 'Downhill';
+            break;
+        case 'None':
+            rangeText = 'Not applicable';
+            break;
+        default:
+            rangeText = 'Not specified';
+    }
+    
+    // Update the span if it exists
+    if (rangeSpan) {
+        rangeSpan.textContent = rangeText;
+        rangeSpan.style.display = 'block';
+        console.log('Position vertical progression range updated to:', rangeText);
+    }
+}
+
+function ensureHiddenInput(form, name, value) {
+    // Check if hidden input already exists
+    let input = form.querySelector(`input[name="${name}"][type="hidden"]`);
+    
+    // If input doesn't exist, create it
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        form.appendChild(input);
+    }
     
     // Set the value
     input.value = value;
+}
+
+/**
+ * Initialize specimen checkboxes (plate/pipe) based on saved values
+ */
+function initializeSpecimenCheckboxes() {
+    const plateCheckbox = document.getElementById('plate_specimen');
+    const pipeCheckbox = document.getElementById('pipe_specimen');
+    
+    if (plateCheckbox && pipeCheckbox) {
+        console.log('Initializing specimen checkboxes:', {
+            plate: plateCheckbox.checked,
+            pipe: pipeCheckbox.checked
+        });
+        
+        // If both are checked or neither is checked, default to plate only
+        if ((plateCheckbox.checked && pipeCheckbox.checked) || 
+            (!plateCheckbox.checked && !pipeCheckbox.checked)) {
+            plateCheckbox.checked = true;
+            pipeCheckbox.checked = false;
+        }
+        
+        // Call toggle function to update UI based on selection
+        toggleDiameterField();
+    }
 }

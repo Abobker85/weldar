@@ -196,224 +196,294 @@ class FcawCertificateController extends Controller
         ));
     }
 
+  /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        // Transform boolean checkbox values to ensure they're properly processed
-        $booleanFields = [
-            'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen', 'rt', 'ut',
-            'fillet_welds_plate', 'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
-            'transverse_face_root', 'longitudinal_bends', 'side_bends',
-            'pipe_bend_corrosion', 'plate_bend_corrosion','gtaw_process','smaw_process', 'gtaw_yes', 'gtaw_no',
-        ];
-        
-        $data = $request->all();
-        
-        // Handle potential duplicate fields in the form submission
-        foreach ($data as $key => $value) {
-            if (is_array($value) && !in_array($key, ['_token'])) {
-                // Take only the first value if it's an array but not expected to be
-                $data[$key] = $value[0];
-            }
-        }
-        
-        // Set default false values for boolean fields if they're not present in request
-        foreach ($booleanFields as $field) {
-            if (!isset($data[$field])) {
-                $data[$field] = false;
-            } else if ($data[$field] === 'on' || $data[$field] === 'true' || $data[$field] === '1') {
-                $data[$field] = true;
-            } else {
-                $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
-            }
-        }
-
-        // Create a validator instance with the transformed data
-        $validator = Validator::make($data, [
-            // Certificate identification
-            'certificate_no' => 'required|string|max:50|unique:fcaw_certificates,certificate_no',
-            'welder_id' => 'required|exists:welders,id',
-            'company_id' => 'required|exists:companies,id',
-            'wps_followed' => 'required|string|max:255',
-            'test_date' => 'required|date',
-
-            // Specimen details
-            'test_coupon' => 'boolean',
-            'production_weld' => 'boolean',
-            'plate_specimen' => 'boolean',
-            'pipe_specimen' => 'boolean',
-            'base_metal_spec' => 'required|string|max:255',
-            'diameter' => 'required_if:pipe_specimen,true|nullable|string|max:255',
-            'thickness' => 'required|string|max:255',
-
-            // Pipe information
-            'pipe_diameter_type' => 'required_if:pipe_specimen,true|nullable|string|max:255',
-            'pipe_diameter_manual' => 'nullable|string|max:255',
-            'diameter_range' => 'nullable|string',
-            
-            // Metal and filler details
-            'base_metal_p_no' => 'required|string|max:255',
-            'base_metal_p_no_manual' => 'nullable|string|max:255',
-            'p_number_range' => 'nullable|string',
-            'p_number_range_manual' => 'nullable|string|max:255',
-            
-            // Position details
-            'test_position' => 'required|string|max:255',
-            'position_range' => 'nullable|string',
-            'position_range_manual' => 'nullable|string|max:255',
-            
-            // Backing details
-            'backing' => 'required|string|max:255',
-            'backing_manual' => 'nullable|string|max:255',
-            'backing_range' => 'nullable|string',
-            
-            // Filler details
-            'filler_spec' => 'required|string|max:255',
-            'filler_spec_manual' => 'nullable|string|max:255',
-            'filler_spec_range' => 'nullable|string',
-            'filler_class' => 'required|string|max:255',
-            'filler_class_manual' => 'nullable|string|max:255',
-            'filler_class_range' => 'nullable|string',
-            'filler_f_no' => 'required|string|max:255',
-            'filler_f_no_manual' => 'nullable|string|max:255',
-            'f_number_range' => 'nullable|string',
-            
-            // Progression details
-            'vertical_progression' => 'required|string|max:255',
-            'vertical_progression_range' => 'nullable|string',
-            
-            // RT/UT testing details
-            'rt' => 'boolean',
-            'ut' => 'boolean',
-            'rt_doc_no' => 'nullable|string|max:255',
-            
-            // Personnel fields
-            'evaluated_by' => 'nullable|string|max:255',
-            'evaluated_company' => 'nullable|string|max:255',
-            'mechanical_tests_by' => 'nullable|string|max:255',
-            'lab_test_no' => 'nullable|string|max:255',
-            'supervised_by' => 'required|string|max:255',
-            'supervised_company' => 'nullable|string|max:255',
-            
-            // Additional fields
-            'inspector_name' => 'required|string|max:255',
-            'inspector_date' => 'required|date',
-            'certification_text' => 'nullable|string',
-            
-            // Welding parameters
-            'transfer_mode' => 'nullable|string|max:255',
-            'transfer_mode_range' => 'nullable|string',
-            'current' => 'nullable|string|max:255',
-            'current_range' => 'nullable|string',
-            'equipment_type' => 'nullable|string|max:255',
-            'equipment_type_range' => 'nullable|string',
-            'technique' => 'nullable|string|max:255',
-            'technique_range' => 'nullable|string',
-            'oscillation' => 'nullable|string|max:255',
-            'oscillation_value' => 'nullable|string|max:255',
-            'oscillation_range' => 'nullable|string',
-            'operation_mode' => 'nullable|string|max:255',
-            'operation_mode_range' => 'nullable|string',
-            
-            // File uploads
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'signature_data' => 'nullable|string',
-            'inspector_signature_data' => 'nullable|string',
-        ]);
-        
-       
-        
-        // Check validation result before proceeding
-        if ($validator->fails()) {
-            // For AJAX requests, return JSON response
-            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            
-            // For regular requests, redirect back with errors
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-        
-        // Get validated data
-        $validated = $validator->validated();
-        
-        // Fix for position_range - if empty, calculate based on test_position and pipe_specimen
-        if (empty($validated['position_range'])) {
-            $validated['position_range'] = $this->getPositionRange(
-                $validated['test_position'],
-                $validated['pipe_specimen']
-            );
-        }
-        
-        // Add current user as creator
-        $validated['created_by'] = Auth::id();
-        
-        // Add report numbers if not provided
-        if (empty($validated['vt_report_no'])) {
-            $companyCode = Company::find($validated['company_id'])->code ?? 'AIC';
-            $systemCode = AppSetting::getValue('doc_prefix', 'EEA');
-            $validated['vt_report_no'] = $systemCode . '-' . $companyCode . '-VT-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-        }
-        
-        if (empty($validated['rt_report_no'])) {
-            $companyCode = Company::find($validated['company_id'])->code ?? 'AIC';
-            $systemCode = AppSetting::getValue('doc_prefix', 'EEA');
-            $validated['rt_report_no'] = $systemCode . '-' . $companyCode . '-RT-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-        }
-        
-        // Create the certificate
-        try {
-            DB::beginTransaction();
-            
-            $certificate = FcawCertificate::create($validated);
-            
-            DB::commit();
-            
-            // Check if request is AJAX
-            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Certificate created successfully.',
-                    'redirect' => route('fcaw-certificates.certificate', $certificate),
-                    'certificate' => $certificate
-                ]);
-            }
-            
-            // Standard redirect for non-AJAX requests
-            return redirect()->route('fcaw-certificates.certificate', $certificate)
-                            ->with('success', 'Certificate created successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            // // Clean up uploaded file if there was an error
-            // if ($photoPath && Storage::exists('public/' . $photoPath)) {
-            //     Storage::delete('public/' . $photoPath);
-            // }
-            
-            // Check if request is AJAX
-            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error creating certificate: ' . $e->getMessage()
-                ], 422);
-            }
-            
-            return redirect()->back()
-                            ->withInput()
-                            ->with('error', 'Error creating certificate: ' . $e->getMessage());
+   /**
+ * Store a newly created resource in storage.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @return \Illuminate\Http\Response
+ */
+public function store(Request $request)
+{
+    // Transform boolean checkbox values to ensure they're properly processed
+    $booleanFields = [
+        'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen', 'rt', 'ut',
+        'fillet_welds_plate', 'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
+        'transverse_face_root', 'longitudinal_bends', 'side_bends',
+        'pipe_bend_corrosion', 'plate_bend_corrosion', 'gtaw_process', 'fcaw_process'
+    ];
+    
+    $data = $request->all();
+    
+    // Handle potential duplicate fields in the form submission
+    foreach ($data as $key => $value) {
+        if (is_array($value) && !in_array($key, ['_token'])) {
+            // Take only the first value if it's an array but not expected to be
+            $data[$key] = $value[0];
         }
     }
+    
+    // Set default false values for boolean fields if they're not present in request
+    foreach ($booleanFields as $field) {
+        if (!isset($data[$field])) {
+            $data[$field] = false;
+        } else if ($data[$field] === 'on' || $data[$field] === 'true' || $data[$field] === '1') {
+            $data[$field] = true;
+        } else {
+            $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
+        }
+    }
+
+    // Handle manual entry fields properly
+    if (isset($data['filler_spec']) && $data['filler_spec'] === '__manual__') {
+        $data['filler_spec'] = $data['filler_spec_manual'] ?? '';
+    }
+    
+    if (isset($data['filler_class']) && $data['filler_class'] === '__manual__') {
+        $data['filler_class'] = $data['filler_class_manual'] ?? '';
+    }
+    
+    if (isset($data['filler_f_no']) && $data['filler_f_no'] === '__manual__') {
+        $data['filler_f_no'] = $data['filler_f_no_manual'] ?? '';
+    }
+    
+    if (isset($data['base_metal_p_no']) && $data['base_metal_p_no'] === '__manual__') {
+        $data['base_metal_p_no'] = $data['base_metal_p_no_manual'] ?? '';
+    }
+    
+    if (isset($data['backing']) && $data['backing'] === '__manual__') {
+        $data['backing'] = $data['backing_manual'] ?? '';
+    }
+
+    // Create a validator instance with the transformed data
+    $validator = Validator::make($data, [
+        // Certificate identification
+        'certificate_no' => 'required|string|max:50|unique:fcaw_certificates,certificate_no',
+        'welder_id' => 'required|exists:welders,id',
+        'company_id' => 'required|exists:companies,id',
+        'wps_followed' => 'required|string|max:255',
+        'test_date' => 'required|date',
+        'revision_no' => 'nullable|string|max:50',
+
+        // Specimen details
+        'test_coupon' => 'boolean',
+        'production_weld' => 'boolean',
+        'plate_specimen' => 'boolean',
+        'pipe_specimen' => 'boolean',
+        'base_metal_spec' => 'required|string|max:255',
+        'diameter' => 'nullable|string|max:255',
+        'thickness' => 'required|string|max:255',
+
+        // Pipe information
+        'pipe_diameter_type' => 'nullable|string|max:255',
+        'pipe_diameter_manual' => 'nullable|string|max:255',
+        'diameter_range' => 'nullable|string',
+        
+        // Metal and filler details
+        'base_metal_p_no' => 'required|string|max:255',
+        'base_metal_p_no_manual' => 'nullable|string|max:255',
+        'p_number_range' => 'nullable|string',
+        'p_number_range_manual' => 'nullable|string|max:255',
+        
+        // Position details
+        'test_position' => 'required|string|max:255',
+        'position_range' => 'nullable|string',
+        'position_range_manual' => 'nullable|string|max:255',
+        
+        // Backing details
+        'backing' => 'required|string|max:255',
+        'backing_manual' => 'nullable|string|max:255',
+        'backing_range' => 'nullable|string',
+        
+        // Vertical progression
+        'vertical_progression' => 'required|string|max:255',
+        'vertical_progression_range' => 'nullable|string',
+        
+        // Filler details
+        'filler_spec' => 'required|string|max:255',
+        'filler_spec_manual' => 'nullable|string|max:255',
+        'filler_spec_range' => 'nullable|string',
+        'filler_class' => 'required|string|max:255',
+        'filler_class_manual' => 'nullable|string|max:255',
+        'filler_class_range' => 'nullable|string',
+        'filler_f_no' => 'required|string|max:255',
+        'filler_f_no_manual' => 'nullable|string|max:255',
+        'f_number_range' => 'nullable|string',
+        
+        // Process fields
+        'fcaw_thickness' => 'nullable|string|max:255',
+        'fcaw_thickness_range' => 'nullable|string|max:255',
+        'deposit_thickness' => 'nullable|string|max:255',
+        'deposit_thickness_range' => 'nullable|string|max:255',
+        'welding_process' => 'nullable|string|max:255',
+        'welding_type' => 'nullable|string|max:255',
+        
+        // Additional welding parameters
+        'transfer_mode' => 'nullable|string|max:255',
+        'transfer_mode_range' => 'nullable|string',
+        'backing_gas' => 'nullable|string|max:255',
+        'backing_gas_range' => 'nullable|string',
+        'gtaw_current_type' => 'nullable|string|max:255',
+        'gtaw_current_type_range' => 'nullable|string|max:255',
+        'equipment_type' => 'nullable|string|max:255',
+        'equipment_type_range' => 'nullable|string|max:255',
+        'technique' => 'nullable|string|max:255',
+        'technique_range' => 'nullable|string|max:255',
+        'oscillation' => 'nullable|string|max:255',
+        'oscillation_value' => 'nullable|string|max:255',
+        'oscillation_range' => 'nullable|string',
+        'operation_mode' => 'nullable|string|max:255',
+        'operation_mode_range' => 'nullable|string',
+        
+        // RT/UT testing details
+        'rt' => 'boolean',
+        'ut' => 'boolean',
+        'rt_doc_no' => 'nullable|string|max:255',
+        'vt_report_no' => 'nullable|string|max:255',
+        'rt_report_no' => 'nullable|string|max:255',
+        
+        // Test results
+        'transverse_face_root' => 'boolean',
+        'longitudinal_bends' => 'boolean', 
+        'side_bends' => 'boolean',
+        'pipe_bend_corrosion' => 'boolean',
+        'plate_bend_corrosion' => 'boolean',
+        'pipe_macro_fusion' => 'boolean',
+        'plate_macro_fusion' => 'boolean',
+        'fillet_welds_plate' => 'boolean',
+        'fillet_welds_pipe' => 'boolean',
+        
+        // Additional test fields
+        'additional_type_1' => 'nullable|string|max:255',
+        'additional_result_1' => 'nullable|string|max:255',
+        'additional_type_2' => 'nullable|string|max:255',
+        'additional_result_2' => 'nullable|string|max:255',
+        'fillet_fracture_test' => 'nullable|string|max:255',
+        'defects_length' => 'nullable|string|max:255',
+        'macro_exam' => 'nullable|string|max:255',
+        'fillet_size' => 'nullable|string|max:255',
+        'other_tests' => 'nullable|string|max:255',
+        'concavity_convexity' => 'nullable|string|max:255',
+        
+        // Personnel fields
+        'evaluated_by' => 'nullable|string|max:255',
+        'evaluated_company' => 'nullable|string|max:255',
+        'mechanical_tests_by' => 'nullable|string|max:255',
+        'lab_test_no' => 'nullable|string|max:255',
+        'supervised_by' => 'required|string|max:255',
+        'supervised_company' => 'nullable|string|max:255',
+        
+        // Certification fields
+        'certification_text' => 'required|string|max:1000', // Make required
+        'confirm_date1' => 'nullable|date',
+        'confirm_title1' => 'nullable|string|max:255',
+        'confirm_date2' => 'nullable|date', 
+        'confirm_title2' => 'nullable|string|max:255',
+        'confirm_date3' => 'nullable|date',
+        'confirm_title3' => 'nullable|string|max:255',
+        
+        // Inspector fields
+        'inspector_name' => 'required|string|max:255',
+        'inspector_date' => 'required|date',
+        'inspector_signature_data' => 'nullable|string',
+        
+        // File uploads
+        'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'signature_data' => 'nullable|string',
+    ]);
+    
+    // Check validation result before proceeding
+    if ($validator->fails()) {
+        // For AJAX requests, return JSON response
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        // For regular requests, redirect back with errors
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
+    }
+    
+    // Get validated data
+    $validated = $validator->validated();
+    
+    // Fix for position_range - if empty, calculate based on test_position and pipe_specimen
+    if (empty($validated['position_range'])) {
+        $validated['position_range'] = $this->getPositionRange(
+            $validated['test_position'],
+            $validated['pipe_specimen'] ?? false
+        );
+    }
+    
+    // Add current user as creator
+    $validated['created_by'] = Auth::id();
+    
+    // Add report numbers if not provided
+    if (empty($validated['vt_report_no'])) {
+        $companyCode = Company::find($validated['company_id'])->code ?? 'AIC';
+        $systemCode = AppSetting::getValue('doc_prefix', 'EEA');
+        $validated['vt_report_no'] = $systemCode . '-' . $companyCode . '-VT-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+    }
+    
+    if (empty($validated['rt_report_no'])) {
+        $companyCode = Company::find($validated['company_id'])->code ?? 'AIC';
+        $systemCode = AppSetting::getValue('doc_prefix', 'EEA');
+        $validated['rt_report_no'] = $systemCode . '-' . $companyCode . '-RT-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+    }
+    
+    // Create the certificate
+    try {
+        DB::beginTransaction();
+        
+        $certificate = FcawCertificate::create($validated);
+        
+        DB::commit();
+        
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Certificate created successfully.',
+                'redirect' => route('fcaw-certificates.certificate', $certificate),
+                'certificate' => $certificate
+            ]);
+        }
+        
+        // Standard redirect for non-AJAX requests
+        return redirect()->route('fcaw-certificates.certificate', $certificate)
+                        ->with('success', 'Certificate created successfully.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating certificate: ' . $e->getMessage()
+            ], 422);
+        }
+        
+        return redirect()->back()
+                        ->withInput()
+                        ->with('error', 'Error creating certificate: ' . $e->getMessage());
+    }
+}
 
     /**
      * Display the specified resource.
@@ -511,198 +581,268 @@ class FcawCertificateController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
-        // Transform boolean checkbox values to ensure they're properly processed
-        $booleanFields = [
-            'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen', 'rt', 'ut',
-            'fillet_welds_plate', 'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
-            'transverse_face_root', 'longitudinal_bends', 'side_bends',
-            'pipe_bend_corrosion', 'plate_bend_corrosion','gtaw_process','smaw_process', 'gtaw_yes', 'gtaw_no',
-        ];
+  /**
+ * Update the specified resource in storage.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @param  int  $id
+ * @return \Illuminate\Http\Response
+ */
+public function update(Request $request, $id)
+{
+    // Transform boolean checkbox values to ensure they're properly processed
+    $booleanFields = [
+        'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen', 'rt', 'ut',
+        'fillet_welds_plate', 'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
+        'transverse_face_root', 'longitudinal_bends', 'side_bends',
+        'pipe_bend_corrosion', 'plate_bend_corrosion', 'gtaw_process', 'fcaw_process'
+    ];
 
-        $data = $request->all();
+    $data = $request->all();
 
-        // Handle potential duplicate fields in the form submission
-        foreach ($data as $key => $value) {
-            if (is_array($value) && !in_array($key, ['_token'])) {
-                // Take only the first value if it's an array but not expected to be
-                $data[$key] = $value[0];
-            }
-        }
-
-        // Set default false values for boolean fields if they're not present in request
-        foreach ($booleanFields as $field) {
-            if (!isset($data[$field])) {
-                $data[$field] = false;
-            } else if ($data[$field] === 'on' || $data[$field] === 'true' || $data[$field] === '1') {
-                $data[$field] = true;
-            } else {
-                $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
-            }
-        }
-
-        // Create a validator instance with the transformed data
-        $validator = Validator::make($data, [
-            // Certificate identification
-            'certificate_no' => 'required|string|max:50|unique:fcaw_certificates,certificate_no,' . $id,
-            'welder_id' => 'required|exists:welders,id',
-            'company_id' => 'required|exists:companies,id',
-            'wps_followed' => 'required|string|max:255',
-            'test_date' => 'required|date',
-
-            // Specimen details
-            'test_coupon' => 'boolean',
-            'production_weld' => 'boolean',
-            'plate_specimen' => 'boolean',
-            'pipe_specimen' => 'boolean',
-            'base_metal_spec' => 'required|string|max:255',
-            'diameter' => 'required_if:pipe_specimen,true|nullable|string|max:255',
-            'thickness' => 'required|string|max:255',
-
-            // Pipe information
-            'pipe_diameter_type' => 'required_if:pipe_specimen,true|nullable|string|max:255',
-            'pipe_diameter_manual' => 'nullable|string|max:255',
-            'diameter_range' => 'nullable|string',
-
-            // Metal and filler details
-            'base_metal_p_no' => 'required|string|max:255',
-            'base_metal_p_no_manual' => 'nullable|string|max:255',
-            'p_number_range' => 'nullable|string',
-            'p_number_range_manual' => 'nullable|string|max:255',
-
-            // Position details
-            'test_position' => 'required|string|max:255',
-            'position_range' => 'nullable|string',
-            'position_range_manual' => 'nullable|string|max:255',
-
-            // Backing details
-            'backing' => 'required|string|max:255',
-            'backing_manual' => 'nullable|string|max:255',
-            'backing_range' => 'nullable|string',
-
-            // Filler details
-            'filler_spec' => 'required|string|max:255',
-            'filler_spec_manual' => 'nullable|string|max:255',
-            'filler_spec_range' => 'nullable|string',
-            'filler_class' => 'required|string|max:255',
-            'filler_class_manual' => 'nullable|string|max:255',
-            'filler_class_range' => 'nullable|string',
-            'filler_f_no' => 'required|string|max:255',
-            'filler_f_no_manual' => 'nullable|string|max:255',
-            'f_number_range' => 'nullable|string',
-
-            // Progression details
-            'vertical_progression' => 'required|string|max:255',
-            'vertical_progression_range' => 'nullable|string',
-
-            // RT/UT testing details
-            'rt' => 'boolean',
-            'ut' => 'boolean',
-            'rt_doc_no' => 'nullable|string|max:255',
-
-            // Personnel fields
-            'evaluated_by' => 'nullable|string|max:255',
-            'evaluated_company' => 'nullable|string|max:255',
-            'mechanical_tests_by' => 'nullable|string|max:255',
-            'lab_test_no' => 'nullable|string|max:255',
-            'supervised_by' => 'required|string|max:255',
-            'supervised_company' => 'nullable|string|max:255',
-
-            // Additional fields
-            'inspector_name' => 'required|string|max:255',
-            'inspector_date' => 'required|date',
-            'certification_text' => 'nullable|string',
-
-            // Welding parameters
-            'transfer_mode' => 'nullable|string|max:255',
-            'transfer_mode_range' => 'nullable|string',
-            'current' => 'nullable|string|max:255',
-            'current_range' => 'nullable|string',
-            'equipment_type' => 'nullable|string|max:255',
-            'equipment_type_range' => 'nullable|string',
-            'technique' => 'nullable|string|max:255',
-            'technique_range' => 'nullable|string',
-            'oscillation' => 'nullable|string|max:255',
-            'oscillation_value' => 'nullable|string|max:255',
-            'oscillation_range' => 'nullable|string',
-            'operation_mode' => 'nullable|string|max:255',
-            'operation_mode_range' => 'nullable|string',
-
-            // File uploads
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'signature_data' => 'nullable|string',
-            'inspector_signature_data' => 'nullable|string',
-        ]);
-
-
-
-        // Check validation result before proceeding
-        if ($validator->fails()) {
-            // For AJAX requests, return JSON response
-            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            // For regular requests, redirect back with errors
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        // Get validated data
-        $validated = $validator->validated();
-
-        // Fix for position_range - if empty, calculate based on test_position and pipe_specimen
-        if (empty($validated['position_range'])) {
-            $validated['position_range'] = $this->getPositionRange(
-                $validated['test_position'],
-                $validated['pipe_specimen']
-            );
-        }
-
-        // Update the certificate
-        try {
-            DB::beginTransaction();
-
-            $certificate = FcawCertificate::findOrFail($id);
-            $certificate->update($validated);
-
-            DB::commit();
-
-            // Check if request is AJAX
-            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Certificate updated successfully.',
-                    'redirect' => route('fcaw-certificates.certificate', $certificate),
-                    'certificate' => $certificate
-                ]);
-            }
-
-            // Standard redirect for non-AJAX requests
-            return redirect()->route('fcaw-certificates.certificate', $certificate)
-                            ->with('success', 'Certificate updated successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            // Check if request is AJAX
-            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error updating certificate: ' . $e->getMessage()
-                ], 422);
-            }
-
-            return redirect()->back()
-                            ->withInput()
-                            ->with('error', 'Error updating certificate: ' . $e->getMessage());
+    // Handle potential duplicate fields in the form submission
+    foreach ($data as $key => $value) {
+        if (is_array($value) && !in_array($key, ['_token', '_method'])) {
+            // Take only the first value if it's an array but not expected to be
+            $data[$key] = $value[0];
         }
     }
+
+    // Set default false values for boolean fields if they're not present in request
+    foreach ($booleanFields as $field) {
+        if (!isset($data[$field])) {
+            $data[$field] = false;
+        } else if ($data[$field] === 'on' || $data[$field] === 'true' || $data[$field] === '1') {
+            $data[$field] = true;
+        } else {
+            $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
+        }
+    }
+
+    // Handle manual entry fields properly
+    if (isset($data['filler_spec']) && $data['filler_spec'] === '__manual__') {
+        $data['filler_spec'] = $data['filler_spec_manual'] ?? '';
+    }
+    
+    if (isset($data['filler_class']) && $data['filler_class'] === '__manual__') {
+        $data['filler_class'] = $data['filler_class_manual'] ?? '';
+    }
+    
+    if (isset($data['filler_f_no']) && $data['filler_f_no'] === '__manual__') {
+        $data['filler_f_no'] = $data['filler_f_no_manual'] ?? '';
+    }
+    
+    if (isset($data['base_metal_p_no']) && $data['base_metal_p_no'] === '__manual__') {
+        $data['base_metal_p_no'] = $data['base_metal_p_no_manual'] ?? '';
+    }
+    
+    if (isset($data['backing']) && $data['backing'] === '__manual__') {
+        $data['backing'] = $data['backing_manual'] ?? '';
+    }
+
+    // Create a validator instance with the transformed data
+    $validator = Validator::make($data, [
+        // Certificate identification
+        'certificate_no' => 'required|string|max:50|unique:fcaw_certificates,certificate_no,' . $id,
+        'welder_id' => 'required|exists:welders,id',
+        'company_id' => 'required|exists:companies,id',
+        'wps_followed' => 'required|string|max:255',
+        'test_date' => 'required|date',
+        'revision_no' => 'nullable|string|max:50',
+
+        // Specimen details
+        'test_coupon' => 'boolean',
+        'production_weld' => 'boolean',
+        'plate_specimen' => 'boolean',
+        'pipe_specimen' => 'boolean',
+        'base_metal_spec' => 'required|string|max:255',
+        'diameter' => 'nullable|string|max:255',
+        'thickness' => 'required|string|max:255',
+
+        // Pipe information
+        'pipe_diameter_type' => 'nullable|string|max:255',
+        'pipe_diameter_manual' => 'nullable|string|max:255',
+        'diameter_range' => 'nullable|string',
+
+        // Metal and filler details
+        'base_metal_p_no' => 'required|string|max:255',
+        'base_metal_p_no_manual' => 'nullable|string|max:255',
+        'p_number_range' => 'nullable|string',
+        'p_number_range_manual' => 'nullable|string|max:255',
+
+        // Position details
+        'test_position' => 'required|string|max:255',
+        'position_range' => 'nullable|string',
+        'position_range_manual' => 'nullable|string|max:255',
+
+        // Backing details
+        'backing' => 'required|string|max:255',
+        'backing_manual' => 'nullable|string|max:255',
+        'backing_range' => 'nullable|string',
+        
+        // Vertical progression
+        'vertical_progression' => 'required|string|max:255',
+        'vertical_progression_range' => 'nullable|string',
+
+        // Filler details
+        'filler_spec' => 'required|string|max:255',
+        'filler_spec_manual' => 'nullable|string|max:255',
+        'filler_spec_range' => 'nullable|string',
+        'filler_class' => 'required|string|max:255',
+        'filler_class_manual' => 'nullable|string|max:255',
+        'filler_class_range' => 'nullable|string',
+        'filler_f_no' => 'required|string|max:255',
+        'filler_f_no_manual' => 'nullable|string|max:255',
+        'f_number_range' => 'nullable|string',
+
+        // Process fields
+        'fcaw_thickness' => 'nullable|string|max:255',
+        'fcaw_thickness_range' => 'nullable|string|max:255',
+        'deposit_thickness' => 'nullable|string|max:255',
+        'deposit_thickness_range' => 'nullable|string|max:255',
+        'welding_process' => 'nullable|string|max:255',
+        'welding_type' => 'nullable|string|max:255',
+        
+        // Additional welding parameters
+        'transfer_mode' => 'nullable|string|max:255',
+        'transfer_mode_range' => 'nullable|string',
+        'backing_gas' => 'nullable|string|max:255',
+        'backing_gas_range' => 'nullable|string',
+        'gtaw_current_type' => 'nullable|string|max:255',
+        'gtaw_current_type_range' => 'nullable|string|max:255',
+        'equipment_type' => 'nullable|string|max:255',
+        'equipment_type_range' => 'nullable|string|max:255',
+        'technique' => 'nullable|string|max:255',
+        'technique_range' => 'nullable|string|max:255',
+        'oscillation' => 'nullable|string|max:255',
+        'oscillation_value' => 'nullable|string|max:255',
+        'oscillation_range' => 'nullable|string',
+        'operation_mode' => 'nullable|string|max:255',
+        'operation_mode_range' => 'nullable|string',
+
+        // RT/UT testing details
+        'rt' => 'boolean',
+        'ut' => 'boolean',
+        'rt_doc_no' => 'nullable|string|max:255',
+        'vt_report_no' => 'nullable|string|max:255',
+        'rt_report_no' => 'nullable|string|max:255',
+        
+        // Test results
+        'transverse_face_root' => 'boolean',
+        'longitudinal_bends' => 'boolean', 
+        'side_bends' => 'boolean',
+        'pipe_bend_corrosion' => 'boolean',
+        'plate_bend_corrosion' => 'boolean',
+        'pipe_macro_fusion' => 'boolean',
+        'plate_macro_fusion' => 'boolean',
+        'fillet_welds_plate' => 'boolean',
+        'fillet_welds_pipe' => 'boolean',
+        
+        // Additional test fields
+        'additional_type_1' => 'nullable|string|max:255',
+        'additional_result_1' => 'nullable|string|max:255',
+        'additional_type_2' => 'nullable|string|max:255',
+        'additional_result_2' => 'nullable|string|max:255',
+        'fillet_fracture_test' => 'nullable|string|max:255',
+        'defects_length' => 'nullable|string|max:255',
+        'macro_exam' => 'nullable|string|max:255',
+        'fillet_size' => 'nullable|string|max:255',
+        'other_tests' => 'nullable|string|max:255',
+        'concavity_convexity' => 'nullable|string|max:255',
+
+        // Personnel fields
+        'evaluated_by' => 'nullable|string|max:255',
+        'evaluated_company' => 'nullable|string|max:255',
+        'mechanical_tests_by' => 'nullable|string|max:255',
+        'lab_test_no' => 'nullable|string|max:255',
+        'supervised_by' => 'required|string|max:255',
+        'supervised_company' => 'nullable|string|max:255',
+
+        // Certification fields
+        'certification_text' => 'required|string|max:1000', // Make required
+        'confirm_date1' => 'nullable|date',
+        'confirm_title1' => 'nullable|string|max:255',
+        'confirm_date2' => 'nullable|date', 
+        'confirm_title2' => 'nullable|string|max:255',
+        'confirm_date3' => 'nullable|date',
+        'confirm_title3' => 'nullable|string|max:255',
+        
+        // Inspector fields
+        'inspector_name' => 'required|string|max:255',
+        'inspector_date' => 'required|date',
+        'inspector_signature_data' => 'nullable|string',
+
+        // File uploads
+        'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'signature_data' => 'nullable|string',
+    ]);
+
+    // Check validation result before proceeding
+    if ($validator->fails()) {
+        // For AJAX requests, return JSON response
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // For regular requests, redirect back with errors
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
+    }
+
+    // Get validated data
+    $validated = $validator->validated();
+
+    // Fix for position_range - if empty, calculate based on test_position and pipe_specimen
+    if (empty($validated['position_range'])) {
+        $validated['position_range'] = $this->getPositionRange(
+            $validated['test_position'],
+            $validated['pipe_specimen'] ?? false
+        );
+    }
+
+    // Update the certificate
+    try {
+        DB::beginTransaction();
+
+        $certificate = FcawCertificate::findOrFail($id);
+        $certificate->update($validated);
+
+        DB::commit();
+
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Certificate updated successfully.',
+                'redirect' => route('fcaw-certificates.certificate', $certificate),
+                'certificate' => $certificate
+            ]);
+        }
+
+        // Standard redirect for non-AJAX requests
+        return redirect()->route('fcaw-certificates.certificate', $certificate)
+                        ->with('success', 'Certificate updated successfully.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating certificate: ' . $e->getMessage()
+            ], 422);
+        }
+
+        return redirect()->back()
+                        ->withInput()
+                        ->with('error', 'Error updating certificate: ' . $e->getMessage());
+    }
+}
 
     /**
      * Remove the specified resource from storage.

@@ -9,16 +9,17 @@
         </div>
         <div class="cert-center">
             <strong>Welder's name:</strong>
-            <select class="form-input" name="welder_id" id="welder_id">
+            <select class="form-input select2" name="welder_id" id="welder_id" style="width: 100%;">
+                <option value="">-- Select Welder --</option>
                 @foreach($welders as $welder)
-                    <option value="{{ $welder->id }}" {{ old('welder_id', $certificate->welder_id) == $welder->id ? 'selected' : '' }}>{{ $welder->name }}</option>
+                    <option value="{{ $welder->id }}" {{ old('welder_id', isset($certificate) ? $certificate->welder_id : '') == $welder->id ? 'selected' : '' }}>{{ $welder->name }}</option>
                 @endforeach
             </select>
         </div>
         <div class="cert-right">
             <strong>Welder ID No:</strong>
             <input type="text" class="form-input" name="welder_id_no" id="welder_id_no"
-                style="width: 60px; display: inline; font-weight: bold;" value="{{ old('welder_id_no', $certificate->welder->welder_no) }}" readonly>
+                style="width: 60px; display: inline; font-weight: bold;" value="{{ old('welder_id_no', isset($certificate) ? $certificate->welder->welder_no : '') }}" readonly>
         </div>
     </div>
     
@@ -27,25 +28,40 @@
         <div class="cert-left">
             <strong>Gov ID Iqama number:</strong>
             <input type="text" class="form-input" name="iqama_no" id="iqama_no"
-                style="width: 100px; display: inline; font-weight: bold;" value="{{ old('iqama_no', $certificate->welder->iqama_no) }}" readonly>
+                style="width: 100px; display: inline; font-weight: bold;" value="{{ old('iqama_no', isset($certificate) ? $certificate->welder->iqama_no : '') }}" readonly>
         </div>
         <div class="cert-center">
             <strong>Company:</strong>
-            <select class="form-input" name="company_id" id="company_id">
+            <select class="form-input select2" name="company_id" id="company_id" style="width: 100%;">
+                <option value="">-- Select Company --</option>
                 @foreach($companies as $company)
-                    <option value="{{ $company->id }}" {{ old('company_id', $certificate->company_id) == $company->id ? 'selected' : '' }}>{{ $company->name }}</option>
+                    <option value="{{ $company->id }}" {{ old('company_id', isset($certificate) ? $certificate->company_id : '') == $company->id ? 'selected' : '' }}>{{ $company->name }}</option>
                 @endforeach
             </select>
         </div>
         <div class="cert-right">
             <strong>Passport No:</strong>
             <input type="text" class="form-input" name="passport_no" id="passport_no"
-                style="width: 80px; display: inline; font-weight: bold;" value="{{ old('passport_no', $certificate->welder->passport_no) }}" readonly>
+                style="width: 80px; display: inline; font-weight: bold;" value="{{ old('passport_no', isset($certificate) ? $certificate->welder->passport_no : '') }}" readonly>
         </div>
     </div>
     
     <!-- Photo placement that spans both rows -->
     <div class="photo-container">
-        @include('components.photo-upload', ['photo_path' => $certificate->photo_path])
+        @include('components.photo-upload', ['photo_path' => isset($certificate) ? $certificate->photo_path : null])
     </div>
 </div>
+
+<!-- Add Select2 CSS and JS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize Select2
+    $('.select2').select2({
+        theme: 'bootstrap4',
+        width: '100%'
+    });
+});
+</script>

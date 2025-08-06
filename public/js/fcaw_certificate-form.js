@@ -1,7 +1,12 @@
-// Remove any require statements from the top of this file
-// For example, if there was something like:
-// const someModule = require('some-module');
-// That needs to be removed or replaced with browser-compatible code
+/**
+ * Complete FCAW Certificate Form JavaScript
+ * Handles all functionality for FCAW certificate forms
+ */
+
+// Global variables
+let currentSignatureTarget = null;
+let modalSignaturePad = null;
+let inspectorSignaturePad = null;
 
 // Register the certificate-specific handler globally
 window.fcawLoadWelderData = function(welderId, directData = null) {
@@ -23,17 +28,18 @@ window.fcawLoadWelderData = function(welderId, directData = null) {
     }
     
     // Build URL with origin to ensure correct path resolution
-const baseUrl = (() => {
-    // Get base domain
-    const origin = window.location.origin;
+    const baseUrl = (() => {
+        // Get base domain
+        const origin = window.location.origin;
+        
+        // Check if we're in a subfolder deployment
+        if (window.location.pathname.includes('/Weldar/public')) {
+            return `${origin}/Weldar/public`;
+        }
+        
+        return origin;
+    })();
     
-    // Check if we're in a subfolder deployment
-    if (window.location.pathname.includes('/Weldar/public')) {
-        return `${origin}/Weldar/public`;
-    }
-    
-    return origin;
-})();
     // Use web-based API route instead of API route
     const apiUrl = `${baseUrl}/api/welders/${welderId}?certificate_type=fcaw`;
     const url = apiUrl;
@@ -64,7 +70,14 @@ const baseUrl = (() => {
             
             // Update welder fields - add null checks for each element
             const welderIdField = document.getElementById('welder_id');
-            if (welderIdField) welderIdField.value = welder.id || '';
+            if (welderIdField) {
+                // For Select2, trigger change event
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    $(welderIdField).val(welder.id).trigger('change');
+                } else {
+                    welderIdField.value = welder.id || '';
+                }
+            }
             
             const welderNameField = document.getElementById('welder_name');
             if (welderNameField) welderNameField.value = welder.name || '';
@@ -82,7 +95,14 @@ const baseUrl = (() => {
             if (companyNameField) companyNameField.value = welder.company_name || '';
             
             const companyIdField = document.getElementById('company_id');
-            if (companyIdField) companyIdField.value = welder.company_id || '';
+            if (companyIdField) {
+                // For Select2, trigger change event
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    $(companyIdField).val(welder.company_id).trigger('change');
+                } else {
+                    companyIdField.value = welder.company_id || '';
+                }
+            }
 
             // Update photo if available
             const photoPreview = document.getElementById('photo-preview');
@@ -131,11 +151,13 @@ const baseUrl = (() => {
         })
         .catch(error => {
             console.error('Error in fcawLoadWelderData:', error);
-            Swal.fire({
-                title: 'Error',
-                text: 'Failed to load welder data. Please try again.',
-                icon: 'error'
-            });
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to load welder data. Please try again.',
+                    icon: 'error'
+                });
+            }
         });
 };
 
@@ -153,7 +175,14 @@ window.handleBackendWelderData = function(data) {
         
         // Fill form fields with welder data - add null checks for all elements
         const welderIdField = document.getElementById('welder_id');
-        if (welderIdField) welderIdField.value = welder.id || '';
+        if (welderIdField) {
+            // For Select2, trigger change event
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $(welderIdField).val(welder.id).trigger('change');
+            } else {
+                welderIdField.value = welder.id || '';
+            }
+        }
         
         const welderIdNoField = document.getElementById('welder_id_no');
         if (welderIdNoField) welderIdNoField.value = welder.welder_id || '';
@@ -164,51 +193,56 @@ window.handleBackendWelderData = function(data) {
         const passportNoField = document.getElementById('passport_no');
         if (passportNoField) passportNoField.value = welder.passport_no || '';
     
-    // Set company name if field exists
-    const companyField = document.getElementById('company_name');
-    if (companyField) {
-        companyField.value = welder.company_name || '';
-    }
-    
-    // Set company ID if field exists
-    const companyIdField = document.getElementById('company_id');
-    if (companyIdField) {
-        companyIdField.value = welder.company_id || '';
-    }
-    
-    // Set certificate numbers
-    if (data.fcaw_certificate) {
-        const certNumberField = document.getElementById('certificate_no');
-        if (certNumberField) {
-            certNumberField.value = data.fcaw_certificate;
+        // Set company name if field exists
+        const companyField = document.getElementById('company_name');
+        if (companyField) {
+            companyField.value = welder.company_name || '';
         }
-    }
-    
-    // Set report numbers
-    if (data.vt_report_no) {
-        const vtReportField = document.getElementById('vt_report_no');
-        if (vtReportField) {
-            vtReportField.value = data.vt_report_no;
+        
+        // Set company ID if field exists
+        const companyIdField = document.getElementById('company_id');
+        if (companyIdField) {
+            // For Select2, trigger change event
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $(companyIdField).val(welder.company_id).trigger('change');
+            } else {
+                companyIdField.value = welder.company_id || '';
+            }
         }
-    }
-    
-    if (data.rt_report_no) {
-        const rtReportField = document.getElementById('rt_report_no');
-        if (rtReportField) {
-            rtReportField.value = data.rt_report_no;
+        
+        // Set certificate numbers
+        if (data.fcaw_certificate) {
+            const certNumberField = document.getElementById('certificate_no');
+            if (certNumberField) {
+                certNumberField.value = data.fcaw_certificate;
+            }
         }
-    }
-    
-    // Display welder photo if available
-    if (welder.photo_path) {
-        const photoPreview = document.getElementById('photo-preview');
-        if (photoPreview) {
-            photoPreview.innerHTML = `<img src="${welder.photo_path}" alt="Welder Photo" style="max-width:100%; max-height:200px;">`;
-            photoPreview.classList.add('has-photo');
+        
+        // Set report numbers
+        if (data.vt_report_no) {
+            const vtReportField = document.getElementById('vt_report_no');
+            if (vtReportField) {
+                vtReportField.value = data.vt_report_no;
+            }
         }
-    }
-    
-    console.log('Welder data successfully applied to form');
+        
+        if (data.rt_report_no) {
+            const rtReportField = document.getElementById('rt_report_no');
+            if (rtReportField) {
+                rtReportField.value = data.rt_report_no;
+            }
+        }
+        
+        // Display welder photo if available
+        if (welder.photo_path) {
+            const photoPreview = document.getElementById('photo-preview');
+            if (photoPreview) {
+                photoPreview.innerHTML = `<img src="${welder.photo_path}" alt="Welder Photo" style="max-width:100%; max-height:200px;">`;
+                photoPreview.classList.add('has-photo');
+            }
+        }
+        
+        console.log('Welder data successfully applied to form');
     } catch (error) {
         console.error('Error in handleBackendWelderData:', error);
         // Optionally show a user-friendly error message
@@ -231,92 +265,243 @@ class ValidationError extends Error {
     }
 }
 
-// Set current date in the test date field
-function setCurrentDate() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-
-    const formattedDate = `${year}-${month}-${day}`;
-
-    // Find the test_date input field
-    const dateField = document.querySelector('input[name="test_date"]');
-    if (dateField) {
-        dateField.value = formattedDate;
-
-        // Update the formatted date display if it exists
-        formatDateDisplay(dateField);
+/**
+ * Initialize Select2 for dropdowns
+ */
+function initializeSelect2() {
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            placeholder: function() {
+                return $(this).data('placeholder') || 'Select an option';
+            },
+            allowClear: true
+        });
     }
 }
 
-// Format date display in a readable format
-function formatDateDisplay(dateInput) {
-    if (!dateInput || !dateInput.value) return;
-
-    const date = new Date(dateInput.value);
-    if (isNaN(date.getTime())) return;
-
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
-        'October', 'November', 'December'
-    ];
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-
-    const formattedDate = `${day} of ${month} ${year}`;
-    const formattedDateElement = document.getElementById('formatted_date');
-    if (formattedDateElement) {
-        formattedDateElement.textContent = formattedDate;
+/**
+ * Handle plate/pipe specimen toggle logic
+ */
+function handleSpecimenToggle() {
+    const plateCheckbox = document.getElementById('plate_specimen');
+    const pipeCheckbox = document.getElementById('pipe_specimen');
+    const pipeDiameterSelect = document.getElementById('pipe_diameter_type');
+    const pipeDiameterManual = document.getElementById('pipe_diameter_manual');
+    const diameterRangeSpan = document.getElementById('diameter_range_span');
+    const diameterRangeHidden = document.getElementById('diameter_range');
+    
+    if (!plateCheckbox || !pipeCheckbox || !pipeDiameterSelect) return;
+    
+    const plateChecked = plateCheckbox.checked;
+    const pipeChecked = pipeCheckbox.checked;
+    
+    if (plateChecked && pipeChecked) {
+        // Both checked - disable pipe diameter controls
+        pipeDiameterSelect.disabled = true;
+        if (pipeDiameterManual) pipeDiameterManual.disabled = true;
+        
+        if (diameterRangeSpan) diameterRangeSpan.textContent = 'Plate & Pipe';
+        if (diameterRangeHidden) diameterRangeHidden.value = 'Plate & Pipe';
+        
+    } else if (plateChecked && !pipeChecked) {
+        // Only plate checked - disable pipe diameter controls
+        pipeDiameterSelect.disabled = true;
+        if (pipeDiameterManual) pipeDiameterManual.disabled = true;
+        
+        if (diameterRangeSpan) diameterRangeSpan.textContent = 'Plate';
+        if (diameterRangeHidden) diameterRangeHidden.value = 'Plate';
+        
+    } else if (!plateChecked && pipeChecked) {
+        // Only pipe checked - enable pipe diameter controls
+        pipeDiameterSelect.disabled = false;
+        if (pipeDiameterManual) pipeDiameterManual.disabled = false;
+        
+        updateDiameterRange();
+        
+    } else {
+        // Neither checked - disable all and clear
+        pipeDiameterSelect.disabled = true;
+        if (pipeDiameterManual) pipeDiameterManual.disabled = true;
+        
+        if (diameterRangeSpan) diameterRangeSpan.textContent = '';
+        if (diameterRangeHidden) diameterRangeHidden.value = '';
     }
 }
 
-// Update dia-thickness value when diameter or thickness changes
-function updateDiaThickness() {
-    const diameter = document.getElementById('diameter').value;
-    const thickness = document.getElementById('thickness').value;
-    document.getElementById('dia_thickness').value = `${diameter} x ${thickness}`;
+/**
+ * Update diameter range based on pipe diameter selection
+ */
+function updateDiameterRange() {
+    const pipeDiameterSelect = document.getElementById('pipe_diameter_type');
+    const diameterRangeSpan = document.getElementById('diameter_range_span');
+    const diameterRangeHidden = document.getElementById('diameter_range');
+    
+    if (!pipeDiameterSelect) return;
+    
+    // Check if plate is also selected
+    const plateCheckbox = document.getElementById('plate_specimen');
+    if (plateCheckbox && plateCheckbox.checked) {
+        if (diameterRangeSpan) diameterRangeSpan.textContent = 'Plate & Pipe';
+        if (diameterRangeHidden) diameterRangeHidden.value = 'Plate & Pipe';
+        return;
+    }
+    
+    const selectedValue = pipeDiameterSelect.value;
+    let rangeText = '';
+    
+    switch (selectedValue) {
+        case '8_nps':
+            rangeText = 'Outside diameter 219.1 mm (8 NPS) and larger';
+            break;
+        case '6_nps':
+            rangeText = 'Outside diameter 168.3 mm (6 NPS) to unlimited';
+            break;
+        case '4_nps':
+            rangeText = 'Outside diameter 114.3 mm (4 NPS) to unlimited';
+            break;
+        case '2_nps':
+            rangeText = 'Outside diameter 60.3 mm (2 NPS) to unlimited';
+            break;
+        case '1_nps':
+            rangeText = 'Outside diameter 33.4 mm (1 NPS) to unlimited';
+            break;
+        case '__manual__':
+            const manualInput = document.getElementById('pipe_diameter_manual');
+            rangeText = manualInput ? manualInput.value : '';
+            break;
+        default:
+            rangeText = selectedValue;
+    }
+    
+    if (diameterRangeSpan) diameterRangeSpan.textContent = rangeText;
+    if (diameterRangeHidden) diameterRangeHidden.value = rangeText;
 }
 
-// Update P-Number range based on selected P-Number
+/**
+ * Toggle manual entry fields
+ */
+function toggleManualEntry(fieldName) {
+    const selectField = document.getElementById(fieldName);
+    const manualField = document.getElementById(fieldName + '_manual');
+    const rangeSpan = document.getElementById(fieldName + '_range_span');
+    const rangeManualField = document.getElementById(fieldName + '_range_manual');
+    
+    if (!selectField || !manualField) return;
+    
+    if (selectField.value === '__manual__') {
+        manualField.style.display = 'block';
+        manualField.required = true;
+        
+        if (rangeManualField) {
+            rangeManualField.style.display = 'block';
+        }
+        if (rangeSpan) {
+            rangeSpan.style.display = 'none';
+        }
+    } else {
+        manualField.style.display = 'none';
+        manualField.required = false;
+        
+        if (rangeManualField) {
+            rangeManualField.style.display = 'none';
+        }
+        if (rangeSpan) {
+            rangeSpan.style.display = 'block';
+        }
+        
+        // Update range when selection changes
+        updateFieldRange(fieldName);
+    }
+}
+
+/**
+ * Update field ranges based on selection
+ */
+function updateFieldRange(fieldName) {
+    const selectField = document.getElementById(fieldName);
+    const rangeSpan = document.getElementById(fieldName + '_range_span');
+    const rangeHidden = document.getElementById(fieldName + '_range');
+    
+    if (!selectField) return;
+    
+    let rangeText = '';
+    
+    switch (fieldName) {
+        case 'filler_spec':
+            rangeText = selectField.value;
+            break;
+        case 'filler_class':
+            rangeText = selectField.value;
+            break;
+        case 'filler_f_no':
+            if (selectField.value === 'F-No.6') {
+                rangeText = 'All F-No. 6';
+            }
+            break;
+        case 'base_metal_p_no':
+            rangeText = 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49';
+            break;
+        case 'backing':
+            if (selectField.value === 'With Backing') {
+                rangeText = 'With backing';
+            } else if (selectField.value === 'Without Backing') {
+                rangeText = 'With or Without backing';
+            }
+            break;
+    }
+    
+    if (rangeSpan) rangeSpan.textContent = rangeText;
+    if (rangeHidden) rangeHidden.value = rangeText;
+}
+
+/**
+ * Update P-Number range
+ */
 function updatePNumberRange() {
-    const pNo = document.getElementById('base_metal_p_no').value;
+    const pNo = document.getElementById('base_metal_p_no');
     const pNumberRange = document.getElementById('p_number_range_span');
+    const pNumberRangeInput = document.getElementById('p_number_range');
     const manualInput = document.getElementById('base_metal_p_no_manual');
     const manualRangeInput = document.getElementById('p_number_range_manual');
 
-    if (pNo === '__manual__') {
-        manualInput.style.display = 'block';
-        manualRangeInput.style.display = 'block';
-        pNumberRange.style.display = 'none';
-        manualInput.focus();
+    if (!pNo) return;
+
+    if (pNo.value === '__manual__') {
+        if (manualInput) manualInput.style.display = 'block';
+        if (manualRangeInput) manualRangeInput.style.display = 'block';
+        if (pNumberRange) pNumberRange.style.display = 'none';
+        if (manualInput) manualInput.focus();
     } else {
-        manualInput.style.display = 'none';
-        manualRangeInput.style.display = 'none';
-        pNumberRange.style.display = 'block';
+        if (manualInput) manualInput.style.display = 'none';
+        if (manualRangeInput) manualRangeInput.style.display = 'none';
+        if (pNumberRange) pNumberRange.style.display = 'block';
         
         // Use a fixed range text for all P-Number options
         const pNumberRangeText = 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49';
         
         // Set the range text
-        pNumberRange.textContent = pNumberRangeText;
+        if (pNumberRange) pNumberRange.textContent = pNumberRangeText;
         
         // Update the hidden field for form submission
-        const pNumberRangeHidden = document.getElementById('p_number_range');
-        if (pNumberRangeHidden) {
-            pNumberRangeHidden.value = pNumberRangeText;
-        }
+        if (pNumberRangeInput) pNumberRangeInput.value = pNumberRangeText;
     }
 }
 
-// Update F-Number range based on selected F-Number
+/**
+ * Update F-Number range
+ */
 function updateFNumberRange() {
-    const fNo = document.getElementById('filler_f_no').value;
+    const fNo = document.getElementById('filler_f_no');
     const fNumberRange = document.getElementById('f_number_range_span');
+    const fNumberRangeInput = document.getElementById('f_number_range');
     const manualInput = document.getElementById('filler_f_no_manual');
     const manualRangeInput = document.getElementById('f_number_range_manual');
 
-    if (fNo === '__manual__') {
+    if (!fNo) return;
+
+    if (fNo.value === '__manual__') {
         if (manualInput) manualInput.style.display = 'block';
         if (manualRangeInput) manualRangeInput.style.display = 'block';
         if (fNumberRange) fNumberRange.style.display = 'none';
@@ -332,26 +517,23 @@ function updateFNumberRange() {
         'F-No.6': 'All F-No. 6'
     };
 
-    if (fNumberRange) {
-        fNumberRange.textContent = fNumberRanges[fNo] || 'All F-No. 6';
-    }
+    const rangeText = fNumberRanges[fNo.value] || 'All F-No. 6';
     
-    // Update hidden field
-    const fNumberRangeHidden = document.getElementById('f_number_range');
-    if (fNumberRangeHidden) {
-        fNumberRangeHidden.value = fNumberRange ? fNumberRange.textContent : 'All F-No. 6';
-    }
+    if (fNumberRange) fNumberRange.textContent = rangeText;
+    if (fNumberRangeInput) fNumberRangeInput.value = rangeText;
 }
 
-// Update position range based on selected position
+/**
+ * Update position range based on selected position
+ */
 function updatePositionRange() {
     const positionSelect = document.getElementById('test_position');
     if (!positionSelect) return;
 
     const position = positionSelect.value;
-    const rangeCells = document.querySelectorAll('.var-range[style*="font-weight: bold"]');
-    if (rangeCells.length !== 3) return;
-
+    const positionRangeInput = document.getElementById('position_range');
+    const isPipe = document.getElementById('pipe_specimen')?.checked;
+    
     const positionRules = {
         '1G': {
             groove_over_24: 'F for Groove Plate and Pipe Over 24 in. (610 mm) O.D.',
@@ -386,54 +568,56 @@ function updatePositionRange() {
     };
 
     const rules = positionRules[position] || positionRules['6G'];
-    rangeCells[0].textContent = rules.groove_over_24;
-    rangeCells[1].textContent = rules.groove_under_24;
-    rangeCells[2].textContent = rules.fillet;
+    let rangeText = '';
     
-    // Update the hidden field for form submission
-    const positionRangeHidden = document.getElementById('position_range');
-    if (positionRangeHidden) {
-        const isPipe = document.getElementById('pipe_specimen')?.checked;
-        if (isPipe) {
-            positionRangeHidden.value = rules.groove_over_24 + ' | ' + rules.groove_under_24 + ' | ' + rules.fillet;
-        } else {
-            positionRangeHidden.value = rules.groove_over_24 + ' | ' + rules.fillet;
-        }
+    if (isPipe) {
+        rangeText = rules.groove_over_24 + ' | ' + rules.groove_under_24 + ' | ' + rules.fillet;
+    } else {
+        rangeText = rules.groove_over_24 + ' | ' + rules.fillet;
+    }
+    
+    if (positionRangeInput) {
+        positionRangeInput.value = rangeText;
     }
 }
 
-// Update backing range based on selected backing
+/**
+ * Update backing range based on selected backing
+ */
 function updateBackingRange() {
-    const backing = document.getElementById('backing').value;
+    const backing = document.getElementById('backing');
     const backingRange = document.getElementById('backing_range_span');
+    const backingRangeInput = document.getElementById('backing_range');
     
-    if (!backingRange) return;
+    if (!backing || !backingRange) return;
     
     let backingRangeText = '';
     
     // Set backing range text based on backing selection
-    if (backing === 'With Backing') {
+    if (backing.value === 'With Backing') {
         backingRangeText = 'With backing';
-    } else if (backing === 'Without Backing') {
+    } else if (backing.value === 'Without Backing') {
         backingRangeText = 'With or Without backing';
     } else {
-        backingRangeText = backing;
+        backingRangeText = backing.value;
     }
         
     // Set backing range text
     backingRange.textContent = backingRangeText;
     
     // Update hidden field
-    const backingRangeHidden = document.getElementById('backing_range');
-    if (backingRangeHidden) {
-        backingRangeHidden.value = backingRangeText;
+    if (backingRangeInput) {
+        backingRangeInput.value = backingRangeText;
     }
 }
 
-// Update backing gas range based on selected backing gas option
+/**
+ * Update backing gas range based on selected backing gas option
+ */
 function updateBackingGasRange() {
-    const backingGas = document.getElementById('backing_gas').value;
+    const backingGas = document.getElementById('backing_gas');
     const backingGasRange = document.getElementById('backing_gas_range_span');
+    const backingGasRangeInput = document.getElementById('backing_gas_range');
     
     if (!backingGasRange) return;
     
@@ -444,154 +628,47 @@ function updateBackingGasRange() {
     backingGasRange.textContent = backingGasRangeText;
     
     // Update hidden field
-    const backingGasRangeHidden = document.getElementById('backing_gas_range');
-    if (backingGasRangeHidden) {
-        backingGasRangeHidden.value = backingGasRangeText;
+    if (backingGasRangeInput) {
+        backingGasRangeInput.value = backingGasRangeText;
     }
 }
 
-// Toggle visibility of pipe diameter field based on specimen type
-function toggleDiameterField() {
-    const plateCheckbox = document.getElementById('plate_specimen');
-    const pipeCheckbox = document.getElementById('pipe_specimen');
-    const diameterTypeField = document.getElementById('pipe_diameter_type');
-    const diameterRangeSpan = document.getElementById('diameter_range_span');
-    const diameterRangeHidden = document.getElementById('diameter_range');
-    
-    // If both are checked or only plate is checked
-    if ((plateCheckbox && pipeCheckbox && plateCheckbox.checked && pipeCheckbox.checked) || 
-        (plateCheckbox && plateCheckbox.checked && pipeCheckbox && !pipeCheckbox.checked)) {
-        
-        if (diameterRangeSpan) {
-            diameterRangeSpan.textContent = 'Plate & Pipe';
-        }
-        
-        if (diameterRangeHidden) {
-            diameterRangeHidden.value = 'Plate & Pipe';
-        }
-        
-        // If both are checked or only pipe is checked, show the diameter field
-        if (diameterTypeField) {
-            if (pipeCheckbox && pipeCheckbox.checked) {
-                diameterTypeField.parentElement.style.display = 'block';
-                
-                // Make sure to update all ranges when pipe is selected
-                setTimeout(function() {
-                    if (typeof updateAllRangeFields === 'function') {
-                        updateAllRangeFields();
-                    }
-                }, 100);
-            } else {
-                diameterTypeField.parentElement.style.display = 'none';
-            }
-        }
-        
-    } else if (pipeCheckbox && pipeCheckbox.checked) {
-        // If only pipe is checked
-        if (diameterTypeField) {
-            diameterTypeField.parentElement.style.display = 'block';
-        }
-        
-        // Update the diameter range text based on the selected diameter type
-        updateDiameterRange();
-    } else {
-        // If neither is checked (shouldn't happen in normal usage)
-        if (diameterTypeField) {
-            diameterTypeField.parentElement.style.display = 'none';
-        }
-        
-        if (diameterRangeSpan) {
-            diameterRangeSpan.textContent = '';
-        }
-        
-        if (diameterRangeHidden) {
-            diameterRangeHidden.value = '';
-        }
-    }
-}
-
-// Update diameter range based on pipe diameter type
-function updateDiameterRange() {
-    const plateCheckbox = document.getElementById('plate_specimen');
-    const pipeCheckbox = document.getElementById('pipe_specimen');
-    const diameterType = document.getElementById('pipe_diameter_type').value;
-    const diameterRange = document.getElementById('diameter_range_span');
-    
-    if (!diameterRange) return;
-    
-    // If plate is checked, always show "Plate & Pipe"
-    if (plateCheckbox && plateCheckbox.checked) {
-        diameterRange.textContent = 'Plate & Pipe';
-        
-        // Update hidden field
-        const diameterRangeHidden = document.getElementById('diameter_range');
-        if (diameterRangeHidden) {
-            diameterRangeHidden.value = 'Plate & Pipe';
-        }
-        return;
-    }
-    
-    let diameterRangeText = '';
-    
-    // Set range text based on diameter type
-    switch (diameterType) {
-        case '2_nps':
-            diameterRangeText = 'Diameters 2 3/8 inch (60 mm) or larger';
-            break;
-        case '2_7_8_nps':
-            diameterRangeText = 'Outside diameter 2 7/8 inch (73 mm) to unlimited';
-            break;
-        case '8_nps':
-            diameterRangeText = 'Outside diameter 8 inch (219 mm) or larger';
-            break;
-        case 'less_than_8_nps':
-            diameterRangeText = 'Outside diameter less than 8 inch (219 mm)';
-            break;
-        default:
-            diameterRangeText = '';
-    }
-    
-    // Set diameter range text
-    diameterRange.textContent = diameterRangeText;
-    
-    // Update hidden field
-    const diameterRangeHidden = document.getElementById('diameter_range');
-    if (diameterRangeHidden) {
-        diameterRangeHidden.value = diameterRangeText;
-    }
-}
-
-// Update vertical progression range
+/**
+ * Update vertical progression range
+ */
 function updateVerticalProgressionRange() {
-    const progression = document.getElementById('vertical_progression').value;
+    const progression = document.getElementById('vertical_progression');
     const progressionRange = document.getElementById('vertical_progression_range_span');
+    const progressionRangeInput = document.getElementById('vertical_progression_range');
     
-    if (!progressionRange) return;
+    if (!progression || !progressionRange) return;
     
     // Set progression range text based on selection
-    const progressionRangeText = (progression === 'Upward') ? 'Upward' : progression;
+    const progressionRangeText = (progression.value === 'Upward') ? 'Upward' : progression.value;
     
     // Set vertical progression range text
     progressionRange.textContent = progressionRangeText;
     
     // Update hidden field
-    const progressionRangeHidden = document.getElementById('vertical_progression_range');
-    if (progressionRangeHidden) {
-        progressionRangeHidden.value = progressionRangeText;
+    if (progressionRangeInput) {
+        progressionRangeInput.value = progressionRangeText;
     }
 }
 
-// Update transfer mode range
+/**
+ * Update transfer mode range
+ */
 function updateTransferModeRange() {
-    const transferMode = document.getElementById('transfer_mode').value;
+    const transferMode = document.getElementById('transfer_mode');
     const transferModeRange = document.getElementById('transfer_mode_range_span');
+    const transferModeRangeInput = document.getElementById('transfer_mode_range');
     
-    if (!transferModeRange) return;
+    if (!transferMode || !transferModeRange) return;
     
     let transferModeRangeText = '';
     
     // Set range text based on transfer mode
-    switch (transferMode) {
+    switch (transferMode.value) {
         case 'spray':
             transferModeRangeText = 'spray, globular, or pulsed Spray';
             break;
@@ -605,109 +682,44 @@ function updateTransferModeRange() {
             transferModeRangeText = 'short circuit';
             break;
         default:
-            transferModeRangeText = transferMode;
+            transferModeRangeText = transferMode.value;
     }
     
     // Set transfer mode range text
     transferModeRange.textContent = transferModeRangeText;
     
     // Update hidden field
-    const transferModeRangeHidden = document.getElementById('transfer_mode_range');
-    if (transferModeRangeHidden) {
-        transferModeRangeHidden.value = transferModeRangeText;
+    if (transferModeRangeInput) {
+        transferModeRangeInput.value = transferModeRangeText;
     }
 }
 
-// Update equipment type range
-function updateEquipmentTypeRange() {
-    const equipmentTypeElement = document.getElementById('equipment_type');
-    if (!equipmentTypeElement) return; // Exit if equipment_type element doesn't exist
+/**
+ * Calculate thickness range based on actual thickness
+ */
+function calculateThicknessRange(thickness, processType = 'fcaw') {
+    const thicknessValue = parseFloat(thickness);
+    let rangeValue = '';
     
-    const equipmentType = equipmentTypeElement.value;
-    const equipmentTypeRange = document.getElementById('equipment_type_range_span');
+    if (!isNaN(thicknessValue)) {
+        if (thicknessValue <= 12) {
+            // If thickness is 0-12, multiply by 2
+            rangeValue = (thicknessValue * 2).toFixed(2) + ' mm';
+        } else {
+            // If thickness is 13 or greater, use "Maximum to be welded"
+            rangeValue = 'Maximum to be welded';
+        }
+    }
     
-    if (!equipmentTypeRange) return;
-    
-    // Set equipment type range text (same as selected)
-    equipmentTypeRange.textContent = equipmentType;
-    
-    // Update hidden field
-    const equipmentTypeRangeHidden = document.getElementById('equipment_type_range');
-    if (equipmentTypeRangeHidden) {
-        equipmentTypeRangeHidden.value = equipmentType;
+    const rangeField = document.getElementById(processType + '_thickness_range');
+    if (rangeField) {
+        rangeField.value = rangeValue;
     }
 }
 
-// Update technique range
-function updateTechniqueRange() {
-    const techniqueElement = document.getElementById('technique');
-    if (!techniqueElement) return; // Exit if technique element doesn't exist
-    
-    const technique = techniqueElement.value;
-    const techniqueRange = document.getElementById('technique_range_span');
-    
-    if (!techniqueRange) return;
-    
-    // Set technique range text (same as selected)
-    techniqueRange.textContent = technique;
-    
-    // Update hidden field
-    const techniqueRangeHidden = document.getElementById('technique_range');
-    if (techniqueRangeHidden) {
-        techniqueRangeHidden.value = technique;
-    }
-}
-
-// Update oscillation range
-function updateOscillationRange() {
-    const oscillationYesCheckbox = document.getElementById('oscillation_yes');
-    const oscillationNoCheckbox = document.getElementById('oscillation_no');
-    const oscillationValue = document.getElementById('oscillation_value');
-    const oscillationRange = document.getElementById('oscillation_range_span');
-    
-    if (!oscillationRange) return;
-    // If checkboxes don't exist, exit early
-    if (!oscillationYesCheckbox && !oscillationNoCheckbox) return;
-    
-    // Determine if oscillation is enabled
-    const isOscillationEnabled = oscillationYesCheckbox && oscillationYesCheckbox.checked;
-    
-    // Set oscillation range text based on checkbox and value
-    let oscillationRangeText = isOscillationEnabled ? 
-        'YES - ' + (oscillationValue ? oscillationValue.value : '') : 
-        'NO';
-    
-    // Set oscillation range text
-    oscillationRange.textContent = oscillationRangeText;
-    
-    // Update hidden field
-    const oscillationRangeHidden = document.getElementById('oscillation_range');
-    if (oscillationRangeHidden) {
-        oscillationRangeHidden.value = oscillationRangeText;
-    }
-}
-
-// Update operation mode range
-function updateOperationModeRange() {
-    const operationModeElement = document.getElementById('operation_mode');
-    if (!operationModeElement) return; // Exit early if element doesn't exist
-    
-    const operationMode = operationModeElement.value;
-    const operationModeRange = document.getElementById('operation_mode_range_span');
-    
-    if (!operationModeRange) return;
-    
-    // Set operation mode range text (same as selected)
-    operationModeRange.textContent = operationMode;
-    
-    // Update hidden field
-    const operationModeRangeHidden = document.getElementById('operation_mode_range');
-    if (operationModeRangeHidden) {
-        operationModeRangeHidden.value = operationMode;
-    }
-}
-
-// Update all range fields for form submission
+/**
+ * Update all range fields for form submission
+ */
 function updateAllRangeFields() {
     try {
         // Call each update function safely
@@ -743,29 +755,15 @@ function updateAllRangeFields() {
             updateTransferModeRange();
         }
         
-        if (document.getElementById('equipment_type')) {
-            updateEquipmentTypeRange();
-        }
-        
-        if (document.getElementById('technique')) {
-            updateTechniqueRange();
-        }
-        
-        // For oscillation, check the radio buttons
-        if (document.getElementById('oscillation_yes') || document.getElementById('oscillation_no')) {
-            updateOscillationRange();
-        }
-        
-        if (document.getElementById('operation_mode')) {
-            updateOperationModeRange();
-        }
     } catch (error) {
         console.error("Error in updateAllRangeFields:", error);
         // Continue with form submission despite errors
     }
 }
 
-// Function to enable/disable RT/UT fields based on checkbox selection
+/**
+ * Function to enable/disable RT/UT fields based on checkbox selection
+ */
 function updateTestFields() {
     const rtCheckbox = document.getElementById('rt');
     const utCheckbox = document.getElementById('ut');
@@ -865,18 +863,74 @@ function updateTestFields() {
     updateField();
 }
 
-// Function to validate required form fields
+/**
+ * Set current date in the test date field
+ */
+function setCurrentDate() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    const formattedDate = `${year}-${month}-${day}`;
+
+    // Find the test_date input field
+    const dateField = document.querySelector('input[name="test_date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = formattedDate;
+
+        // Update the formatted date display if it exists
+        formatDateDisplay(dateField);
+    }
+}
+
+/**
+ * Format date display in a readable format
+ */
+function formatDateDisplay(dateInput) {
+    if (!dateInput || !dateInput.value) return;
+
+    const date = new Date(dateInput.value);
+    if (isNaN(date.getTime())) return;
+
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
+        'October', 'November', 'December'
+    ];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    const formattedDate = `${day} of ${month} ${year}`;
+    const formattedDateElement = document.getElementById('formatted_date');
+    if (formattedDateElement) {
+        formattedDateElement.textContent = formattedDate;
+    }
+}
+
+/**
+ * Update dia-thickness value when diameter or thickness changes
+ */
+function updateDiaThickness() {
+    const diameter = document.getElementById('diameter');
+    const thickness = document.getElementById('thickness');
+    const diaThicknessField = document.getElementById('dia_thickness');
+    
+    if (diameter && thickness && diaThicknessField) {
+        diaThicknessField.value = `${diameter.value} x ${thickness.value}`;
+    }
+}
+
+/**
+ * Function to validate required form fields
+ */
 function validateRequiredFields() {
     // Get all required fields
-    const requiredFields = document.querySelectorAll('[required]');
+    const requiredFields = document.querySelectorAll('[required]:not([disabled])');
     let isValid = true;
     let firstInvalidField = null;
 
     // Check each required field
     requiredFields.forEach(field => {
-        // Skip disabled fields as they won't be submitted
-        if (field.disabled) return;
-
         // Reset previous validation styling
         field.classList.remove('is-invalid');
         
@@ -906,113 +960,237 @@ function validateRequiredFields() {
     // Focus on the first invalid field if any
     if (firstInvalidField) {
         firstInvalidField.focus();
+        firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     return isValid;
 }
 
-// Initialize form on document ready
-document.addEventListener('DOMContentLoaded', function() {
+/**
+ * Clear validation errors
+ */
+function clearValidationErrors() {
+    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+}
+
+/**
+ * Display validation errors
+ */
+function displayValidationErrors(errors) {
+    Object.keys(errors).forEach(fieldName => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            field.classList.add('is-invalid');
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            errorDiv.textContent = errors[fieldName][0];
+            
+            field.parentNode.insertBefore(errorDiv, field.nextSibling);
+        }
+    });
+}
+
+/**
+ * Initialize signature pads
+ */
+function initializeSignaturePads() {
+    // Initialize main signature pad
+    const canvas = document.getElementById('signature-pad');
+    const signatureDataInput = document.getElementById('signature_data');
+    
+    if (canvas && typeof SignaturePad !== 'undefined') {
+        const signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            penColor: 'black'
+        });
+        
+        // Clear signature button
+        const clearBtn = document.getElementById('clear-signature');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                signaturePad.clear();
+                signatureDataInput.value = '';
+            });
+        }
+        
+        // Update hidden input when signature changes
+        signaturePad.addEventListener("endStroke", () => {
+            signatureDataInput.value = signaturePad.toDataURL();
+        });
+        
+        // If there's an existing signature, load it
+        if (signatureDataInput && signatureDataInput.value) {
+            signaturePad.fromDataURL(signatureDataInput.value);
+        }
+        
+        // Handle window resize to maintain signature pad aspect ratio
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            
+            // Redraw signature if it exists
+            if (signatureDataInput && signatureDataInput.value) {
+                signaturePad.fromDataURL(signatureDataInput.value);
+            } else {
+                signaturePad.clear(); // Otherwise isEmpty() might return incorrect value
+            }
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+    }
+    
+    // Initialize inspector signature functionality
+    initializeInspectorSignature();
+}
+
+/**
+ * Initialize inspector signature functionality
+ */
+function initializeInspectorSignature() {
+    const inspectorSignBtn = document.getElementById('inspector-sign-btn');
+    const inspectorSignatureDataInput = document.getElementById('inspector_signature_data');
+    const inspectorSignaturePreview = document.getElementById('inspector-signature-preview');
+    
+    if (inspectorSignBtn) {
+        // Add inspector signature modal if it doesn't exist
+        if (!document.getElementById('inspector-signature-modal')) {
+            const modalHtml = `
+            <div id="inspector-signature-modal" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+                <div class="modal-dialog" style="position: relative; width: 600px; margin: 60px auto;">
+                    <div class="modal-content" style="background-color: #fefefe; padding: 0; border: 1px solid #888; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #e9ecef;">
+                            <h5 style="margin: 0;">Add Inspector Signature</h5>
+                            <button type="button" class="close-modal" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+                        </div>
+                        <div class="modal-body" style="padding: 20px;">
+                            <div class="signature-pad-wrapper" style="width: 100%; border: 1px solid #ccc; border-radius: 4px;">
+                                <canvas id="inspector-signature-canvas" width="560" height="200" style="width: 100%; height: 200px;"></canvas>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="display: flex; justify-content: flex-end; padding: 15px; border-top: 1px solid #e9ecef;">
+                            <button type="button" id="clear-inspector-signature" class="btn btn-secondary" style="background-color: #6c757d; color: white; border: none; padding: 8px 16px; margin-right: 10px; border-radius: 4px; cursor: pointer;">Clear</button>
+                            <button type="button" id="save-inspector-signature" class="btn btn-primary" style="background-color: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Save Signature</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        const inspectorModal = document.getElementById('inspector-signature-modal');
+        const inspectorCanvas = document.getElementById('inspector-signature-canvas');
+        
+        if (inspectorCanvas && typeof SignaturePad !== 'undefined') {
+            // Initialize signature pad
+            inspectorSignaturePad = new SignaturePad(inspectorCanvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                penColor: 'black'
+            });
+            
+            // Show modal when sign button is clicked
+            inspectorSignBtn.addEventListener('click', function() {
+                inspectorModal.style.display = 'block';
+                
+                // Resize canvas
+                setTimeout(() => {
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    inspectorCanvas.width = inspectorCanvas.offsetWidth * ratio;
+                    inspectorCanvas.height = inspectorCanvas.offsetHeight * ratio;
+                    inspectorCanvas.getContext("2d").scale(ratio, ratio);
+                    
+                    // If there's already a signature, load it
+                    if (inspectorSignatureDataInput && inspectorSignatureDataInput.value) {
+                        inspectorSignaturePad.fromDataURL(inspectorSignatureDataInput.value);
+                    }
+                }, 100);
+            });
+            
+            // Hide modal when clicking close button
+            const closeBtn = document.querySelector('.close-modal');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    inspectorModal.style.display = 'none';
+                });
+            }
+            
+            // Hide modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === inspectorModal) {
+                    inspectorModal.style.display = 'none';
+                }
+            });
+            
+            // Clear signature
+            const clearBtn = document.getElementById('clear-inspector-signature');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    inspectorSignaturePad.clear();
+                });
+            }
+            
+            // Save signature
+            const saveBtn = document.getElementById('save-inspector-signature');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function() {
+                    if (inspectorSignaturePad.isEmpty()) {
+                        alert('Please provide a signature');
+                        return;
+                    }
+                    
+                    const signatureData = inspectorSignaturePad.toDataURL();
+                    if (inspectorSignatureDataInput) {
+                        inspectorSignatureDataInput.value = signatureData;
+                    }
+                    if (inspectorSignaturePreview) {
+                        inspectorSignaturePreview.innerHTML = `<img src="${signatureData}" alt="Inspector Signature" style="max-height: 40px;">`;
+                    }
+                    inspectorModal.style.display = 'none';
+                    
+                    console.log('Inspector signature saved');
+                });
+            }
+            
+            // Load existing signature if available
+            if (inspectorSignatureDataInput && inspectorSignatureDataInput.value && inspectorSignaturePreview) {
+                inspectorSignaturePreview.innerHTML = `<img src="${inspectorSignatureDataInput.value}" alt="Inspector Signature" style="max-height: 40px;">`;
+            }
+        }
+    }
+}
+
+/**
+ * Set default values
+ */
+function setDefaultValues() {
+    // Set supervised_company to default value
+    const supervisedCompanyField = document.getElementById('supervised_company');
+    if (supervisedCompanyField && !supervisedCompanyField.value) {
+        supervisedCompanyField.value = 'Elite Engineering Arabia';
+    }
+    
+    // Set current date if not already set
     setCurrentDate();
     
-    // Initialize RT/UT fields state
-    updateTestFields();
-    
-    // Set up event listeners if elements exist
-    const testPosition = document.getElementById('test_position');
-    if (testPosition) {
-        testPosition.addEventListener('change', updatePositionRange);
+    // Set default inspector date
+    const inspectorDateField = document.querySelector('input[name="inspector_date"]');
+    if (inspectorDateField && !inspectorDateField.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        inspectorDateField.value = `${year}-${month}-${day}`;
     }
-    
-    const backing = document.getElementById('backing');
-    if (backing) {
-        backing.addEventListener('change', updateBackingRange);
-    }
-    
-    const backingGas = document.getElementById('backing_gas');
-    if (backingGas) {
-        backingGas.addEventListener('change', updateBackingGasRange);
-        // Initialize with default value
-        updateBackingGasRange();
-    }
-    
-    const baseMetalPNo = document.getElementById('base_metal_p_no');
-    if (baseMetalPNo) {
-        baseMetalPNo.addEventListener('change', updatePNumberRange);
-    }
-    
-    const fillerFNo = document.getElementById('filler_f_no');
-    if (fillerFNo) {
-        fillerFNo.addEventListener('change', updateFNumberRange);
-    }
-    
-    const pipeDiameterType = document.getElementById('pipe_diameter_type');
-    if (pipeDiameterType) {
-        pipeDiameterType.addEventListener('change', updateDiameterRange);
-    }
-    
-    // Set up event listeners for new fields
-    const verticalProgression = document.getElementById('vertical_progression');
-    if (verticalProgression) {
-        verticalProgression.addEventListener('change', updateVerticalProgressionRange);
-        // Initialize with default value
-        updateVerticalProgressionRange();
-    }
-    
-    const transferMode = document.getElementById('transfer_mode');
-    if (transferMode) {
-        transferMode.addEventListener('change', updateTransferModeRange);
-        // Initialize with default value
-        updateTransferModeRange();
-    }
-    
-    const equipmentType = document.getElementById('equipment_type');
-    if (equipmentType) {
-        equipmentType.addEventListener('change', updateEquipmentTypeRange);
-        // Initialize with default value
-        updateEquipmentTypeRange();
-    }
-    
-    const technique = document.getElementById('technique');
-    if (technique) {
-        technique.addEventListener('change', updateTechniqueRange);
-        // Initialize with default value
-        updateTechniqueRange();
-    }
-    
-    // Set up oscillation radio buttons
-    const oscillationYes = document.getElementById('oscillation_yes');
-    const oscillationNo = document.getElementById('oscillation_no');
-    const oscillationValue = document.getElementById('oscillation_value');
-    
-    if (oscillationYes) {
-        oscillationYes.addEventListener('change', updateOscillationRange);
-    }
-    
-    if (oscillationNo) {
-        oscillationNo.addEventListener('change', updateOscillationRange);
-    }
-    
-    if (oscillationValue) {
-        oscillationValue.addEventListener('input', updateOscillationRange);
-    }
-    
-    // Initialize oscillation range
-    updateOscillationRange();
-    
-    const operationMode = document.getElementById('operation_mode');
-    if (operationMode) {
-        operationMode.addEventListener('change', updateOperationModeRange);
-        // Initialize with default value
-        updateOperationModeRange();
-    }
-    
-    // Register the FCAW certificate handler function globally
-    // This allows welder-search.js to call this function when a welder is selected
-    console.log('FCAW certificate form initialized, registered fcawLoadWelderData handler');
-});
+}
 
-// Form submission handler
+/**
+ * Main form submission handler
+ */
 window.submitCertificateForm = function(event) {
     // Prevent default form submission
     if (event) event.preventDefault();
@@ -1023,22 +1201,38 @@ window.submitCertificateForm = function(event) {
     // Validate all required fields
     if (!validateRequiredFields()) {
         // Show error message if validation fails
-        Swal.fire({
-            title: 'Form Incomplete',
-            text: 'Please fill in all required fields before submitting.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Form Incomplete',
+                text: 'Please fill in all required fields before submitting.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            alert('Please fill in all required fields before submitting.');
+        }
         return false;
     }
     
     // If validation passes, submit the form
     const form = document.getElementById('certificate-form');
-    if (form) {
-        // Get form data for AJAX submission
-        const formData = new FormData(form);
-        
-        // Show loading indicator
+    if (!form) {
+        console.error('Form with ID "certificate-form" not found!');
+        return false;
+    }
+    
+    // Enable all disabled fields before submission
+    const disabledFields = document.querySelectorAll('input:disabled, select:disabled, textarea:disabled');
+    disabledFields.forEach(field => {
+        field.dataset.wasDisabled = "true";
+        field.disabled = false;
+    });
+    
+    // Get form data for AJAX submission
+    const formData = new FormData(form);
+    
+    // Show loading indicator
+    if (typeof Swal !== 'undefined') {
         Swal.fire({
             title: 'Submitting...',
             text: 'Please wait while the certificate is being created.',
@@ -1047,39 +1241,45 @@ window.submitCertificateForm = function(event) {
                 Swal.showLoading();
             }
         });
+    }
+    
+    // Submit form via AJAX
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json().then(data => {
+                // Return both the data and the response object for further processing
+                return { data, response };
+            });
+        } else {
+            // Not JSON, handle HTML response (error page)
+            return response.text().then(html => {
+                throw new Error('Server returned an HTML response instead of JSON. There might be validation errors.');
+            });
+        }
+    })
+    .then(({ data, response }) => {
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
         
-        // Submit form via AJAX
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            // Check if response is JSON
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return response.json().then(data => {
-                    // Return both the data and the response object for further processing
-                    return { data, response };
-                });
-            } else {
-                // Not JSON, handle HTML response (error page)
-                return response.text().then(html => {
-                    throw new Error('Server returned an HTML response instead of JSON. There might be validation errors.');
-                });
-            }
-        })
-        .then(({ data, response }) => {
-            if (!response.ok) {
-                // Handle error response with JSON data
-                throw new Error(data.message || 'An error occurred while submitting the form.');
-            }
-            
-            // Handle success
+        if (!response.ok) {
+            // Handle error response with JSON data
+            throw new Error(data.message || 'An error occurred while submitting the form.');
+        }
+        
+        // Handle success
+        if (typeof Swal !== 'undefined') {
             Swal.fire({
                 title: 'Success',
                 text: 'Certificate has been created successfully.',
@@ -1094,38 +1294,206 @@ window.submitCertificateForm = function(event) {
                     window.location.href = form.dataset.successRedirect || '/fcaw-certificates';
                 }
             });
-        })
-        .catch(error => {
-            console.error('Form submission error:', error);
-            
-            // Try to parse error.message to see if it's JSON
-            let errorMessage = error.message || 'There was a problem submitting the certificate. Please check the form and try again.';
-            let errorDetails = '';
-            
-            try {
-                // Check if there are validation errors in a JSON format
-                if (error.data && error.data.errors) {
-                    errorDetails = '<ul class="text-left">';
-                    for (const field in error.data.errors) {
-                        if (error.data.errors.hasOwnProperty(field)) {
-                            errorDetails += `<li>${error.data.errors[field].join('<br>')}</li>`;
-                        }
-                    }
-                    errorDetails += '</ul>';
-                }
-            } catch (e) {
-                console.error('Error parsing error message:', e);
+        } else {
+            alert('Certificate has been created successfully.');
+            if (data.redirect) {
+                window.location.href = data.redirect;
             }
-            
-            // Show error message with details if available
+        }
+    })
+    .catch(error => {
+        console.error('Form submission error:', error);
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
+        
+        // Try to parse error.message to see if it's JSON
+        let errorMessage = error.message || 'There was a problem submitting the certificate. Please check the form and try again.';
+        let errorDetails = '';
+        
+        try {
+            // Check if there are validation errors in a JSON format
+            if (error.data && error.data.errors) {
+                errorDetails = '<ul class="text-left">';
+                for (const field in error.data.errors) {
+                    if (error.data.errors.hasOwnProperty(field)) {
+                        errorDetails += `<li>${error.data.errors[field].join('<br>')}</li>`;
+                    }
+                }
+                errorDetails += '</ul>';
+                displayValidationErrors(error.data.errors);
+            }
+        } catch (e) {
+            console.error('Error parsing error message:', e);
+        }
+        
+        // Show error notification
+        if (typeof Swal !== 'undefined') {
             Swal.fire({
                 title: 'Error',
                 html: errorMessage + (errorDetails ? '<br>' + errorDetails : ''),
                 icon: 'error',
                 confirmButtonText: 'OK'
             });
+        } else {
+            alert('Error: ' + errorMessage);
+        }
+    })
+    .finally(() => {
+        // Re-disable fields that were originally disabled
+        disabledFields.forEach(field => {
+            if (field.dataset.wasDisabled === 'true') {
+                field.disabled = true;
+                delete field.dataset.wasDisabled;
+            }
         });
-    }
+    });
     
     return false; // Always return false to prevent default form submission
 };
+
+/**
+ * Initialize form on document ready
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('FCAW Certificate Form JavaScript Loaded');
+    
+    // Initialize Select2
+    initializeSelect2();
+    
+    // Set default values
+    setDefaultValues();
+    
+    // Initialize RT/UT fields state
+    updateTestFields();
+    
+    // Initialize signature pads
+    initializeSignaturePads();
+    
+    // Set up event listeners for specimen toggles
+    const plateCheckbox = document.getElementById('plate_specimen');
+    const pipeCheckbox = document.getElementById('pipe_specimen');
+    if (plateCheckbox && pipeCheckbox) {
+        plateCheckbox.addEventListener('change', handleSpecimenToggle);
+        pipeCheckbox.addEventListener('change', handleSpecimenToggle);
+        // Initialize on page load
+        handleSpecimenToggle();
+    }
+    
+    // Set up event listeners for range updates
+    const testPosition = document.getElementById('test_position');
+    if (testPosition) {
+        testPosition.addEventListener('change', updatePositionRange);
+    }
+    
+    const backing = document.getElementById('backing');
+    if (backing) {
+        backing.addEventListener('change', function() {
+            updateBackingRange();
+            toggleManualEntry('backing');
+        });
+    }
+    
+    const backingGas = document.getElementById('backing_gas');
+    if (backingGas) {
+        backingGas.addEventListener('change', updateBackingGasRange);
+        // Initialize with default value
+        updateBackingGasRange();
+    }
+    
+    const baseMetalPNo = document.getElementById('base_metal_p_no');
+    if (baseMetalPNo) {
+        baseMetalPNo.addEventListener('change', function() {
+            updatePNumberRange();
+            toggleManualEntry('base_metal_p_no');
+        });
+    }
+    
+    const fillerFNo = document.getElementById('filler_f_no');
+    if (fillerFNo) {
+        fillerFNo.addEventListener('change', function() {
+            updateFNumberRange();
+            toggleManualEntry('filler_f_no');
+        });
+    }
+    
+    const fillerSpec = document.getElementById('filler_spec');
+    if (fillerSpec) {
+        fillerSpec.addEventListener('change', function() {
+            updateFieldRange('filler_spec');
+            toggleManualEntry('filler_spec');
+        });
+    }
+    
+    const fillerClass = document.getElementById('filler_class');
+    if (fillerClass) {
+        fillerClass.addEventListener('change', function() {
+            updateFieldRange('filler_class');
+            toggleManualEntry('filler_class');
+        });
+    }
+    
+    const pipeDiameterType = document.getElementById('pipe_diameter_type');
+    if (pipeDiameterType) {
+        pipeDiameterType.addEventListener('change', updateDiameterRange);
+    }
+    
+    const verticalProgression = document.getElementById('vertical_progression');
+    if (verticalProgression) {
+        verticalProgression.addEventListener('change', updateVerticalProgressionRange);
+        // Initialize with default value
+        updateVerticalProgressionRange();
+    }
+    
+    const transferMode = document.getElementById('transfer_mode');
+    if (transferMode) {
+        transferMode.addEventListener('change', updateTransferModeRange);
+        // Initialize with default value
+        updateTransferModeRange();
+    }
+    
+    // Initialize thickness range calculation
+    const fcawThickness = document.getElementById('fcaw_thickness');
+    if (fcawThickness) {
+        fcawThickness.addEventListener('input', function() {
+            calculateThicknessRange(this.value, 'fcaw');
+        });
+        // Initialize if there's already a value
+        if (fcawThickness.value) {
+            calculateThicknessRange(fcawThickness.value, 'fcaw');
+        }
+    }
+    
+    // Initialize diameter/thickness update
+    const diameterField = document.getElementById('diameter');
+    const thicknessField = document.getElementById('thickness');
+    if (diameterField && thicknessField) {
+        diameterField.addEventListener('input', updateDiaThickness);
+        thicknessField.addEventListener('input', updateDiaThickness);
+        // Initialize if there are already values
+        updateDiaThickness();
+    }
+    
+    // Initialize all range fields
+    setTimeout(function() {
+        updateAllRangeFields();
+    }, 500);
+    
+    console.log('FCAW certificate form initialized, registered fcawLoadWelderData handler');
+});
+
+// Make functions globally available
+window.handleSpecimenToggle = handleSpecimenToggle;
+window.updateDiameterRange = updateDiameterRange;
+window.toggleManualEntry = toggleManualEntry;
+window.calculateThicknessRange = calculateThicknessRange;
+window.updateAllRangeFields = updateAllRangeFields;
+window.updateTestFields = updateTestFields;
+window.updatePNumberRange = updatePNumberRange;
+window.updateFNumberRange = updateFNumberRange;
+window.updatePositionRange = updatePositionRange;
+window.updateBackingRange = updateBackingRange;
+window.updateBackingGasRange = updateBackingGasRange;
+window.updateVerticalProgressionRange = updateVerticalProgressionRange;
+window.updateTransferModeRange = updateTransferModeRange;

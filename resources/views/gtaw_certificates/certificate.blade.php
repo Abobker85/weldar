@@ -589,6 +589,14 @@
                 </td>
                 <td class="var-range">{{ $certificate->f_number_range }}</td>
             </tr>
+
+            <!-- In certificate.blade.php, update the consumable insert row in the variables table -->
+
+<tr>
+    <td class="var-label">Consumable insert (GTAW, PAW, LBW):</td>
+    <td class="var-value">Not Applicable</td>
+    <td class="var-range">Not Applicable</td>
+</tr>
             <tr>
                 
 

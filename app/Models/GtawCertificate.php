@@ -28,6 +28,8 @@ class GtawCertificate extends Model
           'deposit_thickness',
           'p_number_range_manual',
         'deposit_thickness_range',
+          'signature_data',
+        'inspector_signature_data',
         'gtaw_yes',
         'gtaw_thickness',
         'gtaw_thickness_range',

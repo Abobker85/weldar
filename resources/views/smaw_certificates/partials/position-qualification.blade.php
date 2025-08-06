@@ -35,9 +35,9 @@
         </td>
     </tr>
    <tr>
-        <td class="var-label">Vertical progression (uphill or downhill) :</td>
+        <td class="var-label">Vertical progression:</td>
         <td class="var-value">
-            <select class="form-select" name="vertical_progression" id="vertical_progression" onchange="updateVerticalProgressionRange()">
+            <select class="form-select" name="vertical_progression" id="vertical_progression" onchange="updatePositionVerticalProgressionRange()">
                 <option value="None"  selected>None</option>
                 <option value="Uphill">Uphill</option>
                 <option value="Downhill">Downhill</option>

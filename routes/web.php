@@ -37,6 +37,20 @@ Route::get('verify-certificate/{id}/{code}', [SmawCertificateController::class, 
 Route::get('verify', [SmawCertificateController::class, 'showVerificationForm'])->name('smaw-certificates.verify-form');
 Route::post('verify', [SmawCertificateController::class, 'verifyByCertificateNo'])->name('smaw-certificates.verify-submit');
 
+// Route for serving company stamps
+Route::get('storage/company-stamps/{filename}', function ($filename) {
+    $path = storage_path('app/public/company-stamps/' . $filename);
+    
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    
+    return response()->file($path, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+});
+
 Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 // Unified route for getting welder details with certificate numbers

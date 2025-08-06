@@ -134,7 +134,7 @@
                 <div class="checkbox-container">
                     <!-- Fixed RT checkbox - use a single hidden field -->
                     <input type="hidden" name="rt" value="0">
-                    <input type="checkbox" name="rt" id="rt" value="1" {{ old('rt') ? 'checked' : '' }} onchange="updateTestFields()">
+                    <input type="checkbox" name="rt" id="rt" value="1" {{ old('rt', $certificate->rt ?? false) ? 'checked' : '' }} onchange="updateTestFields()">
                     <label for="rt">■ RT</label>
                 </div>
             </td>
@@ -142,7 +142,7 @@
                 <div class="checkbox-container">
                     <!-- Fixed UT checkbox - use a single hidden field -->
                     <input type="hidden" name="ut" value="0">
-                    <input type="checkbox" name="ut" id="ut" value="1" {{ old('ut') ? 'checked' : '' }} onchange="updateTestFields()">
+                    <input type="checkbox" name="ut" id="ut" value="1" {{ old('ut', $certificate->ut ?? false) ? 'checked' : '' }} onchange="updateTestFields()">
                     <label for="ut">□ UT</label>
                 </div>
             </td>
@@ -234,7 +234,7 @@
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="supervised_company" value="{{ \App\Models\AppSetting::getValue('system_name', 'ELITE') }}" readonly>
+                <input type="text" class="form-input" name="supervised_company" value="{{ \App\Models\AppSetting::getValue('system_name', 'Elite Engineering Arabia') }}" readonly>
             </td>
         </tr>
     </table>

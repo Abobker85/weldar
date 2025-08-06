@@ -116,6 +116,7 @@
             <input type="text" class="form-input" name="p_number_range_manual"
                 id="p_number_range_manual" placeholder="Enter qualified range"
                 style="display: none; margin-top: 2px;">
+            <input type="hidden" name="p_number_range_span" id="p_number_range_span_hidden">
         </td>
     </tr>
     <!-- Remaining welding variables rows -->
@@ -181,8 +182,8 @@
                 style="{{ !in_array(($certificate->filler_f_no ?? ''), ['F4_with_backing', 'F5_with_backing', 'F4_without_backing', 'F5_without_backing', 'F43', '']) && !empty($certificate->filler_f_no) ? 'display: block;' : 'display: none;' }} margin-top: 2px;">
         </td>
         <td class="var-range">
-            <span id="f_number_range_span">F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing &
-                F-No.4 With Backing</span>
+            <span id="f_number_range_span">F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing & F-No.4 With Backing</span>
+            <input type="hidden" name="f_number_range_span" id="f_number_range_span_hidden" value="">
             <input type="text" class="form-input" name="f_number_range_manual"
                 id="f_number_range_manual" placeholder="Enter qualified range"
                 style="display: none; margin-top: 2px;">
@@ -218,8 +219,10 @@
                 data-saved-value="{{ $certificate->deposit_thickness ?? '' }}">
         </td>
         <td class="var-range">
-            <input type="text" class="form-input" name="deposit_thickness_range"
-                placeholder="------">
+            <!-- Hidden input for form submission -->
+            <input type="hidden" name="deposit_thickness_range" id="deposit_thickness_range_hidden">
+            <!-- Visual indicator for deposit thickness -->
+            <div id="deposit_thickness_visual_indicator" class="thickness-visual-indicator" style="font-weight: bold; padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; border-radius: 4px;"></div>
         </td>
     </tr>
     <tr>
@@ -239,14 +242,16 @@
             <input type="text" class="form-input" name="smaw_thickness" id="smaw_thickness" 
                 placeholder="Enter thickness (mm)" value="{{ $certificate->smaw_thickness ?? '14.26' }}" required
                 data-saved-value="{{ $certificate->smaw_thickness ?? '' }}"
-                onchange="calculateThicknessRange(this.value)">
+                onchange="calculateThicknessRange(this.value); console.log('Thickness changed to:', this.value);">
         </td>
         <td class="var-range">
-            <input type="text" class="form-input" name="smaw_thickness_range" id="smaw_thickness_range"
-                placeholder="Max. to be welded" readonly>
+            <!-- Hidden input for form submission -->
+            <input type="hidden" name="smaw_thickness_range" id="smaw_thickness_range_hidden">
+            <!-- Visual indicator for thickness range -->
+            <div id="thickness_visual_indicator" class="thickness-visual-indicator" style="font-weight: bold; padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; border-radius: 4px;"></div>
         </td>
     </tr>
-    <!-- Need to add the vertical progression field with proper span element -->
+   
     
 </table>
 
@@ -262,14 +267,56 @@ function calculateThicknessRange(thickness) {
     if (!isNaN(thicknessValue)) {
         if (thicknessValue <= 12) {
             // If thickness is 0-12, multiply by 2
-            rangeValue = (thicknessValue * 2).toFixed(2) + ' mm';
+            rangeValue = thicknessValue + ' mm to ' + (thicknessValue * 2).toFixed(2) + ' mm';
         } else {
             // If thickness is 13 or greater, use "Maximum to be welded"
             rangeValue = 'Maximum to be welded';
         }
     }
     
-    document.getElementById('smaw_thickness_range').value = rangeValue;
+    const thicknessRangeField = document.getElementById('smaw_thickness_range');
+    if (thicknessRangeField) {
+        console.log('Blade template - Setting thickness range to:', rangeValue);
+        console.log('Previous value was:', thicknessRangeField.value);
+        
+        // Force a UI refresh by creating a new input element
+        const parentElement = thicknessRangeField.parentElement;
+        const newInput = document.createElement('input');
+        
+        // Copy all attributes
+        for (let i = 0; i < thicknessRangeField.attributes.length; i++) {
+            const attr = thicknessRangeField.attributes[i];
+            if (attr.name !== 'value') { // Skip value attribute for now
+                newInput.setAttribute(attr.name, attr.value);
+            }
+        }
+        
+        // Set the class, id and name explicitly to ensure they're correct
+        newInput.className = 'form-input';
+        newInput.id = 'smaw_thickness_range';
+        newInput.name = 'smaw_thickness_range';
+        
+        // Set the value - do this after other attributes
+        newInput.value = rangeValue;
+        newInput.setAttribute('value', rangeValue);
+        
+        // Add data attributes for debugging
+        newInput.setAttribute('data-calculated-value', rangeValue);
+        newInput.setAttribute('data-original-value', thicknessRangeField.getAttribute('data-original-value') || '');
+        
+        // Replace the old input with the new one
+        parentElement.replaceChild(newInput, thicknessRangeField);
+        
+        console.log('Current thickness value:', thicknessValue);
+        console.log('Current thickness range value:', rangeValue);
+        console.log('Thickness range attributes:', {
+            'value': newInput.value,
+            'value attribute': newInput.getAttribute('value'),
+            'data-calculated-value': newInput.getAttribute('data-calculated-value'),
+            'data-original-value': newInput.getAttribute('data-original-value'),
+            'readonly': newInput.hasAttribute('readonly')
+        });
+    }
 }
 
 // Initialize the thickness range calculation when the page loads
@@ -350,12 +397,91 @@ function initializeWeldingVariables() {
     });
 }
 
+// Update vertical progression range based on selected value
+function updateVerticalProgressionRange() {
+    const verticalProgression = document.getElementById('vertical_progression');
+    const verticalProgressionSpan = document.getElementById('vertical_progression_range_span');
+    const verticalProgressionRange = document.getElementById('vertical_progression_range');
+    const verticalProgressionManual = document.getElementById('vertical_progression_manual');
+    const verticalProgressionRangeManual = document.getElementById('vertical_progression_range_manual');
+    
+    if (verticalProgression.value === '__manual__') {
+        verticalProgressionManual.style.display = 'block';
+        verticalProgressionRangeManual.style.display = 'block';
+        verticalProgressionSpan.style.display = 'none';
+        
+        // When manual is selected, use the manual value
+        if (verticalProgressionRange) {
+            const manualValue = verticalProgressionManual.value || 'Uphill';
+            verticalProgressionRange.value = manualValue;
+            // Also set the span content (though it's hidden)
+            verticalProgressionSpan.textContent = manualValue;
+            
+            console.log('Vertical progression set to manual value:', manualValue);
+        }
+    } else {
+        verticalProgressionManual.style.display = 'none';
+        verticalProgressionRangeManual.style.display = 'none';
+        verticalProgressionSpan.style.display = 'inline';
+        
+        // Set the text based on selection
+        const rangeText = verticalProgression.value === 'Downhill' ? 'Downhill' : 'Uphill';
+        
+        if (verticalProgressionSpan) {
+            verticalProgressionSpan.textContent = rangeText;
+        }
+        
+        if (verticalProgressionRange) {
+            verticalProgressionRange.value = rangeText;
+        }
+        
+        console.log('Vertical progression updated to:', rangeText);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all welding variables with saved values
     initializeWeldingVariables();
     
-    const smawThickness = document.getElementById('smaw_thickness').value;
-    calculateThicknessRange(smawThickness);
+    // Clear any existing value to prevent old values from persisting
+    const thicknessRangeField = document.getElementById('smaw_thickness_range');
+    if (thicknessRangeField) {
+        // Clear out any existing value that might be causing issues
+        thicknessRangeField.value = '';
+    }
+    
+    // Wait a moment to ensure all elements are properly initialized
+    setTimeout(function() {
+        const smawThickness = document.getElementById('smaw_thickness').value;
+        console.log('Initial smaw thickness on page load:', smawThickness);
+        calculateThicknessRange(smawThickness);
+        
+        // Add event listener for input changes (in addition to onChange)
+        const thicknessInput = document.getElementById('smaw_thickness');
+        if (thicknessInput) {
+            thicknessInput.addEventListener('input', function() {
+                console.log('Thickness input event fired with value:', this.value);
+                calculateThicknessRange(this.value);
+            });
+            
+            // Also trigger an immediate calculation to ensure the field is updated
+            const event = new Event('input', { bubbles: true });
+            thicknessInput.dispatchEvent(event);
+        }
+        
+        // Double-check that the range field is properly updated after initialization
+        setTimeout(function() {
+            const currentThickness = document.getElementById('smaw_thickness').value;
+            const currentRange = document.getElementById('smaw_thickness_range').value;
+            console.log('After initialization - Thickness:', currentThickness, 'Range:', currentRange);
+            
+            // If range is still empty or not what we expect, force an update
+            if (!currentRange || (parseFloat(currentThickness) > 12 && currentRange !== 'Maximum to be welded')) {
+                console.log('Range field not properly updated, forcing update...');
+                calculateThicknessRange(currentThickness);
+            }
+        }, 500);
+    }, 200);
     
     // Initialize backing range immediately to ensure it's not empty
     const backing = document.getElementById('backing').value;
@@ -391,18 +517,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initialize vertical progression
-    const verticalProgression = document.getElementById('vertical_progression').value;
-    const verticalProgressionRangeText = verticalProgression === 'Uphill' ? 'Uphill' : 'Downhill';
+    updateVerticalProgressionRange();
     
-    const verticalProgressionSpan = document.getElementById('vertical_progression_range_span');
-    if (verticalProgressionSpan) {
-        verticalProgressionSpan.textContent = verticalProgressionRangeText;
+    // Make sure the vertical progression range field has a value
+    const verticalProgressionElement = document.getElementById('vertical_progression');
+    if (verticalProgressionElement) {
+        const verticalProgressionValue = verticalProgressionElement.value;
+        const verticalProgressionRange = document.getElementById('vertical_progression_range');
+        const verticalProgressionSpan = document.getElementById('vertical_progression_range_span');
         
-        // Also update the hidden field
-        const verticalProgressionHidden = document.getElementById('vertical_progression_range');
-        if (verticalProgressionHidden) {
-            verticalProgressionHidden.value = verticalProgressionRangeText;
+        // Force an update based on the current selection
+        if (verticalProgressionValue === '__manual__') {
+            const verticalProgressionManual = document.getElementById('vertical_progression_manual');
+            const manualValue = verticalProgressionManual ? verticalProgressionManual.value : 'Uphill';
+            
+            if (verticalProgressionRange) verticalProgressionRange.value = manualValue;
+            if (verticalProgressionSpan) verticalProgressionSpan.textContent = manualValue;
+            
+            console.log('Initialized vertical progression (manual):', manualValue);
+        } else {
+            const rangeValue = verticalProgressionValue === 'Downhill' ? 'Downhill' : 'Uphill';
+            
+            if (verticalProgressionRange) verticalProgressionRange.value = rangeValue;
+            if (verticalProgressionSpan) verticalProgressionSpan.textContent = rangeValue;
+            
+            console.log('Initialized vertical progression:', rangeValue);
         }
+        
+        // Add another event listener to ensure changes get propagated
+        verticalProgressionElement.addEventListener('change', function() {
+            updateVerticalProgressionRange();
+            
+            // Force immediate update of form fields
+            const newValue = this.value === 'Downhill' ? 'Downhill' : 'Uphill';
+            if (this.value !== '__manual__') {
+                if (verticalProgressionRange) verticalProgressionRange.value = newValue;
+                if (verticalProgressionSpan) verticalProgressionSpan.textContent = newValue;
+                console.log('Vertical progression changed to:', newValue);
+            }
+        });
     }
     
     // Ensure range fields are properly initialized

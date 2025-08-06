@@ -292,7 +292,6 @@ class GtawCertificateController extends Controller
             
             // Photo and signatures
             'photo' => 'nullable|image|max:2048',
-            'certification_text' => 'nullable|string|max:500',
             'signature_data' => 'nullable|string',
             'inspector_signature_data' => 'nullable|string',
             
@@ -330,6 +329,7 @@ class GtawCertificateController extends Controller
             'rt_report_no' => 'required|string|max:255',
             'rt_doc_no' => 'nullable|string|max:255',
             'visual_examination_result' => 'nullable|string|in:ACC,REJ',
+            'certification_text' => 'required|string|max:500',
             
             // Additional test types and results
             'additional_type_1' => 'nullable|string|max:255',
@@ -397,6 +397,17 @@ class GtawCertificateController extends Controller
         
         if (empty($validated['vertical_progression_range'])) {
             $validated['vertical_progression_range'] = $this->getVerticalProgressionRange($validated['vertical_progression']);
+        }
+
+         $validated['consumable_insert'] = 'Not Applicable';
+        $validated['consumable_insert_range'] = 'Not Applicable';
+        
+        // If these fields were somehow passed in the request, override them
+        if (isset($validated['consumable_insert']) && $validated['consumable_insert'] !== 'Not Applicable') {
+            $validated['consumable_insert'] = 'Not Applicable';
+        }
+        if (isset($validated['consumable_insert_range']) && $validated['consumable_insert_range'] !== 'Not Applicable') {
+            $validated['consumable_insert_range'] = 'Not Applicable';
         }
 
         
@@ -599,7 +610,7 @@ class GtawCertificateController extends Controller
 
             // Photo and signatures
             'photo' => 'nullable|image|max:2048',
-            'certification_text' => 'nullable|string|max:500',
+            'certification_text' => 'required|string|max:500',
             'signature_data' => 'nullable|string',
             'inspector_signature_data' => 'nullable|string',
 
@@ -704,6 +715,17 @@ class GtawCertificateController extends Controller
 
         if (empty($validated['vertical_progression_range'])) {
             $validated['vertical_progression_range'] = $this->getVerticalProgressionRange($validated['vertical_progression']);
+        }
+
+         $validated['consumable_insert'] = 'Not Applicable';
+        $validated['consumable_insert_range'] = 'Not Applicable';
+        
+        // If these fields were somehow passed in the request, override them
+        if (isset($validated['consumable_insert']) && $validated['consumable_insert'] !== 'Not Applicable') {
+            $validated['consumable_insert'] = 'Not Applicable';
+        }
+        if (isset($validated['consumable_insert_range']) && $validated['consumable_insert_range'] !== 'Not Applicable') {
+            $validated['consumable_insert_range'] = 'Not Applicable';
         }
 
 

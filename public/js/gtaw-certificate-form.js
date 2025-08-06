@@ -713,8 +713,9 @@ function updatePositionOptions() {
         return;
     }
 
-    // Store current value if possible
+    // Store current value to preserve it
     const currentValue = positionSelect.value;
+    console.log('Current position value before update:', currentValue);
 
     // Clear existing options
     while (positionSelect.options.length > 0) {
@@ -740,14 +741,38 @@ function updatePositionOptions() {
     }
 
     // Try to restore the previous value if it's still valid
-    if (Array.from(positionSelect.options).some(option => option.value === currentValue)) {
-        positionSelect.value = currentValue;
-    } else {
-        // Default to 6G for pipe, 1G for plate
+    let valueRestored = false;
+    if (currentValue) {
+        for (let i = 0; i < positionSelect.options.length; i++) {
+            if (positionSelect.options[i].value === currentValue) {
+                positionSelect.selectedIndex = i;
+                valueRestored = true;
+                console.log('Successfully restored position value:', currentValue);
+                break;
+            }
+        }
+    }
+
+    // If we couldn't restore the value, set appropriate defaults
+    if (!valueRestored) {
         if (pipeCheckbox.checked) {
-            positionSelect.value = '6G';
+            // Default to 6G for pipe
+            for (let i = 0; i < positionSelect.options.length; i++) {
+                if (positionSelect.options[i].value === '6G') {
+                    positionSelect.selectedIndex = i;
+                    console.log('Set default pipe position to 6G');
+                    break;
+                }
+            }
         } else if (plateCheckbox.checked && positionSelect.options.length > 1) {
-            positionSelect.value = '1G';
+            // Default to 1G for plate
+            for (let i = 0; i < positionSelect.options.length; i++) {
+                if (positionSelect.options[i].value === '1G') {
+                    positionSelect.selectedIndex = i;
+                    console.log('Set default plate position to 1G');
+                    break;
+                }
+            }
         }
     }
 
@@ -761,9 +786,31 @@ function updatePositionRange() {
     if (!positionSelect) return;
 
     const position = positionSelect.value;
-    const rangeCells = document.querySelectorAll('.var-range[style*="font-weight: bold"]');
-    if (rangeCells.length !== 3) return;
+    console.log('Updating position range for position:', position);
 
+    // Get the range cells from the position qualification table
+    const rangeCells = document.querySelectorAll('.var-range[style*="font-weight: bold"]');
+    
+    // If we don't find the styled cells, look for position range spans or cells differently
+    let positionRangeCells = rangeCells;
+    if (positionRangeCells.length === 0) {
+        // Alternative selector - look in the position qualification section
+        const positionSection = document.querySelector('table.variables-table');
+        if (positionSection) {
+            // Find the position row and get the range cell
+            const rows = positionSection.querySelectorAll('tr');
+            for (let row of rows) {
+                const labelCell = row.querySelector('.var-label');
+                if (labelCell && labelCell.textContent.includes('Position(s):')) {
+                    // This is the position row, find the range cells
+                    positionRangeCells = row.querySelectorAll('.var-range');
+                    break;
+                }
+            }
+        }
+    }
+
+    // Define position rules
     const positionRules = {
         '1G': {
             groove_over_24: 'F for Groove Plate and Pipe Over 24 in. (610 mm) O.D.',
@@ -797,10 +844,30 @@ function updatePositionRange() {
         }
     };
 
+    // Get the rules for the selected position, default to 6G if not found
     const rules = positionRules[position] || positionRules['6G'];
-    rangeCells[0].textContent = rules.groove_over_24;
-    rangeCells[1].textContent = rules.groove_under_24;
-    rangeCells[2].textContent = rules.fillet;
+    
+    // Update the range cells if we found them
+    if (positionRangeCells && positionRangeCells.length >= 3) {
+        positionRangeCells[0].textContent = rules.groove_over_24;
+        if (positionRangeCells.length >= 2) {
+            positionRangeCells[1].textContent = rules.groove_under_24;
+        }
+        if (positionRangeCells.length >= 3) {
+            positionRangeCells[2].textContent = rules.fillet;
+        }
+        console.log('Updated position range cells with rules for position:', position);
+    } else {
+        console.log('Position range cells not found, trying alternative approach');
+        
+        // Alternative approach - look for specific position range span
+        const positionRangeSpan = document.getElementById('position_range_span');
+        if (positionRangeSpan) {
+            const combinedRange = rules.groove_over_24 + ' | ' + rules.groove_under_24 + ' | ' + rules.fillet;
+            positionRangeSpan.textContent = combinedRange;
+            console.log('Updated position range span with combined rules');
+        }
+    }
     
     // Update the hidden field for form submission
     const positionRangeHidden = document.getElementById('position_range');
@@ -811,8 +878,237 @@ function updatePositionRange() {
         } else {
             positionRangeHidden.value = rules.groove_over_24 + ' | ' + rules.fillet;
         }
+        console.log('Updated position_range hidden field to:', positionRangeHidden.value);
     }
 }
+
+
+function initializeEditFormPositions() {
+    console.log('Initializing edit form positions...');
+    
+    // Get the current values from the form (these come from the server/database)
+    const plateCheckbox = document.getElementById('plate_specimen');
+    const pipeCheckbox = document.getElementById('pipe_specimen');
+    const positionSelect = document.getElementById('test_position');
+    
+    if (!plateCheckbox || !pipeCheckbox || !positionSelect) {
+        console.error('Required position elements not found during initialization');
+        return;
+    }
+    
+    // Store the original position value before updating options
+    const originalPosition = positionSelect.value;
+    console.log('Original position from database:', originalPosition);
+    
+    // Ensure proper checkbox states based on the database values
+    // In edit mode, the checkboxes should already be set from the server
+    console.log('Plate checked:', plateCheckbox.checked, 'Pipe checked:', pipeCheckbox.checked);
+    
+    // If neither is checked, default to pipe (this shouldn't happen in normal cases)
+    if (!plateCheckbox.checked && !pipeCheckbox.checked) {
+        console.log('Neither plate nor pipe was checked, defaulting to pipe');
+        pipeCheckbox.checked = true;
+    }
+    
+    // Update position options based on current plate/pipe selection
+    updatePositionOptions();
+    
+    // After updating options, try to restore the original position
+    if (originalPosition) {
+        let positionRestored = false;
+        for (let i = 0; i < positionSelect.options.length; i++) {
+            if (positionSelect.options[i].value === originalPosition) {
+                positionSelect.selectedIndex = i;
+                positionRestored = true;
+                console.log('Successfully restored original position:', originalPosition);
+                break;
+            }
+        }
+        
+        if (!positionRestored) {
+            console.warn('Could not restore original position:', originalPosition, 'Available options:', 
+                Array.from(positionSelect.options).map(opt => opt.value));
+        }
+    }
+    
+    // Update the position range to match the current selection
+    updatePositionRange();
+    
+    // Also update diameter range and other dependent fields
+    updateDiameterRange();
+}
+
+// Enhanced setup event listeners function
+function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
+    // Add field change event listeners with null checks to prevent errors
+    const testPosition = document.getElementById('test_position');
+    if (testPosition) {
+        testPosition.addEventListener('change', function() {
+            console.log('Position changed to:', this.value);
+            updatePositionRange();
+        });
+    }
+    
+    const plateSpecimen = document.getElementById('plate_specimen');
+    if (plateSpecimen) {
+        plateSpecimen.addEventListener('change', function() {
+            console.log('Plate specimen changed, checked:', this.checked);
+            toggleDiameterField();
+            updatePositionOptions();
+        });
+    }
+    
+    const pipeSpecimen = document.getElementById('pipe_specimen');
+    if (pipeSpecimen) {
+        pipeSpecimen.addEventListener('change', function() {
+            console.log('Pipe specimen changed, checked:', this.checked);
+            toggleDiameterField();
+            updatePositionOptions();
+        });
+    }
+    
+    // ... rest of the existing event listeners remain the same ...
+    const diameter = document.getElementById('diameter');
+    if (diameter) {
+        diameter.addEventListener('change', updateDiaThickness);
+    }
+    
+    const thickness = document.getElementById('thickness');
+    if (thickness) {
+        thickness.addEventListener('change', updateDiaThickness);
+    }
+    
+    const backing = document.getElementById('backing');
+    if (backing) {
+        backing.addEventListener('change', updateBackingRange);
+    }
+    
+    const baseMetalPNo = document.getElementById('base_metal_p_no');
+    if (baseMetalPNo) {
+        baseMetalPNo.addEventListener('change', updatePNumberRange);
+    }
+    
+    const fillerFNo = document.getElementById('filler_f_no');
+    if (fillerFNo) {
+        fillerFNo.addEventListener('change', updateFNumberRange);
+    }
+    
+    const verticalProgression = document.getElementById('vertical_progression');
+    if (verticalProgression) {
+        console.log('Setting up vertical_progression change event with current value:', verticalProgression.value);
+        
+        verticalProgression.addEventListener('change', function(e) {
+            console.log('Vertical progression changed to:', this.value);
+            updateVerticalProgressionRange();
+        });
+    }
+    
+    const pipeDiameterType = document.getElementById('pipe_diameter_type');
+    if (pipeDiameterType) {
+        pipeDiameterType.addEventListener('change', updateDiameterRange);
+    }
+    
+    const backingGasEl = document.getElementById('backing_gas');
+    if (backingGasEl) {
+        backingGasEl.addEventListener('change', updateBackingGasRange);
+    }
+    
+    const gtawPolarityEl = document.getElementById('gtaw_polarity');
+    if (gtawPolarityEl) {
+        gtawPolarityEl.addEventListener('change', updateGtawPolarityRange);
+    }
+    
+    // Register our GTAW handler function globally
+    window.gtawLoadWelderData = gtawLoadWelderData;
+    console.log('✅ GTAW Certificate: Registered gtawLoadWelderData function globally');
+}
+
+// Updated DOMContentLoaded event handler
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 GTAW Certificate: DOM Content Loaded - Initializing form');
+    
+    // Register certificate-specific functions for use by welder-search.js
+    window.certificateType = 'gtaw';
+    window.gtawLoadWelderData = gtawLoadWelderData;
+    
+    // Initialize basic form settings
+    setCurrentDate();
+    setDefaultSMAWValues();
+    updateProcessFields();
+    setupEventListeners();
+    
+    // Special handling for edit mode - delay position initialization slightly
+    // to ensure all form elements are fully loaded
+    setTimeout(function() {
+        initializeEditFormPositions();
+        
+        // Initialize all other range fields
+        updateBackingRange();
+        updateDiameterRange();
+        updatePNumberRange();
+        updateFNumberRange();
+        updateVerticalProgressionRange();
+        
+        console.log('✅ Edit form position initialization completed');
+    }, 100);
+    
+    // Add event listeners for all dropdown fields that have ranges
+    addRangeFieldListeners();
+
+    // Initialize signature pads
+    initializeSignaturePads();
+    
+    console.log('🔥 GTAW Welder Qualification Form initialized!');
+});
+
+// Rest of the functions remain the same as in your original file...
+// (I'm keeping the existing functions you already have)
+
+// Toggle diameter field based on plate/pipe selection
+function toggleDiameterField() {
+    const plateCheckbox = document.getElementById('plate_specimen');
+    const pipeCheckbox = document.getElementById('pipe_specimen');
+    const diameterField = document.getElementById('diameter');
+    const pipeDiameterField = document.getElementById('pipe_diameter_type');
+    const diameterRangeSpan = document.getElementById('diameter_range_span');
+
+    if (plateCheckbox.checked) {
+        pipeCheckbox.checked = false;
+        diameterField.disabled = true;
+        diameterField.value = "N/A";
+        pipeDiameterField.disabled = true;
+        
+        // Clear pipe diameter dropdown when plate is selected
+        pipeDiameterField.value = "";
+        
+        // Clear diameter range span when plate is selected
+        if (diameterRangeSpan) {
+            diameterRangeSpan.textContent = '';
+        }
+        
+        // Update hidden diameter range field
+        const diameterRangeHidden = document.getElementById('diameter_range');
+        if (diameterRangeHidden) {
+            diameterRangeHidden.value = '';
+        }
+    } else {
+        pipeCheckbox.checked = true;
+        diameterField.disabled = false;
+        diameterField.value = "8 inch";
+        pipeDiameterField.disabled = false;
+        
+        // Restore pipe diameter dropdown when pipe is selected
+        pipeDiameterField.value = "8_nps";
+        
+        // Update diameter range
+        updateDiameterRange();
+    }
+    
+    updateDiaThickness();
+}
+
 
 // Validate form before submission
 function validateForm() {
@@ -1606,3 +1902,325 @@ function initializeSignaturePads() {
     // Initialize inspector signature functionality
     initializeInspectorSignature();
 }
+
+/**
+ * Initialize signature pads for welder and inspector signatures
+ */
+function initializeSignaturePads() {
+    console.log('Initializing signature pads...');
+    
+    // Initialize welder signature pad
+    initializeWelderSignature();
+    
+    // Initialize inspector signature functionality
+    initializeInspectorSignature();
+}
+
+/**
+ * Initialize welder signature pad
+ */
+function initializeWelderSignature() {
+    const canvas = document.getElementById('signature-pad');
+    const signatureDataInput = document.getElementById('signature_data');
+    const clearButton = document.getElementById('clear-signature');
+    
+    if (!canvas) {
+        console.log('Welder signature canvas not found');
+        return;
+    }
+    
+    console.log('Initializing welder signature pad...');
+    
+    // Get existing signature data from hidden input
+    const existingSignature = signatureDataInput ? signatureDataInput.value : '';
+    console.log('Existing welder signature data:', existingSignature ? 'Present' : 'None');
+    
+    // Initialize signature pad
+    const signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        penColor: 'black',
+        minWidth: 1,
+        maxWidth: 3,
+        throttle: 16,
+        minDistance: 5
+    });
+    
+    // Store reference globally for access from other functions
+    window.welderSignaturePad = signaturePad;
+    
+    // Function to resize canvas properly without clearing
+    function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        
+        // Save current signature data before resize
+        const currentSignatureData = signaturePad.isEmpty() ? existingSignature : signaturePad.toDataURL();
+        
+        // Resize canvas
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+        
+        // Restore signature data after resize if it exists
+        if (currentSignatureData && currentSignatureData !== '') {
+            setTimeout(() => {
+                try {
+                    signaturePad.fromDataURL(currentSignatureData);
+                    console.log('Signature restored after resize');
+                } catch (error) {
+                    console.error('Error restoring signature after resize:', error);
+                }
+            }, 100);
+        }
+    }
+    
+    // Initial canvas setup
+    resizeCanvas();
+    
+    // Load existing signature if available
+    if (existingSignature && existingSignature !== '') {
+        setTimeout(() => {
+            try {
+                signaturePad.fromDataURL(existingSignature);
+                console.log('✅ Existing welder signature loaded successfully');
+            } catch (error) {
+                console.error('Error loading existing welder signature:', error);
+            }
+        }, 200);
+    }
+    
+    // Clear signature button event
+    if (clearButton) {
+        clearButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            signaturePad.clear();
+            if (signatureDataInput) {
+                signatureDataInput.value = '';
+            }
+            console.log('Welder signature cleared');
+        });
+    }
+    
+    // Update hidden input when signature changes
+    signaturePad.addEventListener("endStroke", () => {
+        if (signatureDataInput) {
+            signatureDataInput.value = signaturePad.toDataURL();
+            console.log('Welder signature updated');
+        }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', resizeCanvas);
+    
+    console.log('✅ Welder signature pad initialized successfully');
+}
+
+/**
+ * Initialize inspector signature pad
+ */
+function initializeInspectorSignature() {
+    const inspectorCanvas = document.getElementById('inspector-signature-pad');
+    const inspectorSignatureDataInput = document.getElementById('inspector_signature_data');
+    const inspectorClearButton = document.getElementById('clear-inspector-signature');
+    
+    if (!inspectorCanvas) {
+        console.log('Inspector signature canvas not found');
+        return;
+    }
+    
+    console.log('Initializing inspector signature pad...');
+    
+    // Get existing inspector signature data
+    const existingInspectorSignature = inspectorSignatureDataInput ? inspectorSignatureDataInput.value : '';
+    console.log('Existing inspector signature data:', existingInspectorSignature ? 'Present' : 'None');
+    
+    // Initialize inspector signature pad
+    const inspectorSignaturePad = new SignaturePad(inspectorCanvas, {
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        penColor: 'black',
+        minWidth: 1,
+        maxWidth: 3,
+        throttle: 16,
+        minDistance: 5
+    });
+    
+    // Store reference globally
+    window.inspectorSignaturePad = inspectorSignaturePad;
+    
+    // Function to resize inspector canvas
+    function resizeInspectorCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        
+        // Save current signature data before resize
+        const currentSignatureData = inspectorSignaturePad.isEmpty() ? existingInspectorSignature : inspectorSignaturePad.toDataURL();
+        
+        // Resize canvas
+        inspectorCanvas.width = inspectorCanvas.offsetWidth * ratio;
+        inspectorCanvas.height = inspectorCanvas.offsetHeight * ratio;
+        inspectorCanvas.getContext("2d").scale(ratio, ratio);
+        
+        // Restore signature data after resize
+        if (currentSignatureData && currentSignatureData !== '') {
+            setTimeout(() => {
+                try {
+                    inspectorSignaturePad.fromDataURL(currentSignatureData);
+                    console.log('Inspector signature restored after resize');
+                } catch (error) {
+                    console.error('Error restoring inspector signature after resize:', error);
+                }
+            }, 100);
+        }
+    }
+    
+    // Initial canvas setup
+    resizeInspectorCanvas();
+    
+    // Load existing inspector signature if available
+    if (existingInspectorSignature && existingInspectorSignature !== '') {
+        setTimeout(() => {
+            try {
+                inspectorSignaturePad.fromDataURL(existingInspectorSignature);
+                console.log('✅ Existing inspector signature loaded successfully');
+            } catch (error) {
+                console.error('Error loading existing inspector signature:', error);
+            }
+        }, 200);
+    }
+    
+    // Clear inspector signature button
+    if (inspectorClearButton) {
+        inspectorClearButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            inspectorSignaturePad.clear();
+            if (inspectorSignatureDataInput) {
+                inspectorSignatureDataInput.value = '';
+            }
+            console.log('Inspector signature cleared');
+        });
+    }
+    
+    // Update hidden input when inspector signature changes
+    inspectorSignaturePad.addEventListener("endStroke", () => {
+        if (inspectorSignatureDataInput) {
+            inspectorSignatureDataInput.value = inspectorSignaturePad.toDataURL();
+            console.log('Inspector signature updated');
+        }
+    });
+    
+    // Handle window resize for inspector canvas
+    window.addEventListener('resize', resizeInspectorCanvas);
+    
+    console.log('✅ Inspector signature pad initialized successfully');
+}
+
+/**
+ * Function to manually load signature data (useful for edit forms)
+ */
+function loadExistingSignatures() {
+    console.log('Loading existing signatures...');
+    
+    // Load welder signature
+    const welderSignatureData = document.getElementById('signature_data');
+    if (welderSignatureData && welderSignatureData.value && window.welderSignaturePad) {
+        try {
+            window.welderSignaturePad.fromDataURL(welderSignatureData.value);
+            console.log('✅ Welder signature loaded from form data');
+        } catch (error) {
+            console.error('Error loading welder signature from form data:', error);
+        }
+    }
+    
+    // Load inspector signature
+    const inspectorSignatureData = document.getElementById('inspector_signature_data');
+    if (inspectorSignatureData && inspectorSignatureData.value && window.inspectorSignaturePad) {
+        try {
+            window.inspectorSignaturePad.fromDataURL(inspectorSignatureData.value);
+            console.log('✅ Inspector signature loaded from form data');
+        } catch (error) {
+            console.error('Error loading inspector signature from form data:', error);
+        }
+    }
+}
+
+/**
+ * Function to validate signatures before form submission
+ */
+function validateSignatures() {
+    let isValid = true;
+    const errors = [];
+    
+    // Check welder signature (usually required)
+    const welderSignatureData = document.getElementById('signature_data');
+    if (!welderSignatureData || !welderSignatureData.value) {
+        errors.push('Welder signature is required');
+        isValid = false;
+    }
+    
+    // Inspector signature may or may not be required based on your business logic
+    // Uncomment the following if inspector signature is required:
+    /*
+    const inspectorSignatureData = document.getElementById('inspector_signature_data');
+    if (!inspectorSignatureData || !inspectorSignatureData.value) {
+        errors.push('Inspector signature is required');
+        isValid = false;
+    }
+    */
+    
+    if (!isValid) {
+        console.error('Signature validation failed:', errors);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Missing Signatures',
+                text: errors.join('\n'),
+                confirmButtonText: 'OK'
+            });
+        } else {
+            alert('Missing signatures:\n' + errors.join('\n'));
+        }
+    }
+    
+    return isValid;
+}
+
+// Enhanced form submission that includes signature validation
+function submitCertificateFormWithSignatures() {
+    console.log('Submitting certificate form with signature validation...');
+    
+    // Update all range fields before submission
+    updateAllRangeFields();
+    
+    // Validate signatures
+    if (!validateSignatures()) {
+        return false;
+    }
+    
+    // Validate required fields
+    if (!validateRequiredFields()) {
+        return false;
+    }
+    
+    // Continue with existing form submission logic
+    return submitCertificateForm();
+}
+
+// Modified DOMContentLoaded event to include better signature initialization
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 DOM Content Loaded - Enhanced signature initialization');
+    
+    // Wait for all elements to be fully rendered before initializing signatures
+    setTimeout(() => {
+        initializeSignaturePads();
+        
+        // For edit forms, load existing signatures after a short delay
+        setTimeout(() => {
+            loadExistingSignatures();
+        }, 500);
+        
+    }, 300);
+});
+
+// Export functions for global access
+window.initializeSignaturePads = initializeSignaturePads;
+window.loadExistingSignatures = loadExistingSignatures;
+window.validateSignatures = validateSignatures;
+window.submitCertificateFormWithSignatures = submitCertificateFormWithSignatures;

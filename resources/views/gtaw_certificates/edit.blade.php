@@ -52,9 +52,82 @@
         <script src="{{ asset('js/gtaw-certificate-helper.js') }}?v={{ time() }}"></script>
         <script src="{{ asset('js/welder-search.js') }}?v={{ time() }}"></script>
         <script src="{{ asset('js/form-validation.js') }}?v={{ time() }}"></script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Edit form specific initialization...');
+    
+    // Ensure position dropdown has the correct value from database
+    const positionSelect = document.getElementById('test_position');
+    const dbPosition = @json($certificate->test_position ?? '6G');
+    
+    console.log('Database position value:', dbPosition);
+    
+    // Wait a moment for the main initialization to complete
+    setTimeout(function() {
+        if (positionSelect && dbPosition) {
+            // Force set the position value
+            let positionFound = false;
+            for (let i = 0; i < positionSelect.options.length; i++) {
+                if (positionSelect.options[i].value === dbPosition) {
+                    positionSelect.selectedIndex = i;
+                    positionFound = true;
+                    console.log('✅ Successfully set position to:', dbPosition);
+                    break;
+                }
+            }
+            
+            if (!positionFound) {
+                console.warn('⚠️ Position', dbPosition, 'not found in options. Available options:', 
+                    Array.from(positionSelect.options).map(opt => `${opt.value} (${opt.text})`));
+            }
+            
+            // Trigger position range update
+            updatePositionRange();
+        }
+        
+        // Also verify other critical fields
+        const plateChecked = @json($certificate->plate_specimen ?? false);
+        const pipeChecked = @json($certificate->pipe_specimen ?? true);
+        
+        console.log('Database values - Plate:', plateChecked, 'Pipe:', pipeChecked);
+        
+        // Ensure checkboxes match database values
+        const plateCheckbox = document.getElementById('plate_specimen');
+        const pipeCheckbox = document.getElementById('pipe_specimen');
+        
+        if (plateCheckbox) plateCheckbox.checked = plateChecked;
+        if (pipeCheckbox) pipeCheckbox.checked = pipeChecked;
+        
+        // Update position options based on actual checkbox states
+        if (typeof updatePositionOptions === 'function') {
+            updatePositionOptions();
+            
+            // After updating options, restore the position again
+            setTimeout(function() {
+                if (positionSelect && dbPosition) {
+                    for (let i = 0; i < positionSelect.options.length; i++) {
+                        if (positionSelect.options[i].value === dbPosition) {
+                            positionSelect.selectedIndex = i;
+                            console.log('✅ Re-confirmed position setting:', dbPosition);
+                            updatePositionRange();
+                            break;
+                        }
+                    }
+                }
+            }, 50);
+        }
+    }, 200);
+});
+</script>
         <script>
+
+            
             // Initialize form when DOM is loaded
             document.addEventListener('DOMContentLoaded', function() {
+
+                
                 // Make sure the submitCertificateForm function is available globally
                 window.submitCertificateForm = function() {
                     // Clear previous validation errors

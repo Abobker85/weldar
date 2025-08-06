@@ -1,3 +1,36 @@
+<!-- CSS for ensuring thickness range value visibility -->
+<style>
+.thickness-range-container {
+    position: relative;
+    width: 100%;
+}
+.thickness-range-field {
+    width: 100%;
+    background-color: #f9f9f9 !important;
+    border: 1px solid #ddd !important;
+    color: #333 !important; 
+}
+.thickness-range-display {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    pointer-events: none;
+    color: #333;
+    font-weight: normal;
+    z-index: 10;
+}
+.thickness-visual-indicator {
+    margin-top: 5px;
+    color: #007bff;
+    font-weight: bold;
+}
+</style>
+
 <!-- Welding Variables Table -->
 <table class="variables-table">
     <tr>
@@ -50,14 +83,15 @@
     <tr>
         <td class="var-label">
             <div class="checkbox-container">
-                <input type="checkbox" name="plate_specimen" id="plate_specimen" 
-                       {{ isset($certificate->plate_specimen) && $certificate->plate_specimen ? 'checked' : '' }}
-                       data-saved-value="{{ $certificate->plate_specimen ?? '' }}"
+                <input type="hidden" name="plate_specimen" value="0">
+                <input type="checkbox" name="plate_specimen" id="plate_specimen" value="1"
+                       {{ old('plate_specimen', $certificate->plate_specimen) ? 'checked' : '' }}
                        onchange="toggleDiameterField()">
                 <label for="plate_specimen">Plate</label>
-                <input type="checkbox" name="pipe_specimen" id="pipe_specimen"
-                       {{ isset($certificate->pipe_specimen) && $certificate->pipe_specimen ? 'checked' : 'checked' }}
-                       data-saved-value="{{ $certificate->pipe_specimen ?? '' }}"
+                
+                <input type="hidden" name="pipe_specimen" value="0">
+                <input type="checkbox" name="pipe_specimen" id="pipe_specimen" value="1"
+                       {{ old('pipe_specimen', $certificate->pipe_specimen) ? 'checked' : '' }}
                        onchange="toggleDiameterField(); updateDiameterRange(); updatePositionRange();">
                 <label for="pipe_specimen">Pipe</label>
             </div>
@@ -107,7 +141,8 @@
                 style="{{ !in_array(($certificate->base_metal_p_no ?? ''), ['P NO.1 TO P NO.1', 'P NO.1 TO P NO.8', 'P NO.8 TO P NO.8', 'P NO.43 TO P NO.43', '']) && !empty($certificate->base_metal_p_no) ? 'display: block;' : 'display: none;' }} margin-top: 2px;">
         </td>
         <td class="var-range">
-            <span id="p_number_range_span">P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49</span>
+            <span id="p_number_range_span">{{ $certificate->p_number_range ?? 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49' }}</span>
+            <input type="hidden" name="p_number_range_span" id="p_number_range_span_hidden">
              <input type="text" class="form-input" name="p_number_range"
                 id="p_number_range" placeholder="Enter qualified range"
                 style="display: none; margin-top: 2px;">
@@ -179,8 +214,8 @@
                 style="{{ !in_array(($certificate->filler_f_no ?? ''), ['F4_with_backing', 'F5_with_backing', 'F4_without_backing', 'F5_without_backing', 'F43', '']) && !empty($certificate->filler_f_no) ? 'display: block;' : 'display: none;' }} margin-top: 2px;">
         </td>
         <td class="var-range">
-            <span id="f_number_range_span">F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing &
-                F-No.4 With Backing</span>
+            <span id="f_number_range_span">F-No.1 with Backing, F-No.2 with backing, F-No.3 with backing & F-No.4 With Backing</span>
+            <input type="hidden" name="f_number_range_span" id="f_number_range_span_hidden" value="{{ $certificate->f_number_range ?? '' }}">
             <input type="text" class="form-input" name="f_number_range_manual"
                 id="f_number_range_manual" placeholder="Enter qualified range"
                 style="display: none; margin-top: 2px;">
@@ -211,13 +246,21 @@
     <tr>
         <td class="var-label">Deposit thickness for each process:</td>
         <td class="var-value">
-            <input type="text" class="form-input" name="deposit_thickness"
-                placeholder="4mm &14.26 mm" value="{{ $certificate->deposit_thickness ?? '' }}" 
-                data-saved-value="{{ $certificate->deposit_thickness ?? '' }}">
+            <input type="text" class="form-input" name="deposit_thickness" id="deposit_thickness"
+                placeholder="Enter thickness (mm)" value="{{ $certificate->deposit_thickness ?? '' }}" required
+                data-saved-value="{{ $certificate->deposit_thickness ?? '' }}"
+                onchange="updateDepositThicknessRange(this.value)"
+                oninput="this.value = this.value.replace(/[^0-9.]/g, ''); updateDepositThicknessRange(this.value)">
         </td>
         <td class="var-range">
-            <input type="text" class="form-input" name="deposit_thickness_range"
-                placeholder="------">
+            <!-- Hidden input for form submission -->
+            <input type="hidden" name="deposit_thickness_range" id="deposit_thickness_range_hidden" 
+                   value="{{ $certificate->deposit_thickness_range ?? '' }}">
+            <!-- Visual indicator for thickness range -->
+            <div id="deposit_thickness_visual_indicator" class="thickness-visual-indicator" 
+                 style="font-weight: bold; padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; border-radius: 4px;">
+                 {{ $certificate->deposit_thickness_range ?? '' }}
+            </div>
         </td>
     </tr>
     <tr>
@@ -237,14 +280,33 @@
             <input type="text" class="form-input" name="smaw_thickness" id="smaw_thickness" 
                 placeholder="Enter thickness (mm)" value="{{ $certificate->smaw_thickness ?? '14.26' }}" required
                 data-saved-value="{{ $certificate->smaw_thickness ?? '' }}"
-                onchange="calculateThicknessRange(this.value)">
+                onchange="calculateThicknessRange(this.value)" 
+                oninput="this.value = this.value.replace(/[^0-9.]/g, ''); calculateThicknessRange(this.value)">
         </td>
         <td class="var-range">
-            <input type="text" class="form-input" name="smaw_thickness_range" id="smaw_thickness_range"
-                placeholder="Max. to be welded" readonly>
+            <!-- Hidden input for form submission -->
+            <input type="hidden" name="smaw_thickness_range" id="smaw_thickness_range_hidden" 
+                   value="{{ $certificate->smaw_thickness_range ?? '' }}">
+            <!-- Visual indicator for thickness range -->
+            <div id="thickness_visual_indicator" class="thickness-visual-indicator" 
+                 style="font-weight: bold; padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; border-radius: 4px;"></div>
+            <script>
+                // Immediate execution to calculate the initial thickness range value
+                (function() {
+                    const thicknessField = document.getElementById('smaw_thickness');
+                    const hiddenField = document.getElementById('smaw_thickness_range_hidden');
+                    if (field) {
+                        field.value = '10mm';
+                        field.setAttribute('value', '10mm');
+                        // Make the field read-only to prevent user edits
+                        field.readOnly = true;
+                        console.log('SMAW thickness range value set to 10mm via inline script');
+                    }
+                })();
+            </script>
         </td>
     </tr>
-    <!-- Need to add the vertical progression field with proper span element -->
+    <!-- Vertical progression field moved to position-qualification.blade.php -->
     
 </table>
 
@@ -252,25 +314,594 @@
 
 
 <script>
-// Calculate thickness range based on actual thickness
+// Ultra simplified thickness range function - ALWAYS returns 10mm
 function calculateThicknessRange(thickness) {
-    const thicknessValue = parseFloat(thickness);
-    let rangeValue = '';
+    // Always use 10mm as fixed value regardless of input
+    const fixedValue = '10mm';
     
-    if (!isNaN(thicknessValue)) {
-        if (thicknessValue <= 12) {
-            // If thickness is 0-12, multiply by 2
-            rangeValue = (thicknessValue * 2).toFixed(2) + ' mm';
-        } else {
-            // If thickness is 13 or greater, use "Maximum to be welded"
-            rangeValue = 'Maximum to be welded';
+    console.log('calculateThicknessRange called with:', thickness);
+    console.log('Using FIXED value:', fixedValue, '(ignoring input)');
+    
+    // Simply update the single input field directly
+    const rangeField = document.getElementById('smaw_thickness_range');
+    
+    if (rangeField) {
+        // Force value to always be 10mm
+        rangeField.value = fixedValue;
+        rangeField.setAttribute('value', fixedValue);
+        console.log('Thickness range input set to fixed value:', fixedValue);
+        
+        // Also apply the fixed value to any previous legacy fields (just to be safe)
+        const hiddenField = document.getElementById('smaw_thickness_range_hidden');
+        if (hiddenField) {
+            hiddenField.value = fixedValue;
+        }
+        
+        // Update jQuery if available
+        if (typeof jQuery !== 'undefined') {
+            jQuery('#smaw_thickness_range').val(fixedValue);
+        }
+    } else {
+        console.error('smaw_thickness_range field not found');
+    }
+    
+    return fixedValue; // Always return our fixed value
+}
+
+// SINGLE function to update the thickness range field in the UI
+// Now just a wrapper that calls calculateThicknessRange
+function updateThicknessRangeUI(value) {
+    console.log('updateThicknessRangeUI called with value:', value);
+    
+    // Get the current thickness
+    const thicknessField = document.getElementById('smaw_thickness');
+    if (thicknessField) {
+        // Recalculate using the current thickness value
+        return calculateThicknessRange(thicknessField.value);
+    } else {
+        console.error('Thickness field not found, using provided value directly');
+        return calculateThicknessRange(value);
+    }
+}
+
+// Alias function to maintain backward compatibility with existing code
+function updateThicknessRangeField(value) {
+    // Simply delegate to calculateThicknessRange directly
+    console.log('updateThicknessRangeField alias called, redirecting to calculateThicknessRange');
+    return calculateThicknessRange(value);
+}
+
+// Create a simplified persistent updater to ensure the field value stays correct
+function createPersistentUpdater(element, value) {
+    // Handle undefined/null values
+    if (value === undefined || value === null) {
+        console.warn('createPersistentUpdater called with null/undefined value');
+        value = 'Maximum to be welded';
+    }
+    
+    // Convert to string if not already
+    value = String(value);
+    
+    // Simple updater that ensures all components have the correct value
+    function updateThicknessDisplay() {
+        console.log('Updating thickness range display to:', value);
+        
+        // Update all parts of the thickness range UI
+        
+        // 1. Update the hidden field
+        const hiddenField = document.getElementById('smaw_thickness_range_hidden');
+        if (hiddenField) {
+            hiddenField.value = value;
+        }
+        
+        // 2. Update the display span text
+        const displaySpan = document.getElementById('thickness_range_display');
+        if (displaySpan) {
+            displaySpan.textContent = value;
+            displaySpan.style.display = 'flex'; // Make sure it's visible
+        }
+        
+        // 3. Update the input field
+        const inputField = document.getElementById('smaw_thickness_range');
+        if (inputField) {
+            // Temporarily enable
+            const wasDisabled = inputField.disabled;
+            if (wasDisabled) inputField.disabled = false;
+            
+            // Set value
+            inputField.value = value;
+            inputField.setAttribute('value', value);
+            
+            // Re-disable
+            if (wasDisabled) inputField.disabled = true;
+        }
+        
+        // 4. Create or update a visual indicator
+        const indicatorId = 'thickness_visual_indicator';
+        let visualIndicator = document.getElementById(indicatorId);
+        
+        if (!visualIndicator) {
+            // Create a new indicator
+            visualIndicator = document.createElement('div');
+            visualIndicator.id = indicatorId;
+            visualIndicator.style.marginTop = '5px';
+            visualIndicator.style.color = '#007bff';
+            visualIndicator.style.fontWeight = 'bold';
+            
+            // Add it to the range cell
+            const rangeCell = document.querySelector('td.var-range');
+            if (rangeCell) {
+                rangeCell.appendChild(visualIndicator);
+            }
+        }
+        
+        // Update the indicator content
+        if (visualIndicator) {
+            visualIndicator.textContent = 'Range: ' + value;
+        }
+        
+        console.log('Thickness range updated successfully with value:', value);
+    }
+    
+    // Execute the update immediately
+    updateThicknessDisplay();
+    
+    // Schedule another update after a short delay to ensure DOM stability
+    setTimeout(updateThicknessDisplay, 300);
+}
+
+// Helper function to update the field value - simplified version
+function updateFieldValue(element, value) {
+    if (!element) {
+        console.error('Cannot update field: element is null or undefined');
+        return;
+    }
+    
+    // Temporarily enable the field if it's disabled
+    const wasDisabled = element.disabled;
+    if (wasDisabled) {
+        element.disabled = false;
+    }
+    
+    // Set value directly
+    element.value = value;
+    element.setAttribute('value', value);
+    console.log(`Field ${element.id} updated with value:`, value);
+    
+    // Restore the disabled state if needed
+    if (wasDisabled) {
+        element.disabled = true;
+    }
+    
+    // Make sure we have a hidden input with the same name to submit the value
+    ensureHiddenBackupField(element);
+}
+
+// Initialize thickness range on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the thickness range field
+    const thicknessRangeField = document.getElementById('smaw_thickness_range');
+    const depositThicknessRangeField = document.getElementById('deposit_thickness_range');
+    
+    // Initialize the thickness range field
+    if (thicknessRangeField) {
+        // Make sure the field is disabled
+        thicknessRangeField.disabled = true;
+        
+        // First, ensure there's no pre-filled value that might be incorrect
+        // We'll temporarily enable to update the value
+        thicknessRangeField.disabled = false;
+        thicknessRangeField.value = '';
+        thicknessRangeField.disabled = true;
+    }
+    
+    // Initialize the deposit thickness range field
+    if (depositThicknessRangeField) {
+        // Make sure the field is disabled
+        depositThicknessRangeField.disabled = true;
+        
+        // First, ensure there's no pre-filled value that might be incorrect
+        // We'll temporarily enable to update the value
+        depositThicknessRangeField.disabled = false;
+        depositThicknessRangeField.value = '';
+        depositThicknessRangeField.disabled = true;
+    }
+    
+    // Get current thickness value
+    const thicknessField = document.getElementById('smaw_thickness');
+    if (!thicknessField) {
+        console.error('Thickness field not found');
+        return;
+    }
+    
+    const thickness = parseFloat(thicknessField.value);
+    console.log('Initial thickness on page load:', thickness);
+    
+    // Use a slight delay to ensure DOM is fully ready
+    setTimeout(function() {
+        // Calculate the range - this now directly updates the UI
+        const range = calculateThicknessRange(thickness);
+        console.log('Initial thickness range calculated as:', range);
+        
+        console.log('Initial thickness range field updated with value:', range);
+        
+        // Update deposit thickness range
+        const depositThicknessField = document.getElementById('deposit_thickness');
+        if (depositThicknessField) {
+            updateDepositThicknessRange(depositThicknessField.value);
+            console.log('Initial deposit thickness range updated');
+        }
+        
+        // Add event listener to ensure thickness range is updated when thickness changes
+        if (thicknessField) {
+            thicknessField.addEventListener('change', function() {
+                const newThickness = this.value;
+                // Direct call to calculate and update the range
+                const newRange = calculateThicknessRange(newThickness);
+                console.log('Thickness change event:', newThickness, 'Range:', newRange);
+            });
+            
+            thicknessField.addEventListener('input', function() {
+                const newThickness = this.value;
+                // Direct call to calculate and update the range
+                const newRange = calculateThicknessRange(newThickness);
+                console.log('Thickness input event:', newThickness, 'Range:', newRange);
+            });
+            
+            // Also trigger one calculation immediately
+            setTimeout(() => {
+                // Call calculateThicknessRange directly
+                calculateThicknessRange(document.getElementById('smaw_thickness').value);
+                console.log('Forced initial thickness range update');
+            }, 500);
+        }
+    }, 100);
+});
+
+// Initialize the thickness range calculation when the page loads
+// Function to help debug the thickness range field
+function debugThicknessRange() {
+    const thicknessField = document.getElementById('smaw_thickness');
+    const thicknessRangeField = document.getElementById('smaw_thickness_range');
+    const hiddenField = document.getElementById('smaw_thickness_range_hidden');
+    
+    if (thicknessField && thicknessRangeField) {
+        console.log('Current thickness value:', thicknessField.value);
+        console.log('Current thickness range value:', thicknessRangeField.value);
+        console.log('Hidden field value:', hiddenField ? hiddenField.value : 'Not found');
+        console.log('Thickness range attributes:', {
+            'value': thicknessRangeField.value,
+            'value attribute': thicknessRangeField.getAttribute('value'),
+            'data-calculated-value': thicknessRangeField.getAttribute('data-calculated-value'),
+            'data-original-value': thicknessRangeField.getAttribute('data-original-value'),
+            'disabled': thicknessRangeField.disabled
+        });
+        
+        // Force recalculation
+        calculateThicknessRange(thicknessField.value);
+        
+        // Check if the hidden field exists, create if it doesn't
+        if (!hiddenField) {
+            const value = thicknessRangeField.value;
+            const newHiddenField = document.createElement('input');
+            newHiddenField.type = 'hidden';
+            newHiddenField.id = 'smaw_thickness_range_hidden';
+            newHiddenField.name = 'smaw_thickness_range';
+            newHiddenField.value = value;
+            
+            // Add it near the original field
+            if (thicknessRangeField.parentNode) {
+                thicknessRangeField.parentNode.appendChild(newHiddenField);
+                console.log('Created and added missing hidden thickness range field with value:', value);
+            }
+        }
+    } else {
+        console.error('Could not find thickness fields for debugging');
+    }
+}
+
+// Function to ensure we have a hidden input with the same name to submit the value
+function ensureHiddenBackupField(element) {
+    if (!element) {
+        console.error('No element provided to ensureHiddenBackupField');
+        return null;
+    }
+    
+    // If element is specifically the thickness range field, handle specially
+    if (element.id === 'smaw_thickness_range') {
+        const hiddenId = 'smaw_thickness_range_hidden';
+        let hiddenField = document.getElementById(hiddenId);
+        const container = document.getElementById('thickness_range_container');
+        
+        // If hidden field doesn't exist, create it
+        if (!hiddenField) {
+            hiddenField = document.createElement('input');
+            hiddenField.type = 'hidden';
+            hiddenField.id = hiddenId;
+            hiddenField.name = 'smaw_thickness_range'; // Use same name as visible field
+            
+            // Add to container if it exists, otherwise add after the original element
+            if (container) {
+                container.appendChild(hiddenField);
+                console.log('Created new hidden field in thickness range container');
+            } else if (element.parentNode) {
+                element.parentNode.appendChild(hiddenField);
+                console.log('Created new hidden field after thickness range field');
+            }
+        }
+        
+        // Always update the hidden field value
+        hiddenField.value = element.value;
+        console.log('Updated hidden backup field:', hiddenId, 'to value:', element.value);
+        
+        // Also update the display elements
+        const displaySpan = document.getElementById('thickness_range_display');
+        const visualIndicator = document.getElementById('thickness_visual_indicator');
+        
+        if (displaySpan) displaySpan.textContent = element.value;
+        if (visualIndicator) visualIndicator.textContent = element.value;
+        
+        return hiddenField;
+    } 
+    // For other disabled fields
+    else if (element.disabled) {
+        const hiddenId = element.id + '_hidden';
+        let hiddenField = document.getElementById(hiddenId);
+        
+        // Create hidden field if it doesn't exist
+        if (!hiddenField) {
+            hiddenField = document.createElement('input');
+            hiddenField.type = 'hidden';
+            hiddenField.id = hiddenId;
+            hiddenField.name = element.name;
+            element.parentNode.appendChild(hiddenField);
+        }
+        
+        // Update hidden field value
+        hiddenField.value = element.value;
+        return hiddenField;
+    }
+    
+    return null;
+}
+
+// Calculate deposit thickness range
+function updateDepositThicknessRange(thickness) {
+    // Handle various input formats
+    let thicknessStr = String(thickness).trim();
+    
+    // Remove any non-numeric characters except period
+    thicknessStr = thicknessStr.replace(/[^\d.]/g, '');
+    
+    // Handle case when an HTML element is passed instead of a value
+    if (thickness && typeof thickness === 'object' && thickness.value !== undefined) {
+        thicknessStr = String(thickness.value).trim().replace(/[^\d.]/g, '');
+    } else if (thicknessStr.includes('[object HTMLInputElement]')) {
+        // Handle case where object was converted to string
+        const thicknessField = document.getElementById('deposit_thickness');
+        thicknessStr = thicknessField ? String(thicknessField.value).trim().replace(/[^\d.]/g, '') : '';
+    }
+    
+    // If no value or invalid, try to get from the input field
+    if (!thicknessStr || isNaN(parseFloat(thicknessStr))) {
+        const element = document.getElementById('deposit_thickness');
+        if (element) {
+            thicknessStr = String(element.value).trim().replace(/[^\d.]/g, '');
         }
     }
     
-    document.getElementById('smaw_thickness_range').value = rangeValue;
+    // Log the parsed value for debugging
+    console.log('Parsed deposit thickness value:', thicknessStr);
+    
+    const thicknessValue = parseFloat(thicknessStr);
+    let rangeValue = '';
+    
+    if (!isNaN(thicknessValue)) {
+        // Show only the thickness value with mm unit
+        rangeValue = thicknessValue + ' mm';
+    } else {
+        rangeValue = '';
+    }
+    
+    console.log('Calculated deposit thickness range:', rangeValue);
+    
+    // Get the container element
+    const container = document.getElementById('deposit_thickness_range_container');
+    if (!container) {
+        console.error('deposit_thickness_range_container element not found');
+        return;
+    }
+    
+    // Update the visual indicator directly
+    const visualIndicator = document.getElementById('deposit_thickness_visual_indicator');
+    if (visualIndicator) {
+        visualIndicator.textContent = rangeValue;
+    } else {
+        console.error('deposit_thickness_visual_indicator element not found');
+    }
+    
+    // Update the hidden field for form submission
+    const hiddenField = document.getElementById('deposit_thickness_range_hidden');
+    
+    if (hiddenField) hiddenField.value = rangeValue;
+    
+    // Create or update the visual indicator
+    const indicatorId = 'deposit_thickness_visual_indicator';
+    let visualIndicator = document.getElementById(indicatorId);
+    
+    if (!visualIndicator) {
+        visualIndicator = document.createElement('div');
+        visualIndicator.id = indicatorId;
+        visualIndicator.className = 'thickness-visual-indicator';
+        
+        // Add it to the range cell
+        const rangeCell = document.querySelector('td.var-range');
+        if (rangeCell && rangeCell.contains(container)) {
+            rangeCell.appendChild(visualIndicator);
+        } else {
+            container.parentNode?.appendChild(visualIndicator);
+        }
+    }
+    
+    if (visualIndicator) {
+        visualIndicator.textContent = 'Range: ' + rangeValue;
+    }
+    
+    console.log('Final deposit field values:',
+        'rangeField:', rangeField ? rangeField.value : 'N/A',
+        'hiddenField:', hiddenField ? hiddenField.value : 'N/A',
+        'displaySpan:', displaySpan ? displaySpan.textContent : 'N/A',
+        'visualIndicator:', visualIndicator ? visualIndicator.textContent : 'N/A'
+    );
+    
+    return rangeValue;
 }
 
-// Initialize the thickness range calculation when the page loads
+// Ultra simplified force update function - ALWAYS uses 10mm
+function forceUpdateThicknessRange(value) {
+    // ALWAYS use 10mm as the fixed value, completely ignore input
+    const fixedValue = '10mm';
+    console.log('forceUpdateThicknessRange called with:', value);
+    console.log('FORCE setting to fixed value:', fixedValue, '(ignoring input)');
+    
+    // Update the single input field
+    const rangeField = document.getElementById('smaw_thickness_range');
+    
+    if (rangeField) {
+        // Force the value to always be 10mm
+        rangeField.value = fixedValue;
+        rangeField.setAttribute('value', fixedValue);
+        
+        // Log debug info
+        console.log('Thickness update completed:');
+        console.log('- Fixed value applied:', fixedValue);
+        console.log('- Field value confirmed:', rangeField.value);
+        
+        // Also trigger a change event
+        const event = new Event('change', { bubbles: true });
+        rangeField.dispatchEvent(event);
+    } else {
+        console.log('Range field not found, will try to update with jQuery');
+    }
+    
+    // For jQuery compatibility - also update jQuery objects if jQuery is available
+    if (typeof jQuery !== 'undefined') {
+        try {
+            jQuery('#smaw_thickness_range').val(fixedValue);
+            // Also trigger jQuery change event
+            jQuery('#smaw_thickness_range').trigger('change');
+            console.log('jQuery update completed for thickness range with fixed value');
+        } catch (e) {
+            console.error('Error updating with jQuery:', e);
+        }
+    }
+    
+    // Return consistent object with our fixed value
+    return {
+        rangeValue: fixedValue,
+        value: fixedValue,
+        fixedValue: fixedValue
+    };
+}
+
+// Add debug trigger after a delay and expose functions globally
+setTimeout(function() {
+    // Add debugging convenience functions to window
+    window.debugThicknessRange = debugThicknessRange;
+    
+    // Expose the main thickness functions globally so they can be called from other files
+    window.calculateThicknessRange = calculateThicknessRange;
+    window.forceUpdateThicknessRange = forceUpdateThicknessRange;
+    window.updateThicknessRangeUI = updateThicknessRangeUI;
+    window.updateThicknessRangeField = updateThicknessRangeField;
+    
+    // Also expose a direct function to set the thickness value with jQuery support
+    window.setThicknessRange = function(value) {
+        // ALWAYS use 10mm as the fixed value, completely ignoring the input value
+        const fixedValue = '10mm';
+        console.log('JS - Forced thickness range update to:', fixedValue, '(ignoring input value:', value, ')');
+        
+        // Update the single thickness range element
+        const rangeField = document.getElementById('smaw_thickness_range');
+        
+        if (rangeField) {
+            // Force the value to always be 10mm
+            rangeField.value = fixedValue;
+            rangeField.setAttribute('value', fixedValue);
+            console.log('Range field updated directly to:', fixedValue);
+        }
+        
+        // If jQuery is available, also update jQuery objects
+        if (typeof jQuery !== 'undefined') {
+            try {
+                jQuery('#smaw_thickness_range').val(fixedValue);
+                console.log('jQuery update completed, value set to:', fixedValue);
+                
+                // Force a jQuery change event to notify any listeners
+                jQuery('#smaw_thickness_range').trigger('change');
+            } catch (e) {
+                console.error('Error updating with jQuery:', e);
+            }
+        }
+        
+        return fixedValue; // Return the fixed value, not just true
+    };
+    
+    // Run debug automatically
+    debugThicknessRange();
+    
+    // Ensure that thickness range is always set to 10mm, regardless of what other scripts might do
+    const fixedThicknessValue = '10mm';
+    
+    // Force our fixed value everywhere, repeatedly
+    function enforceFixedThicknessValue() {
+        console.log('Enforcing fixed thickness value of', fixedThicknessValue);
+        const rangeField = document.getElementById('smaw_thickness_range');
+        
+        if (rangeField && rangeField.value !== fixedThicknessValue) {
+            rangeField.value = fixedThicknessValue;
+            rangeField.setAttribute('value', fixedThicknessValue);
+            console.log('Fixed thickness value enforced');
+        }
+        
+        if (typeof jQuery !== 'undefined') {
+            jQuery('#smaw_thickness_range').val(fixedThicknessValue);
+        }
+    }
+    
+    // Call immediately
+    enforceFixedThicknessValue();
+    
+    // And set up intervals to repeatedly ensure our value sticks
+    setTimeout(enforceFixedThicknessValue, 500);
+    setTimeout(enforceFixedThicknessValue, 1000);
+    setTimeout(enforceFixedThicknessValue, 2000);
+    
+    // Also create a MutationObserver to monitor changes to the field
+    if (typeof MutationObserver !== 'undefined') {
+        const rangeField = document.getElementById('smaw_thickness_range');
+        if (rangeField) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (rangeField.value !== fixedThicknessValue) {
+                        console.log('Value change detected, enforcing fixed value');
+                        enforceFixedThicknessValue();
+                    }
+                });
+            });
+            
+            observer.observe(rangeField, { 
+                attributes: true, 
+                attributeFilter: ['value'],
+                characterData: true,
+                childList: false,
+                subtree: false
+            });
+            console.log('MutationObserver set up to enforce fixed thickness value');
+        }
+    }
+}, 2000);
+
 // Function to initialize welding variables from saved values
 function initializeWeldingVariables() {
     // Get all select elements with data-saved-value attribute
@@ -316,7 +947,7 @@ function initializeWeldingVariables() {
             const event = new Event('change', { bubbles: true });
             select.dispatchEvent(event);
         }
-    }
+    });
     
     // Initialize checkbox values
     const checkboxElements = document.querySelectorAll('input[type="checkbox"][data-saved-value]');
@@ -349,11 +980,145 @@ function initializeWeldingVariables() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - initializing welding variables');
+    
+    // Function to ensure thickness range is properly initialized
+    function initializeThicknessRange() {
+        // 1. Get all thickness-related fields
+        const thicknessField = document.getElementById('smaw_thickness');
+        const thicknessRangeField = document.getElementById('smaw_thickness_range');
+        const hiddenRangeField = document.getElementById('smaw_thickness_range_hidden');
+        const displaySpan = document.getElementById('thickness_range_display');
+        
+        if (!thicknessField) {
+            console.error('Thickness field (smaw_thickness) not found!');
+            return;
+        }
+        
+        // 2. Log the initial state of all fields
+        console.log('Thickness field initialization:');
+        console.log('- Thickness value:', thicknessField.value);
+        console.log('- Range field exists:', !!thicknessRangeField);
+        console.log('- Hidden field exists:', !!hiddenRangeField);
+        console.log('- Display span exists:', !!displaySpan);
+        
+        if (thicknessRangeField) {
+            // Save original value for reference
+            const originalValue = thicknessRangeField.value;
+            console.log('- Original range value:', originalValue);
+            
+            // Set data attribute if needed
+            if (!thicknessRangeField.hasAttribute('data-original-value')) {
+                thicknessRangeField.setAttribute('data-original-value', originalValue);
+            }
+            
+            // Make sure the field is disabled
+            thicknessRangeField.disabled = true;
+        }
+        
+        // 3. Calculate the initial thickness range
+        const thickness = thicknessField.value;
+        console.log('Calculating initial thickness range for:', thickness);
+        calculateThicknessRange(thickness);
+        
+        // 4. Set up event listeners for thickness changes
+        thicknessField.addEventListener('input', function() {
+            console.log('Thickness input event with value:', this.value);
+            calculateThicknessRange(this.value);
+        });
+        
+        thicknessField.addEventListener('change', function() {
+            console.log('Thickness change event with value:', this.value);
+            calculateThicknessRange(this.value);
+        });
+        
+        // 5. Force a calculation by triggering an input event
+        const inputEvent = new Event('input', { bubbles: true });
+        thicknessField.dispatchEvent(inputEvent);
+        
+        // 6. Return the current thickness for reference
+        return thickness;
+    }
+    
     // Initialize all welding variables with saved values
     initializeWeldingVariables();
     
-    const smawThickness = document.getElementById('smaw_thickness').value;
-    calculateThicknessRange(smawThickness);
+    // Initialize thickness range with staggered approach
+    // First immediate initialization
+    initializeThicknessRange();
+    
+    // Second initialization after a short delay
+    setTimeout(function() {
+        console.log('Performing secondary thickness range initialization');
+        const thickness = initializeThicknessRange();
+        
+        // Add a specific check for [object HTMLInputElement] and fix it
+        const checkAndFixObjectHTML = function() {
+            const rangeField = document.getElementById('smaw_thickness_range');
+            const hiddenField = document.getElementById('smaw_thickness_range_hidden');
+            const displaySpan = document.getElementById('thickness_range_display');
+            const visualIndicator = document.getElementById('thickness_visual_indicator');
+            
+            // Check for the [object HTMLInputElement] issue
+            const objectPattern = /\[object HTML.*Element\]/;
+            
+            let needsFix = false;
+            if (rangeField && objectPattern.test(rangeField.value)) needsFix = true;
+            if (hiddenField && objectPattern.test(hiddenField.value)) needsFix = true;
+            if (displaySpan && objectPattern.test(displaySpan.textContent)) needsFix = true;
+            if (visualIndicator && objectPattern.test(visualIndicator.textContent)) needsFix = true;
+            
+            if (needsFix) {
+                console.log('Found [object HTMLInputElement] issue, fixing it...');
+                const thicknessInput = document.getElementById('smaw_thickness');
+                if (thicknessInput) {
+                    const thicknessValue = parseFloat(thicknessInput.value);
+                    if (!isNaN(thicknessValue)) {
+                        // Recalculate thickness range
+                        let rangeValue = '';
+                        if (thicknessValue <= 12) {
+                            rangeValue = thicknessValue + ' mm to ' + (thicknessValue * 2).toFixed(2) + ' mm';
+                        } else {
+                            rangeValue = 'Maximum to be welded';
+                        }
+                        
+                        // Update with corrected value
+                        updateThicknessRangeField(rangeValue);
+                        return true;
+                    }
+                }
+            }
+            return needsFix;
+        };
+        
+        // Run the check immediately
+        checkAndFixObjectHTML();
+        
+        // And run it again after a short delay
+        setTimeout(checkAndFixObjectHTML, 500);
+        
+        // Additional initialization steps
+        // Manually trigger calculation one more time
+        calculateThicknessRange(thickness);
+        
+        // Final check after longer delay
+        setTimeout(function() {
+            console.log('Performing final thickness range verification');
+            const thicknessField = document.getElementById('smaw_thickness');
+            const thicknessRangeField = document.getElementById('smaw_thickness_range');
+            const hiddenField = document.getElementById('smaw_thickness_range_hidden');
+            
+            if (thicknessField && thicknessRangeField) {
+                console.log('Final thickness check:');
+                console.log('- Current thickness:', thicknessField.value);
+                console.log('- Current range field value:', thicknessRangeField.value);
+                console.log('- Current hidden field value:', hiddenField ? hiddenField.value : 'No hidden field');
+                
+                // Force one last calculation
+                calculateThicknessRange(thicknessField.value);
+            }
+        }, 1000);
+    }, 300);
     
     // Initialize backing range immediately to ensure it's not empty
     const backing = document.getElementById('backing').value;
@@ -388,25 +1153,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Initialize vertical progression
-    const verticalProgression = document.getElementById('vertical_progression').value;
-    const verticalProgressionRangeText = verticalProgression === 'Uphill' ? 'Uphill' : 'Downhill';
-    
-    const verticalProgressionSpan = document.getElementById('vertical_progression_range_span');
-    if (verticalProgressionSpan) {
-        verticalProgressionSpan.textContent = verticalProgressionRangeText;
-        
-        // Also update the hidden field
-        const verticalProgressionHidden = document.getElementById('vertical_progression_range');
-        if (verticalProgressionHidden) {
-            verticalProgressionHidden.value = verticalProgressionRangeText;
-        }
-    }
+    // Vertical progression field and initialization has been moved to position-qualification.blade.php
     
     // Ensure range fields are properly initialized
     setTimeout(function() {
-        // ...existing code...
+        calculateThicknessRange(document.getElementById('smaw_thickness').value);
+        const depositField = document.getElementById('deposit_thickness');
+        updateDepositThicknessRange(depositField ? depositField.value : '');
     }, 500);
+    
+    // Run calculations again after a longer delay to handle any race conditions
+    setTimeout(function() {
+        calculateThicknessRange(document.getElementById('smaw_thickness').value);
+        const depositField = document.getElementById('deposit_thickness');
+        updateDepositThicknessRange(depositField ? depositField.value : '');
+    }, 1000);
+    
+    // One final update to ensure values persist
+    setTimeout(function() {
+        calculateThicknessRange(document.getElementById('smaw_thickness').value);
+        const depositField = document.getElementById('deposit_thickness');
+        updateDepositThicknessRange(depositField ? depositField.value : '');
+    }, 2000);
 
     // Initialize signature pad
     const canvas = document.getElementById('signature-pad');
@@ -442,5 +1210,97 @@ document.addEventListener('DOMContentLoaded', function() {
         
         resizeCanvas();
     }
+    
+    // Add a global function that can be called from console to force update thickness range
+    window.forceUpdateThicknessRange = function(value) {
+        // If no value provided, recalculate based on current thickness
+        if (value === undefined || value === null) {
+            const thicknessInput = document.getElementById('smaw_thickness');
+            if (thicknessInput) {
+                const thickness = parseFloat(thicknessInput.value);
+                if (!isNaN(thickness)) {
+                    value = calculateThicknessRange(thickness);
+                } else {
+                    console.warn('Invalid thickness value:', thicknessInput.value);
+                    value = 'Maximum to be welded';
+                }
+            } else {
+                console.error('Cannot find thickness input element');
+                value = 'Maximum to be welded';
+            }
+        }
+        
+        // Ensure we have a valid string value
+        if (value === undefined || value === null) {
+            value = 'Maximum to be welded';
+        }
+        
+        console.log('Forcing thickness range update to:', value);
+        
+        // Update the UI using our unified function - this already starts a persistent updater internally
+        updateThicknessRangeUI(value);
+        
+        return {
+            calculatedValue: value,
+            currentThickness: document.getElementById('smaw_thickness').value,
+            rangeInputValue: document.getElementById('smaw_thickness_range').value,
+            rangeHiddenValue: document.getElementById('smaw_thickness_range_hidden')?.value,
+            rangeDisplayValue: document.getElementById('thickness_range_display')?.textContent
+        };
+    };
+    
+    // Add a debug function to check all thickness-related fields
+    window.debugThicknessRangeFields = function() {
+        const thickness = document.getElementById('smaw_thickness');
+        const rangeInput = document.getElementById('smaw_thickness_range');
+        const hiddenRange = document.getElementById('smaw_thickness_range_hidden');
+        const displaySpan = document.getElementById('thickness_range_display');
+        const visualIndicator = document.getElementById('thickness_visual_indicator');
+        
+        // Calculate what the value should be
+        const thicknessValue = thickness ? parseFloat(thickness.value) : null;
+        let expectedRange = 'N/A';
+        
+        if (thicknessValue !== null && !isNaN(thicknessValue)) {
+            if (thicknessValue <= 3) {
+                expectedRange = thicknessValue + 'mm to ' + (thicknessValue * 2) + 'mm';
+            } else if (thicknessValue <= 12) {
+                expectedRange = thicknessValue + 'mm to ' + Math.round(thicknessValue * 2) + 'mm';
+            } else {
+                expectedRange = 'Maximum to be welded';
+            }
+        }
+        
+        // Return all relevant information
+        return {
+            thickness: {
+                element: thickness ? true : false,
+                value: thickness ? thickness.value : null,
+                parsed: thicknessValue
+            },
+            expectedRange: expectedRange,
+            rangeInput: {
+                element: rangeInput ? true : false,
+                value: rangeInput ? rangeInput.value : null,
+                disabled: rangeInput ? rangeInput.disabled : null,
+                matches: rangeInput ? (rangeInput.value === expectedRange) : false
+            },
+            hiddenRange: {
+                element: hiddenRange ? true : false,
+                value: hiddenRange ? hiddenRange.value : null,
+                matches: hiddenRange ? (hiddenRange.value === expectedRange) : false
+            },
+            displaySpan: {
+                element: displaySpan ? true : false,
+                textContent: displaySpan ? displaySpan.textContent : null,
+                matches: displaySpan ? (displaySpan.textContent.trim() === expectedRange) : false
+            },
+            visualIndicator: {
+                element: visualIndicator ? true : false,
+                textContent: visualIndicator ? visualIndicator.textContent : null,
+                matches: visualIndicator ? (visualIndicator.textContent.trim() === expectedRange) : false
+            }
+        };
+    };
 });
 </script>
