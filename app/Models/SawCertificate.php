@@ -137,4 +137,9 @@ class SawCertificate extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function rtReport()
+    {
+        return $this->hasOne(SawRtReportWeldar::class, 'certificate_id');
+    }
 }

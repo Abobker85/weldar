@@ -67,6 +67,7 @@ class GtawCertificateController extends Controller
                 $actions .= '<a href="' . route('gtaw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-primary" target="_blank"><i class="fas fa-edit"></i></a>';
                 $actions .= '<a href="' . route('gtaw-certificates.card', $certificate->id) . '" class="btn btn-sm btn-info" target="_blank"><i class="fas fa-id-card"></i></a>';
                 $actions .= '<a href="' . route('gtaw-certificates.back-card', $certificate->id) . '" class="btn btn-sm btn-warning" target="_blank"><i class="fas fa-id-card-alt"></i></a>';
+                $actions .= '<button class="btn btn-sm btn-info" data-toggle="modal" data-target="#rt-report-modal" data-certificate-id="' . $certificate->id . '" data-welder-id="' . $certificate->welder_id . '" data-certificate-type="gtaw"><i class="fas fa-upload"></i></button>';
                 $actions .= '<form action="' . route('gtaw-certificates.destroy', $certificate->id) . '" method="POST" onsubmit="return confirm(\'Are you sure you want to delete this certificate?\');" style="display:inline">';
                 $actions .= csrf_field();
                 $actions .= method_field('DELETE');
