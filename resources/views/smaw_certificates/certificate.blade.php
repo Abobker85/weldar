@@ -649,8 +649,6 @@
                 </td>
             </tr>
             <tr>
-          
-            <tr>
                 <td class="var-label">Vertical progression (uphill or downhill):</td>
                 <td class="var-value">{{ $certificate->vertical_progression }}</td>
                 <td class="var-range">{{ $certificate->vertical_progression_range }}</td>
@@ -783,7 +781,7 @@
                     <td class="var-value" style="text-align: center;">
                         <div style="display: flex; align-items: center; justify-content: center;">
                             <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-right: 5px; text-align: center; line-height: 12px;">
-                                {!! $certificate->rt ? '✓' : '&nbsp;' !!}
+                                {!! isset($certificate->rt) && $certificate->rt ? '✓' : '&nbsp;' !!}
                             </span>
                             RT
                         </div>
@@ -791,7 +789,7 @@
                     <td class="var-value" style="text-align: center;">
                         <div style="display: flex; align-items: center; justify-content: center;">
                             <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-right: 5px; text-align: center; line-height: 12px;">
-                                {!! $certificate->ut ? '✓' : '&nbsp;' !!}
+                                {!! isset($certificate->ut) && $certificate->ut ? '✓' : '&nbsp;' !!}
                             </span>
                             UT
                         </div>
@@ -863,13 +861,17 @@
                     </td>
                     <td class="var-label">Company</td>
                     <td class="var-value" style="text-align: center;">
-                        {{ $certificate->evaluated_company }}
+                        @if(!$certificate->rt && !$certificate->ut)
+                            {{ $certificate->evaluated_company ?? '' }}
+                        @endif
                     </td>
                 </tr>
                 <tr>
                     <td class="var-label">Mechanical tests conducted by</td>
                     <td class="var-value" style="text-align: center;">
-                        {{ $certificate->mechanical_tests_by }}
+                        @if(!$certificate->rt && !$certificate->ut)
+                            {{ $certificate->mechanical_tests_by ?? '' }}
+                        @endif
                     </td>
                     <td class="var-label">Laboratory test no.</td>
                     <td class="var-value" style="text-align: center;">

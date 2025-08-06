@@ -10,7 +10,35 @@
     /**
      * Add event listeners for range fields
      */
+    /**
+     * Initialize specimen checkboxes to ensure they are mutually exclusive
+     */
+    function initializeSpecimenCheckboxes() {
+        const plateSpecimen = document.getElementById('plate_specimen');
+        const pipeSpecimen = document.getElementById('pipe_specimen');
+        
+        if (plateSpecimen && pipeSpecimen) {
+            // If both are checked (which shouldn't happen), make plate the priority
+            if (plateSpecimen.checked && pipeSpecimen.checked) {
+                pipeSpecimen.checked = false;
+            }
+            
+            // Ensure at least one is checked
+            if (!plateSpecimen.checked && !pipeSpecimen.checked) {
+                plateSpecimen.checked = true;
+            }
+            
+            console.log('Initialized specimen checkboxes:', {
+                'plate_specimen': plateSpecimen.checked,
+                'pipe_specimen': pipeSpecimen.checked
+            });
+        }
+    }
+    
     function addRangeFieldListeners() {
+        // Initialize specimen checkboxes first
+        initializeSpecimenCheckboxes();
+        
         // Add listeners to update ranges when form fields change
         const rangeUpdaters = [
             { id: 'backing', handler: updateBackingRange },
@@ -21,7 +49,13 @@
                 updatePositionRange();
             }},
             { id: 'filler_f_no', handler: updateFNumberRange },
-            { id: 'vertical_progression', handler: updateVerticalProgressionRange }
+            { id: 'vertical_progression', handler: updateVerticalProgressionRange },
+            { id: 'smaw_thickness', handler: function() {
+                console.log('SMAW thickness changed, updating thickness range');
+                const thickness = document.getElementById('smaw_thickness')?.value || '';
+                calculateThicknessRange(thickness);
+                updateDiaThickness();
+            }}
         ];
         
         rangeUpdaters.forEach(updater => {
@@ -168,7 +202,38 @@
             console.log('updatePositionRange function called');
             
             const testPositionElement = document.getElementById('test_position');
-            const testPosition = testPositionElement ? testPositionElement.value : '';
+            let testPosition = testPositionElement ? testPositionElement.value : '';
+            
+            // Log the current state of the select element
+            if (testPositionElement) {
+                console.log('Current test_position dropdown state:', {
+                    'value': testPositionElement.value,
+                    'selectedIndex': testPositionElement.selectedIndex,
+                    'selected option text': testPositionElement.selectedIndex >= 0 ? 
+                        testPositionElement.options[testPositionElement.selectedIndex].text : 'none'
+                });
+            }
+            
+            // Check if we should try to get the value from data-saved-value attribute
+            if (testPositionElement && (!testPosition || testPosition === '')) {
+                const savedValue = testPositionElement.getAttribute('data-saved-value');
+                if (savedValue && savedValue.trim() !== '') {
+                    console.log('No value selected, using data-saved-value:', savedValue);
+                    testPosition = savedValue;
+                    
+                    // Try to set the dropdown to match this value
+                    testPositionElement.value = savedValue;
+                    
+                    // Also force select the right option by iterating through options
+                    for (let i = 0; i < testPositionElement.options.length; i++) {
+                        if (testPositionElement.options[i].value === savedValue) {
+                            testPositionElement.selectedIndex = i;
+                            testPositionElement.options[i].selected = true;
+                            break;
+                        }
+                    }
+                }
+            }
             
             const pipeSpecimenElement = document.getElementById('pipe_specimen');
             const plateSpecimenElement = document.getElementById('plate_specimen');
@@ -190,6 +255,15 @@
             if (!testPosition) {
                 console.log('No test position selected, skipping range update');
                 return;
+            }
+            
+            // Ensure the test position value matches what's in the dropdown
+            if (testPositionElement) {
+                // This ensures we're using the actual selected value from the dropdown
+                const selectedOption = testPositionElement.options[testPositionElement.selectedIndex];
+                if (selectedOption) {
+                    console.log('Selected option text:', selectedOption.text);
+                }
             }
             
             let rangeText = '';
@@ -229,10 +303,9 @@
                 console.log('Position range hidden field updated to:', rangeText);
             }
             
-            // Also update any display span if it exists
+            // Also update any display span if it exists (but we've removed it from edit form)
             if (rangeDisplaySpan) {
                 rangeDisplaySpan.textContent = rangeText;
-                rangeDisplaySpan.style.display = 'block';
                 console.log('Position range span updated to:', rangeText);
             }
             
@@ -402,6 +475,13 @@
         const plateCheckbox = document.getElementById('plate_specimen');
         const pipeCheckbox = document.getElementById('pipe_specimen');
         
+        // Make checkboxes mutually exclusive
+        if (checkbox.id === 'plate_specimen' && checkbox.checked) {
+            pipeCheckbox.checked = false;
+        } else if (checkbox.id === 'pipe_specimen' && checkbox.checked) {
+            plateCheckbox.checked = false;
+        }
+        
         // Ensure at least one specimen type is selected
         if (!plateCheckbox.checked && !pipeCheckbox.checked) {
             checkbox.checked = true;
@@ -444,6 +524,118 @@
         }
         
         display.value = diameter + '/' + thickness + ' mm';
+        
+        // Update thickness range when thickness changes
+        calculateThicknessRange(thickness);
+    }
+    
+    /**
+     * Calculate thickness range based on input thickness
+     */
+    function calculateThicknessRange(thickness) {
+        console.log('Calculating thickness range for thickness:', thickness);
+        
+        // If thickness is empty or not a number, use default value
+        if (!thickness || isNaN(parseFloat(thickness))) {
+            console.log('Invalid thickness value, using default');
+            updateThicknessRangeDisplay('Maximum to be welded');
+            return 'Maximum to be welded';
+        }
+        
+        // Parse the thickness value and calculate the range
+        const thicknessValue = parseFloat(thickness);
+        if (thicknessValue <= 12) {
+            // For thickness <= 12mm: double the thickness value
+            const doubledValue = (thicknessValue * 2).toFixed(2);
+            const rangeValue = doubledValue + ' mm';
+            console.log('Calculated thickness range:', rangeValue);
+            updateThicknessRangeDisplay(rangeValue);
+            return rangeValue;
+        } else {
+            console.log('Thickness exceeds 12mm, using "Maximum to be welded"');
+            updateThicknessRangeDisplay('Maximum to be welded');
+            return 'Maximum to be welded';
+        }
+    }
+    
+    /**
+     * Update all thickness range display elements and hidden fields
+     */
+    function updateThicknessRangeDisplay(rangeValue) {
+        // Update visual indicator
+        const visualIndicator = document.getElementById('thickness_visual_indicator');
+        if (visualIndicator) {
+            visualIndicator.textContent = rangeValue;
+            visualIndicator.style.display = 'block';
+        }
+        
+        // Update hidden input field for form submission
+        const hiddenField = document.getElementById('smaw_thickness_range_hidden');
+        if (hiddenField) {
+            hiddenField.value = rangeValue;
+        }
+        
+        // Try using jQuery to update any other related elements if available
+        if (typeof $ !== 'undefined' || typeof jQuery !== 'undefined') {
+            const jq = $ || jQuery;
+            try {
+                // Update hidden field
+                if (jq('#smaw_thickness_range_hidden').length) {
+                    jq('#smaw_thickness_range_hidden').val(rangeValue);
+                }
+                
+                // Update any display spans
+                if (jq('#thickness_range_display').length) {
+                    jq('#thickness_range_display').text(rangeValue);
+                }
+                
+                console.log('Updated all thickness range elements to:', rangeValue);
+            } catch (e) {
+                console.error('Error updating thickness range elements:', e);
+            }
+        }
+        
+        // Update display span
+        const displaySpan = document.getElementById('thickness_range_display');
+        if (displaySpan) {
+            displaySpan.textContent = rangeValue;
+        }
+        
+        // No need to update visual indicator again, it's already done above
+        
+        // Try using jQuery if available
+        if (typeof $ !== 'undefined') {
+            try {
+                $('#smaw_thickness_range').val(rangeValue);
+                
+                // Update related elements if they exist
+                if ($('#smaw_thickness_range_hidden').length) {
+                    $('#smaw_thickness_range_hidden').val(rangeValue);
+                }
+                if ($('#thickness_range_display').length) {
+                    $('#thickness_range_display').text(rangeValue);
+                }
+                if ($('#thickness_visual_indicator').length) {
+                    $('#thickness_visual_indicator').text(rangeValue);
+                }
+                
+                // Trigger change event to notify any listeners
+                $('#smaw_thickness_range').trigger('change');
+                
+                console.log('Used jQuery to update thickness range to value:', rangeValue);
+            } catch (e) {
+                console.log('jQuery update attempt failed:', e);
+            }
+        }
+        
+        // Update any visible display in the table
+        const thicknessRangeCells = document.querySelectorAll('.var-range[data-range="thickness"]');
+        if (thicknessRangeCells && thicknessRangeCells.length > 0) {
+            thicknessRangeCells[0].innerHTML = `<span style="font-weight: bold;">${rangeValue}</span>`;
+            console.log('Updated thickness range cells in table to value:', rangeValue);
+        }
+        
+        return rangeValue;
     }
     
     /**
@@ -452,12 +644,25 @@
     function updateAllRangeFields() {
         try {
             console.log('Updating all range fields...');
+            
+            // Make sure specimen checkboxes are correctly set
+            initializeSpecimenCheckboxes();
+            
             updateDiameterRange();
             updatePNumberRange();
             updatePositionRange();
             updateBackingRange();
             updateFNumberRange();
             updateVerticalProgressionRange();
+            
+            // Update position vertical progression if it exists
+            if (document.getElementById('vertical_progression')) {
+                updatePositionVerticalProgressionRange();
+            }
+            
+            // Update thickness range
+            const thickness = document.getElementById('smaw_thickness')?.value || '';
+            calculateThicknessRange(thickness);
             
             // Log all range values after update
             const rangeFields = [
@@ -466,7 +671,8 @@
                 'position_range',
                 'backing_range', 
                 'f_number_range', 
-                'vertical_progression_range'
+                'vertical_progression_range',
+                'smaw_thickness_range'
             ];
             
             console.log('Range values after update:');
@@ -517,6 +723,23 @@
             try { updateVerticalProgressionRange(); } catch(e) { console.error('Error updating vertical progression range:', e); }
             try { updatePositionRange(); } catch(e) { console.error('Error updating position range:', e); }
             
+            // Update position vertical progression if it exists
+            try { 
+                if (document.getElementById('vertical_progression')) {
+                    updatePositionVerticalProgressionRange();
+                }
+            } catch(e) { 
+                console.error('Error updating position vertical progression range:', e); 
+            }
+            
+            // Update thickness range
+            try { 
+                const thickness = document.getElementById('smaw_thickness')?.value || '';
+                calculateThicknessRange(thickness); 
+            } catch(e) { 
+                console.error('Error updating thickness range:', e); 
+            }
+            
             // Debug - output all range values to console
             console.log('Range values after explicit initialization:');
             const rangeFields = [
@@ -525,7 +748,8 @@
                 'f_number_range',
                 'vertical_progression_range',
                 'position_range',
-                'backing_range'
+                'backing_range',
+                'smaw_thickness_range'
             ];
             
             rangeFields.forEach(field => {
@@ -542,16 +766,263 @@
         }
     }
     
+    /**
+     * Update position vertical progression range
+     */
+    function updatePositionVerticalProgressionRange() {
+        const verticalProgression = document.getElementById('vertical_progression')?.value || '';
+        const rangeSpan = document.getElementById('vertical_progression_range_span');
+        
+        let rangeText = '';
+        switch (verticalProgression) {
+            case 'Uphill':
+                rangeText = 'Uphill';
+                break;
+            case 'Downhill':
+                rangeText = 'Downhill';
+                break;
+            case 'None':
+                rangeText = 'Not applicable';
+                break;
+            default:
+                rangeText = 'Not specified';
+        }
+        
+        // Update the span if it exists
+        if (rangeSpan) {
+            rangeSpan.textContent = rangeText;
+            rangeSpan.style.display = 'block';
+            console.log('Position vertical progression range updated to:', rangeText);
+        }
+    }
+    
+    // Add event listener to initialize the vertical progression field on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize vertical progression on page load
+        updatePositionVerticalProgressionRange();
+    });
+    
+    // Function to update thickness range based on thickness value
+    function enforceFixedThicknessValue() {
+        // Get the thickness field to calculate value dynamically
+        const thicknessField = document.getElementById('smaw_thickness');
+        const thicknessValue = thicknessField ? thicknessField.value : '';
+        
+        // Calculate the range based on the current thickness value
+        let valueToUse = calculateThicknessRange(thicknessValue);
+        console.log('Updating thickness range to calculated value:', valueToUse);
+        
+        // No need to update visible field as it's been removed
+        // Instead, we use the updateThicknessRangeDisplay function
+        // which is called by calculateThicknessRange
+        
+        // Ensure the visual indicator is properly updated
+        const visualIndicator = document.getElementById('thickness_visual_indicator');
+        if (visualIndicator && visualIndicator.textContent !== valueToUse) {
+            visualIndicator.textContent = valueToUse;
+            console.log('Updated visual indicator to:', valueToUse);
+        }
+        
+        // Update the hidden field for form submission
+        const hiddenField = document.getElementById('smaw_thickness_range_hidden');
+        if (hiddenField && hiddenField.value !== valueToUse) {
+            hiddenField.value = valueToUse;
+            console.log('Updated hidden field to:', valueToUse);
+        }
+        
+        // Try jQuery to update ALL matching elements
+        if (typeof $ !== 'undefined' || typeof jQuery !== 'undefined') {
+            const jq = $ || jQuery;
+            try {
+                // Update hidden fields by ID
+                if (jq('#smaw_thickness_range_hidden').length > 0) {
+                    jq('#smaw_thickness_range_hidden').val(valueToUse);
+                }
+                
+                // Update visual indicator
+                if (jq('#thickness_visual_indicator').length > 0) {
+                    jq('#thickness_visual_indicator').text(valueToUse);
+                }
+                
+                // Also update by name (will update all fields with this name)
+                jq('input[name="smaw_thickness_range"]').val(valueToUse);
+                
+                // Trigger change events for hidden fields
+                jq('input[name="smaw_thickness_range"]').trigger('change');
+            } catch (e) {
+                console.error('Error updating with jQuery:', e);
+            }
+        }
+        
+        return valueToUse;
+    }
+    
+    // Add event listener to initialize thickness range values
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wait a bit for other scripts to finish initializing
+        setTimeout(function() {
+            console.log('Initializing thickness range with actual thickness value');
+            
+            // Get the actual thickness value
+            const thicknessField = document.getElementById('smaw_thickness');
+            const thicknessValue = thicknessField ? thicknessField.value : '';
+            
+            // Make sure the visual indicator is properly styled
+            const visualIndicator = document.getElementById('thickness_visual_indicator');
+            if (visualIndicator) {
+                visualIndicator.style.padding = '8px';
+                visualIndicator.style.fontWeight = 'bold';
+                visualIndicator.style.border = '1px solid #ddd';
+                visualIndicator.style.backgroundColor = '#f9f9f9';
+                visualIndicator.style.borderRadius = '4px';
+                visualIndicator.style.display = 'block';
+            }
+            
+            // Calculate range and update all displays
+            calculateThicknessRange(thicknessValue);
+            
+            // Call our enforcer function once
+            enforceFixedThicknessValue();
+            
+            // Add change/input event listeners if not already added
+            if (thicknessField) {
+                thicknessField.addEventListener('change', function() {
+                    const thickness = this.value;
+                    console.log('Thickness change event in range-functions.js:', thickness);
+                    // Calculate and update all displays
+                    calculateThicknessRange(thickness);
+                });
+                
+                thicknessField.addEventListener('input', function() {
+                    const thickness = this.value;
+                    console.log('Thickness input event in range-functions.js:', thickness);
+                    // Calculate and update immediately when typing
+                    calculateThicknessRange(thickness);
+                });
+            }
+        }, 1000); // Delay by 1 second to ensure page is fully loaded
+    });
+    
+    // Add final setup when window is fully loaded
+    window.addEventListener('load', function() {
+        console.log('Window fully loaded - initializing thickness range based on actual input');
+        
+        // Call our function to calculate values based on actual thickness
+        enforceFixedThicknessValue();
+        
+        // Add a final check after a delay to ensure everything is properly initialized
+        setTimeout(function() {
+            // Check for hidden fields
+            const hiddenFields = document.querySelectorAll('[id="smaw_thickness_range_hidden"]');
+            const elementsByName = document.querySelectorAll('[name="smaw_thickness_range"]');
+            
+            console.log(`Found ${hiddenFields.length} elements with id="smaw_thickness_range_hidden"`);
+            console.log(`Found ${elementsByName.length} elements with name="smaw_thickness_range"`);
+            
+            // Check for visual indicator
+            const visualIndicator = document.getElementById('thickness_visual_indicator');
+            if (!visualIndicator) {
+                console.warn('Visual indicator element not found!');
+            } else {
+                console.log('Visual indicator found and is ready');
+                // Add some basic styling if not already styled
+                if (!visualIndicator.style.padding) {
+                    visualIndicator.style.padding = '8px';
+                    visualIndicator.style.fontWeight = 'bold';
+                    visualIndicator.style.border = '1px solid #ddd';
+                    visualIndicator.style.backgroundColor = '#f9f9f9';
+                    visualIndicator.style.borderRadius = '4px';
+                }
+            }
+            
+            // Make sure thickness range is properly updated based on thickness value
+            const thicknessField = document.getElementById('smaw_thickness');
+            if (thicknessField) {
+                const thicknessValue = thicknessField.value;
+                console.log('Current thickness value:', thicknessValue);
+                enforceFixedThicknessValue();
+            }
+        }, 1000);
+    });
+
     // Expose functions to global scope
     window.addRangeFieldListeners = addRangeFieldListeners;
+    window.initializeSpecimenCheckboxes = initializeSpecimenCheckboxes;
+    /**
+     * Update deposit thickness range based on deposit thickness value
+     */
+    function updateDepositThicknessRange(thickness) {
+        // Handle various input formats
+        let thicknessStr = String(thickness).trim();
+        
+        // Remove any non-numeric characters except period
+        thicknessStr = thicknessStr.replace(/[^\d.]/g, '');
+        
+        // Handle case when an HTML element is passed instead of a value
+        if (thickness && typeof thickness === 'object' && thickness.value !== undefined) {
+            thicknessStr = String(thickness.value).trim().replace(/[^\d.]/g, '');
+        } else if (thicknessStr.includes('[object HTMLInputElement]')) {
+            // Handle case where object was converted to string
+            const thicknessField = document.getElementById('deposit_thickness');
+            thicknessStr = thicknessField ? String(thicknessField.value).trim().replace(/[^\d.]/g, '') : '';
+        }
+        
+        // If no value or invalid, try to get from the input field
+        if (!thicknessStr || isNaN(parseFloat(thicknessStr))) {
+            const element = document.getElementById('deposit_thickness');
+            if (element) {
+                thicknessStr = String(element.value).trim().replace(/[^\d.]/g, '');
+            }
+        }
+        
+        // Log the parsed value for debugging
+        console.log('Parsed deposit thickness value:', thicknessStr);
+        
+        const thicknessValue = parseFloat(thicknessStr);
+        let rangeValue = '';
+        
+        if (!isNaN(thicknessValue)) {
+            if (thicknessValue <= 12) {
+                // For thickness <= 12mm: double the thickness value
+                const doubledValue = (thicknessValue * 2).toFixed(2);
+                rangeValue = doubledValue + ' mm';
+            } else {
+                // For thickness > 12mm: show "Maximum to be welded"
+                rangeValue = 'Maximum to be welded';
+            }
+        } else {
+            rangeValue = '';
+        }
+        
+        console.log('Calculated deposit thickness range:', rangeValue);
+        
+        // Update the visual indicator directly
+        const visualIndicator = document.getElementById('deposit_thickness_visual_indicator');
+        if (visualIndicator) {
+            visualIndicator.textContent = rangeValue;
+        } else {
+            console.error('deposit_thickness_visual_indicator element not found');
+        }
+        
+        // Update the hidden field for form submission
+        const hiddenField = document.getElementById('deposit_thickness_range_hidden');
+        if (hiddenField) {
+            hiddenField.value = rangeValue;
+        }
+    }
+
     window.updateDiameterRange = updateDiameterRange;
     window.updatePNumberRange = updatePNumberRange;
     window.updatePositionRange = updatePositionRange;
     window.updateBackingRange = updateBackingRange;
     window.updateFNumberRange = updateFNumberRange;
     window.updateVerticalProgressionRange = updateVerticalProgressionRange;
+    window.updatePositionVerticalProgressionRange = updatePositionVerticalProgressionRange;
     window.updateSpecimenType = updateSpecimenType;
+    window.enforceFixedThicknessValue = enforceFixedThicknessValue;
     window.updateDiaThickness = updateDiaThickness;
+    window.calculateThicknessRange = calculateThicknessRange;
     window.updateAllRangeFields = updateAllRangeFields;
     window.setExplicitRangeValues = setExplicitRangeValues;
+    window.updateDepositThicknessRange = updateDepositThicknessRange;
 })();

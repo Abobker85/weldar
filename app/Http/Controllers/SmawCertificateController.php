@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\AppSetting;
 use SimpleSoftwareIO\QrCode\Facades\QrCode as FacadesQrCode;
+use Illuminate\Support\Facades\Log;
 
 class SmawCertificateController extends Controller
 {
@@ -155,7 +156,8 @@ class SmawCertificateController extends Controller
             'filler_metal_used', 'transverse_face_root_bends', 'longitudinal_bends',
             'side_bends', 'pipe_bend_corrosion', 'plate_bend_corrosion',
             'pipe_macro_fusion', 'plate_macro_fusion', 'rt_selected', 'ut_selected',
-            'fillet_welds_plate', 'fillet_welds_pipe'
+            'fillet_welds_plate', 'fillet_welds_pipe', 'test_result',
+            'rt', 'ut'
         ];
 
         $data = $request->all();
@@ -204,6 +206,23 @@ class SmawCertificateController extends Controller
             // Filler Metal Information
             'filler_metal_sfa_spec' => 'nullable|string|max:255',
             'filler_metal_classification' => 'nullable|string|max:255',
+            'filler_spec' => 'nullable|string|max:255',
+            'filler_spec_manual' => 'nullable|string|max:255',
+            'filler_spec_range' => 'nullable|string|max:255',
+            'filler_f_no' => 'nullable|string|max:255',
+            'filler_f_no_manual' => 'nullable|string|max:255',
+            'f_number_range' => 'nullable|string|max:255',
+            'f_number_range_manual' => 'nullable|string|max:255',
+            'f_number_range_span' => 'nullable|string|max:255',
+            'filler_class' => 'nullable|string|max:255',
+            'filler_class_manual' => 'nullable|string|max:255',
+            'filler_class_range' => 'nullable|string|max:255',
+            
+            // Vertical progression
+            'vertical_progression' => 'nullable|string|max:255',
+            'vertical_progression_manual' => 'nullable|string|max:255',
+            'vertical_progression_range' => 'nullable|string|max:255',
+            'vertical_progression_range_manual' => 'nullable|string|max:255',
 
             // Testing Variables
             'welding_type' => 'required|string|max:255',
@@ -215,6 +234,10 @@ class SmawCertificateController extends Controller
             'backing' => 'required|string|max:255',
             'backing_range' => 'nullable|string',
             'passes_per_side' => 'nullable|string|max:255',
+            'p_number_range_span' => 'nullable|string|max:255',
+            'p_number_range_manual' => 'nullable|string|max:255',
+            'smaw_thickness' => 'nullable|string|max:255',
+            'smaw_thickness_range' => 'nullable|string|max:255',
 
             // Test Results
             'visual_examination_result' => 'nullable|string|max:255',
@@ -222,11 +245,14 @@ class SmawCertificateController extends Controller
             'alternative_volumetric_result' => 'nullable|string|max:255',
             'rt_report_no' => 'nullable|string|max:255',
             'rt_doc_no' => 'nullable|string|max:255',
+            'test_result' => 'boolean',
+            'rt' => 'boolean',
+            'ut' => 'boolean',
 
             // Personnel Information
             'evaluated_by' => 'required|string|max:255',
-            'evaluated_company' => 'required|string|max:255',
-            'mechanical_tests_by' => 'required_if:rt_selected,0,ut_selected,0|nullable|string|max:255',
+            'evaluated_company' => 'required_if:rt,0|required_if:ut,0|nullable|string|max:255',
+            'mechanical_tests_by' => 'required_if:rt,0|required_if:ut,0|nullable|string|max:255',
             'lab_test_no' => 'nullable|string|max:255',
             'welding_supervised_by' => 'nullable|string|max:255',
             'supervised_company' => 'required|string|max:255',
@@ -262,6 +288,27 @@ class SmawCertificateController extends Controller
         // Get validated data
         $validated = $validator->validated();
 
+        // Define all boolean fields
+        $booleanFields = [
+            'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen',
+            'rt', 'ut', 'fillet_welds_plate', 'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
+            'smaw_yes', 'smaw_no', 'test_result'
+        ];
+        
+        // Set default false values for boolean fields
+        foreach ($booleanFields as $field) {
+            if (!isset($validated[$field])) {
+                $validated[$field] = false;
+            } else if (is_string($validated[$field]) && ($validated[$field] === 'on' || $validated[$field] === 'true' || $validated[$field] === '1')) {
+                $validated[$field] = true;
+            } else if (is_bool($validated[$field])) {
+                // Keep boolean value as is
+                $validated[$field] = $validated[$field];
+            } else {
+                $validated[$field] = false;
+            }
+        }
+
         // Handle photo upload
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
@@ -269,28 +316,206 @@ class SmawCertificateController extends Controller
             $validated['photo_path'] = $photoPath;
         }
 
+        // Debug to check what's being received
+        Log::debug('SMAW Certificate Store Debug', [
+            'request_boolean_fields' => [
+                'plate_specimen' => $request->input('plate_specimen'),
+                'pipe_specimen' => $request->input('pipe_specimen'),
+                'rt' => $request->input('rt'),
+                'ut' => $request->input('ut'),
+                'test_result' => $request->input('test_result')
+            ],
+            'validated_boolean_fields' => [
+                'plate_specimen' => $validated['plate_specimen'] ?? 'not set',
+                'pipe_specimen' => $validated['pipe_specimen'] ?? 'not set',
+                'rt' => $validated['rt'] ?? 'not set',
+                'ut' => $validated['ut'] ?? 'not set',
+                'test_result' => $validated['test_result'] ?? 'not set'
+            ],
+            'test_position' => $validated['test_position'] ?? 'not set'
+        ]);
+        
         // Set default values if not provided
         $validated['visual_examination_result'] = $validated['visual_examination_result'] ?? 'Accepted';
         $validated['alternative_volumetric_result'] = $validated['alternative_volumetric_result'] ?? 'ACC';
         $validated['test_witnessed_by'] = $validated['test_witnessed_by'] ?? 'ELITE ENGINEERING ARABIA';
+        
+        // Use the frontend value for smaw_thickness_range directly
+        // No calculation needed in backend as the frontend handles it
+        if (!isset($validated['smaw_thickness_range']) || empty($validated['smaw_thickness_range'])) {
+            // Just set a default value if somehow missing
+            $validated['smaw_thickness_range'] = 'Not specified';
+        }
 
         // Add current user as creator
         $validated['created_by'] = Auth::id();
         
-        // Extract thickness from dia_thickness
+        // Extract thickness from dia_thickness for 'thickness' field only
         if (isset($validated['dia_thickness'])) {
             // Try to extract the thickness value from the dia_thickness string
             // Assuming format like "8 inch x 18.26 mm"
             if (preg_match('/x\s*([\d.]+)\s*mm/i', $validated['dia_thickness'], $matches)) {
                 $validated['thickness'] = $matches[1];
+                // Only set smaw_thickness if not provided by user
+                if (!isset($request->smaw_thickness) || empty($request->smaw_thickness)) {
+                    $validated['smaw_thickness'] = $matches[1];
+                }
             } elseif (preg_match('/([\d.]+)\s*mm/i', $validated['dia_thickness'], $matches)) {
                 $validated['thickness'] = $matches[1];
+                // Only set smaw_thickness if not provided by user
+                if (!isset($request->smaw_thickness) || empty($request->smaw_thickness)) {
+                    $validated['smaw_thickness'] = $matches[1];
+                }
             } else {
                 // If no thickness value can be extracted, use a default value
                 $validated['thickness'] = '0';
+                // Only set smaw_thickness if not provided by user
+                if (!isset($request->smaw_thickness) || empty($request->smaw_thickness)) {
+                    $validated['smaw_thickness'] = '0';
+                }
             }
         } else {
             $validated['thickness'] = '0'; // Default value if dia_thickness is not set
+            // Only set smaw_thickness if not provided by user
+            if (!isset($request->smaw_thickness) || empty($request->smaw_thickness)) {
+                $validated['smaw_thickness'] = '0';
+            }
+        }
+        
+        // Ensure base_metal_p_no is set
+        if (!isset($validated['base_metal_p_no']) || empty($validated['base_metal_p_no'])) {
+            // Try to use base_metal_p_no_from and base_metal_p_no_to if available
+            if (isset($validated['base_metal_p_no_from']) && isset($validated['base_metal_p_no_to'])) {
+                $validated['base_metal_p_no'] = $validated['base_metal_p_no_from'] . ' TO ' . $validated['base_metal_p_no_to'];
+            } elseif (isset($validated['base_metal_p_no_manual']) && !empty($validated['base_metal_p_no_manual'])) {
+                $validated['base_metal_p_no'] = $validated['base_metal_p_no_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['base_metal_p_no'] = 'P NO.1 TO P NO.1';
+            }
+        }
+        
+        // Debug to check what's being received
+        Log::debug('P_NUMBER_RANGE debug', [
+            'request_all' => $request->all(),
+            'has_p_number_range_span' => $request->has('p_number_range_span'),
+            'p_number_range_span' => $request->input('p_number_range_span'),
+            'validated_p_number_range_span' => $validated['p_number_range_span'] ?? 'not set',
+            'p_number_range_manual' => $request->input('p_number_range_manual'),
+        ]);
+        
+        // Ensure filler_spec is set
+        if (!isset($validated['filler_spec']) || empty($validated['filler_spec'])) {
+            if (isset($validated['filler_spec_manual']) && !empty($validated['filler_spec_manual'])) {
+                $validated['filler_spec'] = $validated['filler_spec_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['filler_spec'] = 'AWS A5.1';
+            }
+        }
+        
+        // Ensure filler_class is set
+        if (!isset($validated['filler_class']) || empty($validated['filler_class'])) {
+            if (isset($validated['filler_class_manual']) && !empty($validated['filler_class_manual'])) {
+                $validated['filler_class'] = $validated['filler_class_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['filler_class'] = 'E7018';
+            }
+        }
+        
+        // Ensure filler_f_no is set
+        if (!isset($validated['filler_f_no']) || empty($validated['filler_f_no'])) {
+            if (isset($validated['filler_f_no_manual']) && !empty($validated['filler_f_no_manual'])) {
+                $validated['filler_f_no'] = $validated['filler_f_no_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['filler_f_no'] = 'F4';
+            }
+        }
+        
+        // Ensure f_number_range is set
+        if (!isset($validated['f_number_range']) || empty($validated['f_number_range'])) {
+            // First check the span value
+            if (isset($validated['f_number_range_span']) && !empty($validated['f_number_range_span'])) {
+                $validated['f_number_range'] = $validated['f_number_range_span'];
+            }
+            // If not in validated data, check the raw request
+            elseif ($request->has('f_number_range_span') && !empty($request->input('f_number_range_span'))) {
+                $validated['f_number_range'] = $request->input('f_number_range_span');
+            }
+            // Try the manual entry
+            elseif (isset($validated['f_number_range_manual']) && !empty($validated['f_number_range_manual'])) {
+                $validated['f_number_range'] = $validated['f_number_range_manual'];
+            }
+            elseif ($request->has('f_number_range_manual') && !empty($request->input('f_number_range_manual'))) {
+                $validated['f_number_range'] = $request->input('f_number_range_manual');
+            }
+            else {
+                // Default value if all else fails
+                $validated['f_number_range'] = 'F1 to F6';
+            }
+        }
+
+        // Ensure p_number_range is set
+        if (!isset($validated['p_number_range']) || empty($validated['p_number_range'])) {
+            // First check the validated data
+            if (isset($validated['p_number_range_span']) && !empty($validated['p_number_range_span'])) {
+                $validated['p_number_range'] = $validated['p_number_range_span'];
+                Log::debug('Using validated p_number_range_span: ' . $validated['p_number_range_span']);
+            } 
+            // If not in validated data, check the raw request
+            elseif ($request->has('p_number_range_span') && !empty($request->input('p_number_range_span'))) {
+                $validated['p_number_range'] = $request->input('p_number_range_span');
+                Log::debug('Using request p_number_range_span: ' . $request->input('p_number_range_span'));
+            }
+            // Try the manual entry
+            elseif (isset($validated['p_number_range_manual']) && !empty($validated['p_number_range_manual'])) {
+                $validated['p_number_range'] = $validated['p_number_range_manual'];
+                Log::debug('Using validated p_number_range_manual: ' . $validated['p_number_range_manual']);
+            }
+            elseif ($request->has('p_number_range_manual') && !empty($request->input('p_number_range_manual'))) {
+                $validated['p_number_range'] = $request->input('p_number_range_manual');
+                Log::debug('Using request p_number_range_manual: ' . $request->input('p_number_range_manual'));
+            }
+            else {
+                // Use base_metal_p_no as fallback for p_number_range
+                $validated['p_number_range'] = $validated['base_metal_p_no'] ?? 'P NO.1 TO P NO.15F';
+                Log::debug('Using fallback p_number_range: ' . $validated['p_number_range']);
+            }
+        }
+        
+        // Ensure vertical_progression is set
+        if (!isset($validated['vertical_progression']) || empty($validated['vertical_progression'])) {
+            if (isset($validated['vertical_progression_manual']) && !empty($validated['vertical_progression_manual'])) {
+                $validated['vertical_progression'] = $validated['vertical_progression_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['vertical_progression'] = 'Uphill';
+            }
+        }
+        
+        // Ensure vertical_progression_range is set
+        if (!isset($validated['vertical_progression_range']) || empty($validated['vertical_progression_range'])) {
+            // First check the request directly
+            if ($request->has('vertical_progression_range') && !empty($request->input('vertical_progression_range'))) {
+                $validated['vertical_progression_range'] = $request->input('vertical_progression_range');
+                Log::debug('Using request vertical_progression_range: ' . $request->input('vertical_progression_range'));
+            }
+            // Try the manual entry
+            elseif (isset($validated['vertical_progression_range_manual']) && !empty($validated['vertical_progression_range_manual'])) {
+                $validated['vertical_progression_range'] = $validated['vertical_progression_range_manual'];
+                Log::debug('Using validated vertical_progression_range_manual: ' . $validated['vertical_progression_range_manual']);
+            }
+            elseif ($request->has('vertical_progression_range_manual') && !empty($request->input('vertical_progression_range_manual'))) {
+                $validated['vertical_progression_range'] = $request->input('vertical_progression_range_manual');
+                Log::debug('Using request vertical_progression_range_manual: ' . $request->input('vertical_progression_range_manual'));
+            }
+            else {
+                // Use vertical_progression as fallback
+                $validated['vertical_progression_range'] = $validated['vertical_progression'] ?? 'Uphill';
+                Log::debug('Using fallback vertical_progression_range: ' . $validated['vertical_progression_range']);
+            }
         }
 
         // Generate automatic ranges based on selections
@@ -381,13 +606,26 @@ class SmawCertificateController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Log incoming request data for debugging without stopping execution
+        Log::debug('SMAW Certificate Update - Received Data:', [
+            'certificate_id' => $id,
+            'test_position' => $request->input('test_position'),
+            'vertical_progression' => $request->input('vertical_progression'),
+            'position_range' => $request->input('position_range'),
+            'pipe_specimen' => $request->input('pipe_specimen'),
+            'plate_specimen' => $request->input('plate_specimen'),
+            'deposit_thickness' => $request->input('deposit_thickness'),
+            'deposit_thickness_range' => $request->input('deposit_thickness_range'),
+        ]);
+        
         // Similar validation logic as store method
         $booleanFields = [
             'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen',
             'filler_metal_used', 'transverse_face_root_bends', 'longitudinal_bends',
             'side_bends', 'pipe_bend_corrosion', 'plate_bend_corrosion',
             'pipe_macro_fusion', 'plate_macro_fusion', 'rt_selected', 'ut_selected',
-            'fillet_welds_plate', 'fillet_welds_pipe'
+            'fillet_welds_plate', 'fillet_welds_pipe', 'test_result',
+            'rt', 'ut'
         ];
 
         $data = $request->all();
@@ -411,13 +649,43 @@ class SmawCertificateController extends Controller
             'test_date' => 'required|date',
             'base_metal_spec' => 'required|string|max:255',
             'dia_thickness' => 'required|string|max:255',
+            'test_result' => 'boolean',
+            'rt' => 'boolean',
+            'ut' => 'boolean',
             'welding_supervised_by' => 'sometimes|string|max:255',
             'witness_date' => 'sometimes|date',
             'evaluated_by' => 'required|string|max:255',
-            'evaluated_company' => 'required|string|max:255',
-            'mechanical_tests_by' => 'required_if:rt,0,ut,0|nullable|string|max:255',
+            'evaluated_company' => 'required_if:rt,0|required_if:ut,0|nullable|string|max:255',
+            'mechanical_tests_by' => 'required_if:rt,0|required_if:ut,0|nullable|string|max:255',
             'supervised_company' => 'required|string|max:255',
             'certification_text' => 'required|string|max:500',
+            'p_number_range_span' => 'nullable|string|max:255',
+            'p_number_range_manual' => 'nullable|string|max:255',
+            'base_metal_p_no_from' => 'nullable|string|max:255',
+            'base_metal_p_no_to' => 'nullable|string|max:255',
+            'base_metal_p_no_manual' => 'nullable|string|max:255',
+            'smaw_thickness' => 'nullable|string|max:255',
+            'smaw_thickness_range' => 'nullable|string|max:255',
+            'deposit_thickness' => 'nullable|string|max:255',
+            'deposit_thickness_range' => 'nullable|string|max:255',
+            'filler_spec' => 'nullable|string|max:255',
+            'filler_spec_manual' => 'nullable|string|max:255',
+            'filler_spec_range' => 'nullable|string|max:255',
+            'filler_f_no' => 'nullable|string|max:255',
+            'filler_f_no_manual' => 'nullable|string|max:255',
+            'f_number_range' => 'nullable|string|max:255',
+            'f_number_range_manual' => 'nullable|string|max:255',
+            'f_number_range_span' => 'nullable|string|max:255',
+            'filler_class' => 'nullable|string|max:255',
+            'filler_class_manual' => 'nullable|string|max:255',
+            'filler_class_range' => 'nullable|string|max:255',
+            
+            // Vertical progression
+            'vertical_progression' => 'nullable|string|max:255',
+            'vertical_progression_manual' => 'nullable|string|max:255',
+            'vertical_progression_range' => 'nullable|string|max:255',
+            'vertical_progression_range_manual' => 'nullable|string|max:255',
+            
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -434,21 +702,207 @@ class SmawCertificateController extends Controller
         }
 
         $validated = $validator->validated();
+        
+        // Define all boolean fields
+        $booleanFields = [
+            'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen',
+            'rt', 'ut', 'fillet_welds_plate', 'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
+            'smaw_yes', 'smaw_no', 'test_result'
+        ];
+        
+        // Set default false values for boolean fields
+        foreach ($booleanFields as $field) {
+            if (!isset($validated[$field])) {
+                $validated[$field] = false;
+            } else if (is_string($validated[$field]) && ($validated[$field] === 'on' || $validated[$field] === 'true' || $validated[$field] === '1')) {
+                $validated[$field] = true;
+            } else if (is_bool($validated[$field])) {
+                // Keep boolean value as is
+                $validated[$field] = $validated[$field];
+            } else {
+                $validated[$field] = false;
+            }
+        }
 
-        // Extract thickness from dia_thickness
+        // Extract thickness from dia_thickness for 'thickness' field only
         if (isset($validated['dia_thickness'])) {
             // Try to extract the thickness value from the dia_thickness string
             // Assuming format like "8 inch x 18.26 mm"
             if (preg_match('/x\s*([\d.]+)\s*mm/i', $validated['dia_thickness'], $matches)) {
                 $validated['thickness'] = $matches[1];
+                // Only set smaw_thickness if not provided by user
+                if (!isset($request->smaw_thickness) || empty($request->smaw_thickness)) {
+                    $validated['smaw_thickness'] = $matches[1];
+                }
             } elseif (preg_match('/([\d.]+)\s*mm/i', $validated['dia_thickness'], $matches)) {
                 $validated['thickness'] = $matches[1];
+                // Only set smaw_thickness if not provided by user
+                if (!isset($request->smaw_thickness) || empty($request->smaw_thickness)) {
+                    $validated['smaw_thickness'] = $matches[1];
+                }
             } else {
                 // If no thickness value can be extracted, use a default value
                 $validated['thickness'] = '0';
+                // Only set smaw_thickness if not provided by user
+                if (!isset($request->smaw_thickness) || empty($request->smaw_thickness)) {
+                    $validated['smaw_thickness'] = '0';
+                }
             }
         } else {
             $validated['thickness'] = '0'; // Default value if dia_thickness is not set
+            // Only set smaw_thickness if not provided by user
+            if (!isset($request->smaw_thickness) || empty($request->smaw_thickness)) {
+                $validated['smaw_thickness'] = '0';
+            }
+        }
+        
+        // Ensure base_metal_p_no is set
+        if (!isset($validated['base_metal_p_no']) || empty($validated['base_metal_p_no'])) {
+            // Try to use base_metal_p_no_from and base_metal_p_no_to if available
+            if (isset($validated['base_metal_p_no_from']) && isset($validated['base_metal_p_no_to'])) {
+                $validated['base_metal_p_no'] = $validated['base_metal_p_no_from'] . ' TO ' . $validated['base_metal_p_no_to'];
+            } elseif (isset($validated['base_metal_p_no_manual']) && !empty($validated['base_metal_p_no_manual'])) {
+                $validated['base_metal_p_no'] = $validated['base_metal_p_no_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['base_metal_p_no'] = 'P NO.1 TO P NO.1';
+            }
+        }
+        
+        // Debug to check what's being received
+        Log::debug('SMAW Certificate Update Debug', [
+            'request_boolean_fields' => [
+                'plate_specimen' => $request->input('plate_specimen'),
+                'pipe_specimen' => $request->input('pipe_specimen'),
+                'rt' => $request->input('rt'),
+                'ut' => $request->input('ut'),
+                'test_result' => $request->input('test_result')
+            ],
+            'validated_boolean_fields' => [
+                'plate_specimen' => $validated['plate_specimen'] ?? 'not set',
+                'pipe_specimen' => $validated['pipe_specimen'] ?? 'not set',
+                'rt' => $validated['rt'] ?? 'not set',
+                'ut' => $validated['ut'] ?? 'not set',
+                'test_result' => $validated['test_result'] ?? 'not set'
+            ],
+            'test_position' => $validated['test_position'] ?? 'not set',
+            'has_p_number_range_span' => $request->has('p_number_range_span'),
+            'p_number_range_span' => $request->input('p_number_range_span'),
+            'validated_p_number_range_span' => $validated['p_number_range_span'] ?? 'not set'
+        ]);
+        
+        // Ensure filler_spec is set
+        if (!isset($validated['filler_spec']) || empty($validated['filler_spec'])) {
+            if (isset($validated['filler_spec_manual']) && !empty($validated['filler_spec_manual'])) {
+                $validated['filler_spec'] = $validated['filler_spec_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['filler_spec'] = 'AWS A5.1';
+            }
+        }
+        
+        // Ensure filler_class is set
+        if (!isset($validated['filler_class']) || empty($validated['filler_class'])) {
+            if (isset($validated['filler_class_manual']) && !empty($validated['filler_class_manual'])) {
+                $validated['filler_class'] = $validated['filler_class_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['filler_class'] = 'E7018';
+            }
+        }
+        
+        // Ensure filler_f_no is set
+        if (!isset($validated['filler_f_no']) || empty($validated['filler_f_no'])) {
+            if (isset($validated['filler_f_no_manual']) && !empty($validated['filler_f_no_manual'])) {
+                $validated['filler_f_no'] = $validated['filler_f_no_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['filler_f_no'] = 'F4';
+            }
+        }
+        
+        // Ensure f_number_range is set
+        if (!isset($validated['f_number_range']) || empty($validated['f_number_range'])) {
+            // First check the span value
+            if (isset($validated['f_number_range_span']) && !empty($validated['f_number_range_span'])) {
+                $validated['f_number_range'] = $validated['f_number_range_span'];
+            }
+            // If not in validated data, check the raw request
+            elseif ($request->has('f_number_range_span') && !empty($request->input('f_number_range_span'))) {
+                $validated['f_number_range'] = $request->input('f_number_range_span');
+            }
+            // Try the manual entry
+            elseif (isset($validated['f_number_range_manual']) && !empty($validated['f_number_range_manual'])) {
+                $validated['f_number_range'] = $validated['f_number_range_manual'];
+            }
+            elseif ($request->has('f_number_range_manual') && !empty($request->input('f_number_range_manual'))) {
+                $validated['f_number_range'] = $request->input('f_number_range_manual');
+            }
+            else {
+                // Default value if all else fails
+                $validated['f_number_range'] = 'F1 to F6';
+            }
+        }
+
+        // Ensure p_number_range is set
+        if (!isset($validated['p_number_range']) || empty($validated['p_number_range'])) {
+            // First check the validated data
+            if (isset($validated['p_number_range_span']) && !empty($validated['p_number_range_span'])) {
+                $validated['p_number_range'] = $validated['p_number_range_span'];
+                Log::debug('Using validated p_number_range_span: ' . $validated['p_number_range_span']);
+            } 
+            // If not in validated data, check the raw request
+            elseif ($request->has('p_number_range_span') && !empty($request->input('p_number_range_span'))) {
+                $validated['p_number_range'] = $request->input('p_number_range_span');
+                Log::debug('Using request p_number_range_span: ' . $request->input('p_number_range_span'));
+            }
+            // Try the manual entry
+            elseif (isset($validated['p_number_range_manual']) && !empty($validated['p_number_range_manual'])) {
+                $validated['p_number_range'] = $validated['p_number_range_manual'];
+                Log::debug('Using validated p_number_range_manual: ' . $validated['p_number_range_manual']);
+            }
+            elseif ($request->has('p_number_range_manual') && !empty($request->input('p_number_range_manual'))) {
+                $validated['p_number_range'] = $request->input('p_number_range_manual');
+                Log::debug('Using request p_number_range_manual: ' . $request->input('p_number_range_manual'));
+            }
+            else {
+                // Use base_metal_p_no as fallback for p_number_range
+                $validated['p_number_range'] = $validated['base_metal_p_no'] ?? 'P NO.1 TO P NO.15F';
+                Log::debug('Using fallback p_number_range: ' . $validated['p_number_range']);
+            }
+        }
+        
+        // Ensure vertical_progression is set
+        if (!isset($validated['vertical_progression']) || empty($validated['vertical_progression'])) {
+            if (isset($validated['vertical_progression_manual']) && !empty($validated['vertical_progression_manual'])) {
+                $validated['vertical_progression'] = $validated['vertical_progression_manual'];
+            } else {
+                // Default value if all else fails
+                $validated['vertical_progression'] = 'Uphill';
+            }
+        }
+        
+        // Ensure vertical_progression_range is set
+        if (!isset($validated['vertical_progression_range']) || empty($validated['vertical_progression_range'])) {
+            // First check the request directly
+            if ($request->has('vertical_progression_range') && !empty($request->input('vertical_progression_range'))) {
+                $validated['vertical_progression_range'] = $request->input('vertical_progression_range');
+                Log::debug('Using request vertical_progression_range: ' . $request->input('vertical_progression_range'));
+            }
+            // Try the manual entry
+            elseif (isset($validated['vertical_progression_range_manual']) && !empty($validated['vertical_progression_range_manual'])) {
+                $validated['vertical_progression_range'] = $validated['vertical_progression_range_manual'];
+                Log::debug('Using validated vertical_progression_range_manual: ' . $validated['vertical_progression_range_manual']);
+            }
+            elseif ($request->has('vertical_progression_range_manual') && !empty($request->input('vertical_progression_range_manual'))) {
+                $validated['vertical_progression_range'] = $request->input('vertical_progression_range_manual');
+                Log::debug('Using request vertical_progression_range_manual: ' . $request->input('vertical_progression_range_manual'));
+            }
+            else {
+                // Use vertical_progression as fallback
+                $validated['vertical_progression_range'] = $validated['vertical_progression'] ?? 'Uphill';
+                Log::debug('Using fallback vertical_progression_range: ' . $validated['vertical_progression_range']);
+            }
         }
         
         // Handle photo upload
@@ -471,16 +925,50 @@ class SmawCertificateController extends Controller
         try {
             DB::beginTransaction();
 
+            // Find the certificate
             $certificate = SmawCertificate::findOrFail($id);
+            
+            // Special handling for test_position to make sure it's always saved
+            if (!empty($request->input('test_position'))) {
+                $validated['test_position'] = $request->input('test_position');
+            }
+            
+            // Ensure position_range is saved
+            if (empty($validated['position_range']) && !empty($request->input('position_range'))) {
+                $validated['position_range'] = $request->input('position_range');
+            }
+            
+            // Handle specimen checkboxes explicitly
+            $validated['plate_specimen'] = filter_var($request->input('plate_specimen', false), FILTER_VALIDATE_BOOLEAN);
+            $validated['pipe_specimen'] = filter_var($request->input('pipe_specimen', false), FILTER_VALIDATE_BOOLEAN);
+            
+            // Update the certificate
             $certificate->update($validated);
+
+            // Log the updated certificate data
+            Log::info('SMAW Certificate Updated Successfully', [
+                'id' => $certificate->id,
+                'test_position' => $certificate->test_position,
+                'position_range' => $certificate->position_range,
+                'plate_specimen' => $certificate->plate_specimen,
+                'pipe_specimen' => $certificate->pipe_specimen,
+                'vertical_progression' => $certificate->vertical_progression,
+                'smaw_thickness' => $certificate->smaw_thickness,
+                'smaw_thickness_range' => $certificate->smaw_thickness_range,
+                'deposit_thickness' => $certificate->deposit_thickness,
+                'deposit_thickness_range' => $certificate->deposit_thickness_range,
+                'request_smaw_thickness' => $request->smaw_thickness,
+                'request_deposit_thickness' => $request->deposit_thickness
+            ]);
 
             DB::commit();
 
-            if ($request->ajax() || $request->wantsJson()) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => true,
                     'message' => 'SMAW Certificate updated successfully.',
-                    'redirect' => route('smaw-certificates.certificate', $certificate)
+                    'redirect' => route('smaw-certificates.certificate', $certificate),
+                    'certificate' => $certificate
                 ]);
             }
 
@@ -488,8 +976,13 @@ class SmawCertificateController extends Controller
                             ->with('success', 'SMAW Certificate updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Error updating SMAW Certificate: ' . $e->getMessage(), [
+                'id' => $id,
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
 
-            if ($request->ajax() || $request->wantsJson()) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error updating certificate: ' . $e->getMessage()
@@ -659,6 +1152,39 @@ class SmawCertificateController extends Controller
             $data['joint_tracking_range'] = 'With Automatic joint tracking';
         } else {
             $data['joint_tracking_range'] = 'With & Without Automatic joint tracking';
+        }
+        
+        // Use the frontend value for smaw_thickness_range directly
+        // No calculation needed in backend as the frontend handles it
+        if (!isset($data['smaw_thickness_range']) || empty($data['smaw_thickness_range'])) {
+            // Just set a default value if somehow missing
+            $data['smaw_thickness_range'] = 'Not specified';
+        }
+        
+        // Set default values for filler metal fields if not set
+        if (!isset($data['filler_spec']) || empty($data['filler_spec'])) {
+            $data['filler_spec'] = 'AWS A5.1';
+        }
+        
+        if (!isset($data['filler_class']) || empty($data['filler_class'])) {
+            $data['filler_class'] = 'E7018';
+        }
+        
+        if (!isset($data['filler_f_no']) || empty($data['filler_f_no'])) {
+            $data['filler_f_no'] = 'F4';
+        }
+        
+        // Set default ranges for filler metal specifications
+        if (!isset($data['filler_spec_range']) || empty($data['filler_spec_range'])) {
+            $data['filler_spec_range'] = 'AWS A5.1, A5.5';
+        }
+        
+        if (!isset($data['filler_class_range']) || empty($data['filler_class_range'])) {
+            $data['filler_class_range'] = 'E7018, E7018-1';
+        }
+        
+        if (!isset($data['f_number_range']) || empty($data['f_number_range'])) {
+            $data['f_number_range'] = 'F1 to F6';
         }
 
         return $data;
