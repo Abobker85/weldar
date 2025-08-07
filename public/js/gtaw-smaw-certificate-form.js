@@ -1319,6 +1319,7 @@ function updateFillerProductFormRange() {
 function updateTestFields() {
     const rtCheckbox = document.getElementById('rt');
     const utCheckbox = document.getElementById('ut');
+    const rtReportNoField = document.getElementById('rt_report_no');
 
     const evaluatedByField = document.querySelector('input[name="evaluated_by"]');
     const evaluatedCompanyField = document.querySelector('input[name="evaluated_company"]');
@@ -1362,6 +1363,13 @@ function updateTestFields() {
                     field.disabled = false;
                 }
             });
+        }
+
+        if (rtReportNoField) {
+            rtReportNoField.disabled = !rtCheckbox.checked;
+            if (!rtCheckbox.checked) {
+                rtReportNoField.value = '';
+            }
         }
 
         // Always keep evaluated_company editable

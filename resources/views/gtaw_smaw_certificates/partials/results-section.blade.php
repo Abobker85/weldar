@@ -121,7 +121,7 @@
                 <div class="report-group">
                     <span>ACC (Doc No.</span>
                     <input type="text" class="form-input rt-report" name="rt_report_no" id="rt_report_no" 
-                        value="{{ $rtReportNo ?? 'EEA-AIC-RT-0001' }}" readonly>
+                        value="{{ $rtReportNo ?? 'EEA-AIC-RT-0001' }}">
                     <span>)</span>
                 </div>
                 <div class="doc-group mt-1">
