@@ -77,6 +77,7 @@ class SawCertificate extends Model
         'rt' => 'boolean',
         'ut' => 'boolean',
         'test_date' => 'date',
+        'witness_date' => 'date',
         'inspector_date' => 'date'
     ];
 
