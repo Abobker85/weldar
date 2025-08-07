@@ -338,7 +338,7 @@ class GtawSmawCentificateController extends Controller
             'rt' => 'boolean',
             'ut' => 'boolean',
             'vt_report_no' => 'required|string|max:255',
-            'rt_report_no' => 'required|string|max:255',
+            'rt_report_no' => 'nullable|string|max:255',
             'rt_doc_no' => 'nullable|string|max:255',
             'visual_examination_result' => 'nullable|string|in:ACC,REJ',
             
