@@ -10,10 +10,11 @@
         </div>
         <div class="cert-center">
             <strong>Welding Operator's name:</strong>
-            <select class="form-input welder-search" name="welder_id" id="welder_id" required>
-                @if(isset($certificate) && $certificate->welder)
-                    <option value="{{ $certificate->welder->id }}" selected>{{ $certificate->welder->name }}</option>
-                @endif
+            <select class="form-input" name="welder_id" id="welder_id" required onchange="sawLoadWelderData(this.value)">
+                <option value="">Select Welder</option>
+                @foreach($welders as $welder)
+                    <option value="{{ $welder->id }}" {{ old('welder_id', $certificate->welder_id ?? '') == $welder->id ? 'selected' : '' }}>{{ $welder->name }}</option>
+                @endforeach
             </select>
         </div>
         <div class="cert-right">

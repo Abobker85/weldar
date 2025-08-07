@@ -102,7 +102,7 @@ class SawCertificateController extends Controller
     {
         // Get companies for dropdown
         $companies = Company::orderBy('name')->get();
-        $welders = Welder::orderBy('name')->get();
+        $welders = Welder::with('company')->orderBy('name')->get();
 
         // Get current user information
         $user = Auth::user();
@@ -486,7 +486,7 @@ class SawCertificateController extends Controller
     {
         $certificate = SawCertificate::findOrFail($id);
         $companies = Company::orderBy('name')->get();
-        $welders = Welder::orderBy('name')->get();
+        $welders = Welder::with('company')->orderBy('name')->get();
         $selectedWelder = $certificate->welder;
 
         // Define common options for dropdowns
