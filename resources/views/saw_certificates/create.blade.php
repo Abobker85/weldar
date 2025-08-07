@@ -65,8 +65,8 @@
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.all.min.js"></script>
+    <script src="{{ asset('js/saw-certificate-form.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/saw-certificate-validation.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/welder-search.js') }}?v={{ time() }}"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

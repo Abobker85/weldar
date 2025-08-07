@@ -1,4 +1,5 @@
 <!-- Certificate details rows exactly matching Excel layout -->
+<!-- Certificate details rows exactly matching Excel layout -->
 <div class="cert-details-row with-photo two-row-container">
     <!-- First row -->
     <div class="detail-row">
@@ -9,11 +10,10 @@
         </div>
         <div class="cert-center">
             <strong>Welding Operator's name:</strong>
-            <select class="form-input" name="welder_id" id="welder_id" required>
-                <option value="">Select Welder</option>
-                @foreach($welders as $welder)
-                    <option value="{{ $welder->id }}" {{ old('welder_id', $certificate->welder_id ?? '') == $welder->id ? 'selected' : '' }}>{{ $welder->name }}</option>
-                @endforeach
+            <select class="form-input welder-search" name="welder_id" id="welder_id" required>
+                @if(isset($certificate) && $certificate->welder)
+                    <option value="{{ $certificate->welder->id }}" selected>{{ $certificate->welder->name }}</option>
+                @endif
             </select>
         </div>
         <div class="cert-right">
@@ -53,6 +53,8 @@
             <div class="photo-preview" id="photo-preview">
                 @if(isset($certificate) && $certificate->photo_path)
                     <img src="{{ asset('storage/' . $certificate->photo_path) }}" alt="Welder Photo" class="preview-image">
+                @elseif(isset($certificate) && $certificate->welder && $certificate->welder->photo)
+                    <img src="{{ asset('storage/' . $certificate->welder->photo) }}" alt="Welder Photo" class="preview-image">
                 @else
                     <div class="photo-placeholder">No Photo</div>
                 @endif
@@ -61,114 +63,3 @@
         </div>
     </div>
 </div>
-
-<script>
-// Update welder details when welder is selected
-document.addEventListener('DOMContentLoaded', function() {
-    const welderSelect = document.getElementById('welder_id');
-    if (welderSelect) {
-        welderSelect.addEventListener('change', function() {
-            const welderId = this.value;
-            if (welderId) {
-                fetch(`/welders/${welderId}/details`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.welder) {
-                            document.getElementById('welder_id_no').value = data.welder.welder_id_no || '';
-                            document.getElementById('iqama_no').value = data.welder.iqama_no || '';
-                            document.getElementById('passport_no').value = data.welder.passport_no || '';
-                            
-                            // Update photo if available
-                            const photoPreview = document.getElementById('photo-preview');
-                            if (data.welder.photo_path && photoPreview) {
-                                photoPreview.innerHTML = `<img src="${data.welder.photo_path}" alt="Welder Photo" class="preview-image">`;
-                            }
-                        }
-                        
-                        // Update company code display
-                        if (data.company) {
-                            const companyCodeDisplay = document.getElementById('company-code-display');
-                            if (companyCodeDisplay) {
-                                companyCodeDisplay.innerHTML = `
-                                    <span style="color: #dc3545; font-size: 16px;">${data.company.code || 'AIC'}</span>
-                                    <span style="color: #999; font-size: 12px;">${data.company.name || 'steel'}</span>
-                                `;
-                            }
-                        }
-                    })
-                    .catch(error => console.error('Error fetching welder details:', error));
-            }
-        });
-    }
-});
-
-function previewPhoto(input) {
-    const preview = document.getElementById('photo-preview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.innerHTML = `<img src="${e.target.result}" alt="Photo Preview" class="preview-image">`;
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-</script>
-
-<style>
-.photo-container {
-    position: absolute;
-    right: 10px;
-    top: 5px;
-    width: 80px;
-    height: 60px;
-    border: 1px solid #000;
-    background: #f8f8f8;
-}
-
-.photo-upload-section {
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-.photo-label {
-    position: absolute;
-    top: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 8px;
-    font-weight: bold;
-    z-index: 2;
-}
-
-.photo-preview {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.preview-image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: cover;
-}
-
-.photo-placeholder {
-    font-size: 8px;
-    color: #666;
-    text-align: center;
-}
-
-.photo-input {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-</style>
