@@ -1108,4 +1108,91 @@ class SawCertificateController extends Controller
     return implode(' | ', $ranges);
 }
 
+public function getWelderDetails($id)
+    {
+        $welder = Welder::with('company')->find($id);
+
+        if (!$welder) {
+            return response()->json(['error' => 'Welder not found'], 404);
+        }
+
+        // Generate full URL for photo if it exists
+        $photoUrl = null;
+        if ($welder->photo) {
+            $photoUrl = asset('storage/' . $welder->photo);
+        }
+
+        // Generate certificate and report numbers based on company
+        $systemCode = \App\Models\AppSetting::getValue('doc_prefix', 'EEA');
+        $companyCode = '';
+
+        if ($welder->company) {
+            $companyCode = $welder->company->code ? $systemCode . '-' . $welder->company->code : $systemCode . '-AIC';
+        } else {
+            $companyCode = $systemCode . '-AIC';
+        }
+
+        // Generate certificate number
+        $certificatePrefix = $companyCode . '-SAW-';
+        $lastCert = SawCertificate::where('certificate_no', 'like', $certificatePrefix . '%')
+            ->orderBy('certificate_no', 'desc')
+            ->first();
+
+        $newNumber = 1;
+        if ($lastCert) {
+            $lastNumber = (int) substr($lastCert->certificate_no, -4);
+            $newNumber = $lastNumber + 1;
+        }
+
+        $newCertNo = $certificatePrefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
+        // Generate VT report number
+        $vtReportPrefix = $companyCode . '-VT-';
+        $lastVTReport = SawCertificate::where('vt_report_no', 'like', $vtReportPrefix . '%')
+            ->orderBy('vt_report_no', 'desc')
+            ->first();
+
+        $newVTNumber = 1;
+        if ($lastVTReport) {
+            $lastNumber = (int) substr($lastVTReport->vt_report_no, -4);
+            $newVTNumber = $lastNumber + 1;
+        }
+
+        $vtReportNo = $vtReportPrefix . str_pad($newVTNumber, 4, '0', STR_PAD_LEFT);
+
+        // Generate RT report number
+        $rtReportPrefix = $companyCode . '-RT-';
+        $lastRTReport = SawCertificate::where('rt_report_no', 'like', $rtReportPrefix . '%')
+            ->orderBy('rt_report_no', 'desc')
+            ->first();
+
+        $newRTNumber = 1;
+        if ($lastRTReport) {
+            $lastNumber = (int) substr($lastRTReport->rt_report_no, -4);
+            $newRTNumber = $lastNumber + 1;
+        }
+
+        $rtReportNo = $rtReportPrefix . str_pad($newRTNumber, 4, '0', STR_PAD_LEFT);
+
+        return response()->json([
+            'welder' => [
+                'id' => $welder->id,
+                'name' => $welder->name,
+                'welder_id_no' => $welder->welder_no,
+                'passport_no' => $welder->passport_id_no,
+                'iqama_no' => $welder->iqama_no,
+                'photo_path' => $photoUrl,
+                'photo' => $welder->photo
+            ],
+            'company' => $welder->company ? [
+                'id' => $welder->company->id,
+                'name' => $welder->company->name,
+                'code' => $welder->company->code
+            ] : null,
+            'photo' => $welder->photo ? asset('storage/' . $welder->photo) : null,
+            'certificate_no' => $newCertNo,
+            'vt_report_no' => $vtReportNo,
+            'rt_report_no' => $rtReportNo
+        ]);
+    }
 }

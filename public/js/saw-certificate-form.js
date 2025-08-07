@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
         welderSelect.on('select2:select', function (e) {
             const welderId = e.params.data.id;
             if (welderId) {
-                fetch(`/api/welders/${welderId}`)
+                fetch(`/api/welders/${welderId}/details`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.welder) {
@@ -54,6 +54,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (data.company) {
                                 $('#company_id').val(data.company.id).trigger('change');
                             }
+
+                            // Set certificate and report numbers
+                            $('#certificate_no').val(data.certificate_no || '');
+                            $('#vt_report_no').val(data.vt_report_no || '');
+                            $('#rt_report_no').val(data.rt_report_no || '');
                         }
                     })
                     .catch(error => console.error('Error fetching welder details:', error));
