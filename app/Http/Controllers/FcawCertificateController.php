@@ -75,6 +75,7 @@ class FcawCertificateController extends Controller
                     $actions .= '<a href="' . route('fcaw-certificates.show', $certificate->id) . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>';
                     $actions .= '<a href="' . route('fcaw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>';
                     $actions .= '<a href="' . route('fcaw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank"><i class="fas fa-file-pdf"></i></a>';
+                    $actions .= '<button class="btn btn-sm btn-info" data-toggle="modal" data-target="#rt-report-modal" data-certificate-id="' . $certificate->id . '" data-welder-id="' . $certificate->welder_id . '" data-certificate-type="fcaw"><i class="fas fa-upload"></i></button>';
                     $actions .= '<form action="' . route('fcaw-certificates.destroy', $certificate->id) . '" method="POST" class="d-inline delete-form">';
                     $actions .= csrf_field() . method_field('DELETE');
                     $actions .= '<button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure you want to delete this certificate?\')"><i class="fas fa-trash"></i></button>';

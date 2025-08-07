@@ -195,17 +195,6 @@
     <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
     
     @stack('scripts')
-    
-    <!-- Handle certificate opening in new tab if available in session -->
-    @if(session('open_certificate'))
-    <script>
-        // Open the certificate in a new tab
-        (function() {
-            console.log('Opening certificate from session data');
-            const certificateUrl = "{{ session('open_certificate') }}";
-            window.open(certificateUrl, '_blank');
-        })();
-    </script>
-    @endif
+    @include('rt-report-modal')
 </body>
 </html>

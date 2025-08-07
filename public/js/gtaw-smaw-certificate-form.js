@@ -1284,67 +1284,61 @@ function updateFillerProductFormRange() {
 function updateTestFields() {
     const rtCheckbox = document.getElementById('rt');
     const utCheckbox = document.getElementById('ut');
+
+    const evaluatedByField = document.querySelector('input[name="evaluated_by"]');
     const evaluatedCompanyField = document.querySelector('input[name="evaluated_company"]');
     const mechanicalTestsField = document.querySelector('input[name="mechanical_tests_by"]');
     const labTestNoField = document.querySelector('input[name="lab_test_no"]');
-    
+    const supervisedByField = document.querySelector('input[name="supervised_by"]');
+
+    const fields = [
+        evaluatedByField,
+        evaluatedCompanyField,
+        mechanicalTestsField,
+        labTestNoField,
+        supervisedByField
+    ];
+
     if (!rtCheckbox || !utCheckbox) return;
-    
+
     const updateField = () => {
-        if (rtCheckbox.checked || utCheckbox.checked) {
-            // For evaluated_company field
-            if (evaluatedCompanyField) {
-                evaluatedCompanyField.removeAttribute('required');
-                evaluatedCompanyField.readOnly = false;
-                evaluatedCompanyField.value = '';
-                evaluatedCompanyField.placeholder = 'Not required with RT/UT';
-                evaluatedCompanyField.disabled = true;
-            }
-            
-            // For mechanical_tests_by field
+        const isRtUtChecked = rtCheckbox.checked || utCheckbox.checked;
+
+        if (isRtUtChecked) {
+            // Optional when RT/UT is checked
+            fields.forEach(field => {
+                if (field) {
+                    field.removeAttribute('required');
+                    field.disabled = true;
+                    field.value = '';
+                }
+            });
             if (mechanicalTestsField) {
-                mechanicalTestsField.removeAttribute('disabled');
-                // Remove required attribute to prevent backend validation
-                mechanicalTestsField.removeAttribute('required');
+                mechanicalTestsField.disabled = false;
             }
-            
-            // For lab_test_no field
             if (labTestNoField) {
-                labTestNoField.removeAttribute('disabled');
-                // Remove required attribute to prevent backend validation
-                labTestNoField.removeAttribute('required');
+                labTestNoField.disabled = false;
             }
         } else {
-            // For evaluated_company field
-            if (evaluatedCompanyField) {
-                evaluatedCompanyField.setAttribute('required', 'required');
-                evaluatedCompanyField.readOnly = true;
-                evaluatedCompanyField.value = 'SOGEC';
-                evaluatedCompanyField.placeholder = '';
-                evaluatedCompanyField.disabled = false;
-            }
-            
-            // For mechanical_tests_by field
-            if (mechanicalTestsField) {
-                mechanicalTestsField.setAttribute('disabled', 'disabled');
-                // Already removed required attribute
-                mechanicalTestsField.value = '';
-            }
-            
-            // For lab_test_no field
-            if (labTestNoField) {
-                labTestNoField.setAttribute('disabled', 'disabled');
-                // Already removed required attribute
-                labTestNoField.value = '';
-            }
+            // Mandatory when RT/UT is NOT checked
+            fields.forEach(field => {
+                if (field) {
+                    field.setAttribute('required', 'required');
+                    field.disabled = false;
+                }
+            });
+        }
+
+        // Always keep evaluated_company editable
+        if (evaluatedCompanyField) {
+            evaluatedCompanyField.readOnly = false;
+            evaluatedCompanyField.disabled = false;
         }
     };
-    
-    // Add event listeners
+
     rtCheckbox.addEventListener('change', updateField);
     utCheckbox.addEventListener('change', updateField);
-    
-    // Initialize on page load
+
     updateField();
 }
 
