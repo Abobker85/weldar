@@ -11,7 +11,7 @@
     <tr>
         <td class="var-label">Type of welding (Machine):</td>
         <td class="var-value">
-            <select class="form-input" name="welding_type">
+            <select class="form-input" name="welding_type" onchange="updateSawRange('welding_type')">
                 <option value="Machine" {{ old('welding_type', $certificate->welding_type ?? 'Machine') == 'Machine' ? 'selected' : '' }}>Machine</option>
                 <option value="Automatic" {{ old('welding_type', $certificate->welding_type ?? '') == 'Automatic' ? 'selected' : '' }}>Automatic</option>
             </select>
@@ -24,7 +24,7 @@
     <tr>
         <td class="var-label">Welding process:</td>
         <td class="var-value">
-            <select class="form-input" name="welding_process">
+            <select class="form-input" name="welding_process" onchange="updateSawRange('welding_process')">
                 <option value="SAW" {{ old('welding_process', $certificate->welding_process ?? 'SAW') == 'SAW' ? 'selected' : '' }}>SAW</option>
                 <option value="GTAW" {{ old('welding_process', $certificate->welding_process ?? '') == 'GTAW' ? 'selected' : '' }}>GTAW</option>
                 <option value="GMAW" {{ old('welding_process', $certificate->welding_process ?? '') == 'GMAW' ? 'selected' : '' }}>GMAW</option>
@@ -39,7 +39,7 @@
     <tr>
         <td class="var-label">Direct or remote visual control:</td>
         <td class="var-value">
-            <select class="form-input" name="visual_control_type" onchange="updateVisualControlRange()">
+            <select class="form-input" name="visual_control_type" onchange="updateSawRange('visual_control_type')">
                 <option value="Direct Visual Control" {{ old('visual_control_type', $certificate->visual_control_type ?? 'Direct Visual Control') == 'Direct Visual Control' ? 'selected' : '' }}>Direct Visual Control</option>
                 <option value="Remote Visual Control" {{ old('visual_control_type', $certificate->visual_control_type ?? '') == 'Remote Visual Control' ? 'selected' : '' }}>Remote Visual Control</option>
             </select>
@@ -65,7 +65,7 @@
     <tr>
         <td class="var-label">Automatic joint tracking:</td>
         <td class="var-value">
-            <select class="form-input" name="joint_tracking" onchange="updateJointTrackingRange()">
+            <select class="form-input" name="joint_tracking" onchange="updateSawRange('joint_tracking')">
                 <option value="With Automatic joint tracking" {{ old('joint_tracking', $certificate->joint_tracking ?? 'With Automatic joint tracking') == 'With Automatic joint tracking' ? 'selected' : '' }}>With Automatic joint tracking</option>
                 <option value="Without Automatic joint tracking" {{ old('joint_tracking', $certificate->joint_tracking ?? '') == 'Without Automatic joint tracking' ? 'selected' : '' }}>Without Automatic joint tracking</option>
             </select>
@@ -103,7 +103,7 @@
     <tr>
         <td class="var-label">Backing (with or without):</td>
         <td class="var-value">
-            <select class="form-input" name="backing" id="backing" onchange="updateBackingRange()">
+            <select class="form-input" name="backing" id="backing" onchange="updateSawRange('backing')">
                 <option value="With backing" {{ old('backing', $certificate->backing ?? 'With backing') == 'With backing' ? 'selected' : '' }}>With backing</option>
                 <option value="Without backing" {{ old('backing', $certificate->backing ?? '') == 'Without backing' ? 'selected' : '' }}>Without backing</option>
             </select>
@@ -116,7 +116,7 @@
     <tr>
         <td class="var-label">Single or multiple passes per side:</td>
         <td class="var-value">
-            <select class="form-input" name="passes_per_side" onchange="updatePassesRange()">
+            <select class="form-input" name="passes_per_side" onchange="updateSawRange('passes_per_side')">
                 <option value="Single passes per side" {{ old('passes_per_side', $certificate->passes_per_side ?? '') == 'Single passes per side' ? 'selected' : '' }}>Single passes per side</option>
                 <option value="multiple passes per side" {{ old('passes_per_side', $certificate->passes_per_side ?? 'multiple passes per side') == 'multiple passes per side' ? 'selected' : '' }}>multiple passes per side</option>
             </select>

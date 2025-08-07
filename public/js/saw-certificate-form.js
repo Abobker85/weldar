@@ -23,9 +23,6 @@ function sawLoadWelderData(welderId) {
                 if (data.company) {
                     const companySelect = document.getElementById('company_id');
                     companySelect.value = data.company.id;
-                    // Trigger change event if you are using other libraries that depend on it
-                    // var event = new Event('change');
-                    // companySelect.dispatchEvent(event);
                 }
 
                 // Set certificate and report numbers
@@ -55,3 +52,61 @@ function previewPhoto(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+function updateSawRange(fieldType) {
+    const value = document.querySelector(`[name="${fieldType}"]`).value;
+    const rangeSpan = document.getElementById(`${fieldType}_range`);
+    const hiddenField = document.querySelector(`[name="${fieldType}_range"]`);
+
+    let range = '';
+
+    switch (fieldType) {
+        case 'welding_type':
+            range = value;
+            break;
+        case 'welding_process':
+            range = value;
+            break;
+        case 'visual_control_type':
+            range = value;
+            break;
+        case 'joint_tracking':
+            if (value === 'With Automatic joint tracking') {
+                range = 'With Automatic joint tracking';
+            } else {
+                range = 'With & Without Automatic joint tracking';
+            }
+            break;
+        case 'backing':
+            if (value === 'With backing') {
+                range = 'With backing';
+            } else {
+                range = 'With or Without backing';
+            }
+            break;
+        case 'passes_per_side':
+            if (value === 'Single passes per side') {
+                range = 'Single passes per side';
+            } else {
+                range = 'Single & multiple passes per side';
+            }
+            break;
+    }
+
+    if (rangeSpan) {
+        rangeSpan.textContent = range;
+    }
+
+    if (hiddenField) {
+        hiddenField.value = range;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateSawRange('welding_type');
+    updateSawRange('welding_process');
+    updateSawRange('visual_control_type');
+    updateSawRange('joint_tracking');
+    updateSawRange('backing');
+    updateSawRange('passes_per_side');
+});
