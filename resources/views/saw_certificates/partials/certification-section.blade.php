@@ -3,9 +3,9 @@
     <div class="cert-statement" style="text-align: center; padding: 15px; font-size: 10px; border: 2px solid #000; border-top: none; background: white;">
         <strong>We certify that the statements in this record are correct and that the test coupons were prepared, welded, and tested in accordance with the requirements of Section IX of the ASME BOILER AND PRESSURE VESSEL CODE.</strong>
         <div style="margin-top: 10px;">
-            <textarea name="certification_text" id="certification_text" 
-                class="form-input" style="width: 100%; height: 60px; resize: vertical;" 
-                placeholder="Add any additional certification text here">{{ old('certification_text', $certificate->certification_text ?? '') }}</textarea>
+            <input type="text" name="certification_text" id="certification_text"
+                class="form-input" style="width: 100%;"
+                placeholder="Add any additional certification text here" value="{{ old('certification_text', $certificate->certification_text ?? '') }}">
         </div>
     </div>
 

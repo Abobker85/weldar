@@ -309,7 +309,7 @@ class SawCertificateController extends Controller
         'witness_signature' => 'nullable|string',
 
         // Additional fields
-        'certification_text' => 'nullable|string',
+        'certification_text' => 'required|string|max:255',
 
         // File uploads
         'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -562,127 +562,155 @@ class SawCertificateController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Transform boolean checkbox values to ensure they're properly processed
-        $booleanFields = [
-            'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen', 'rt', 'ut',
-            'fillet_welds_plate', 'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
-            'transverse_face_root', 'longitudinal_bends', 'side_bends',
-            'pipe_bend_corrosion', 'plate_bend_corrosion','gtaw_process','smaw_process', 'gtaw_yes', 'gtaw_no',
-        ];
+        // Transform boolean checkbox values
+    $booleanFields = [
+        'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen',
+        'rt', 'ut', 'rt_selected', 'ut_selected', 'fillet_welds_plate',
+        'fillet_welds_pipe', 'pipe_macro_fusion', 'plate_macro_fusion',
+        'transverse_face_root_bends', 'longitudinal_bends', 'side_bends',
+        'pipe_bend_corrosion', 'plate_bend_corrosion'
+    ];
 
-        $data = $request->all();
+    $data = $request->all();
 
-        // Handle potential duplicate fields in the form submission
-        foreach ($data as $key => $value) {
-            if (is_array($value) && !in_array($key, ['_token'])) {
-                // Take only the first value if it's an array but not expected to be
-                $data[$key] = $value[0];
-            }
+    // Handle boolean fields
+    foreach ($booleanFields as $field) {
+        if (!isset($data[$field])) {
+            $data[$field] = false;
+        } else if ($data[$field] === 'on' || $data[$field] === 'true' || $data[$field] === '1') {
+            $data[$field] = true;
+        } else {
+            $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
         }
+    }
 
-        // Set default false values for boolean fields if they're not present in request
-        foreach ($booleanFields as $field) {
-            if (!isset($data[$field])) {
-                $data[$field] = false;
-            } else if ($data[$field] === 'on' || $data[$field] === 'true' || $data[$field] === '1') {
-                $data[$field] = true;
-            } else {
-                $data[$field] = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
-            }
-        }
+    // FIXED VALIDATION RULES - MATCH FRONTEND FIELD NAMES
+    $validator = Validator::make($data, [
+        // Certificate identification
+        'certificate_no' => 'required|string|max:50|unique:saw_certificates,certificate_no,' . $id,
+        'welder_id' => 'required|exists:welders,id',
+        'company_id' => 'required|exists:companies,id',
+        'wps_followed' => 'required|string|max:255',
+        'test_date' => 'required|date',
 
-        // Create a validator instance with the transformed data
-        $validator = Validator::make($data, [
-            // Certificate identification
-            'certificate_no' => 'required|string|max:50|unique:saw_certificates,certificate_no,' . $id,
-            'welder_id' => 'required|exists:welders,id',
-            'company_id' => 'required|exists:companies,id',
-            'wps_followed' => 'required|string|max:255',
-            'test_date' => 'required|date',
+        // Specimen details
+        'test_coupon' => 'boolean',
+        'production_weld' => 'boolean',
+        'plate_specimen' => 'boolean',
+        'pipe_specimen' => 'boolean',
+        'base_metal_spec' => 'required|string|max:255',
+        'diameter' => 'nullable|string|max:255', // FRONTEND SENDS: diameter
 
-            // Specimen details
-            'test_coupon' => 'boolean',
-            'production_weld' => 'boolean',
-            'plate_specimen' => 'boolean',
-            'pipe_specimen' => 'boolean',
-            'base_metal_spec' => 'required|string|max:255',
-            'diameter' => 'required_if:pipe_specimen,true|nullable|string|max:255',
-            'thickness' => 'required|string|max:255',
+        // FIXED: Use dia_thickness instead of thickness
+        'dia_thickness' => 'required|string|max:255', // FRONTEND SENDS: dia_thickness
 
-            // Pipe information
-            'pipe_diameter_type' => 'required_if:pipe_specimen,true|nullable|string|max:255',
-            'pipe_diameter_manual' => 'nullable|string|max:255',
-            'diameter_range' => 'nullable|string',
+        // FIXED: Map frontend field names to backend validation
+        'base_metal_p_no_from' => 'required|string|max:255', // FRONTEND SENDS: base_metal_p_no_from
+        'base_metal_p_no_to' => 'required|string|max:255',   // FRONTEND SENDS: base_metal_p_no_to
 
-            // Metal and filler details
-            'base_metal_p_no' => 'required|string|max:255',
-            'base_metal_p_no_manual' => 'nullable|string|max:255',
-            'p_number_range' => 'nullable|string',
-            'p_number_range_manual' => 'nullable|string|max:255',
+        // Filler metal fields - FIXED field names
+        'filler_metal_sfa_spec' => 'required|string|max:255',      // FRONTEND SENDS: filler_metal_sfa_spec
+        'filler_metal_classification' => 'required|string|max:255', // FRONTEND SENDS: filler_metal_classification
 
-            // Position details
-            'test_position' => 'required|string|max:255',
-            'position_range' => 'nullable|string',
-            'position_range_manual' => 'nullable|string|max:255',
+        // Position details
+        'test_position' => 'required|string|max:255',
+        'position_range' => 'nullable|string',
 
-            // Backing details
-            'backing' => 'required|string|max:255',
-            'backing_manual' => 'nullable|string|max:255',
-            'backing_range' => 'nullable|string',
+        // Backing details
+        'backing' => 'required|string|max:255',
+        'backing_range' => 'nullable|string',
 
-            // Filler details
-            'filler_spec' => 'required|string|max:255',
-            'filler_spec_manual' => 'nullable|string|max:255',
-            'filler_spec_range' => 'nullable|string',
-            'filler_class' => 'required|string|max:255',
-            'filler_class_manual' => 'nullable|string|max:255',
-            'filler_class_range' => 'nullable|string',
-            'filler_f_no' => 'required|string|max:255',
-            'filler_f_no_manual' => 'nullable|string|max:255',
-            'f_number_range' => 'nullable|string',
+        // Machine welding variables - FRONTEND FIELD NAMES
+        'welding_type' => 'required|string|max:255',
+        'welding_process' => 'required|string|max:255',
+        'visual_control_type' => 'required|string|max:255',
+        'joint_tracking' => 'required|string|max:255',
+        'consumable_inserts' => 'nullable|string|max:255',
+        'passes_per_side' => 'required|string|max:255',
 
-            // Progression details
-            'vertical_progression' => 'required|string|max:255',
-            'vertical_progression_range' => 'nullable|string',
+        // Range fields
+        'diameter_range' => 'nullable|string',
+        'p_number_range' => 'nullable|string',
+        'backing_range' => 'nullable|string',
+        'visual_control_range' => 'nullable|string',
+        'joint_tracking_range' => 'nullable|string',
+        'passes_range' => 'nullable|string',
 
-            // RT/UT testing details
-            'rt' => 'boolean',
-            'ut' => 'boolean',
-            'rt_doc_no' => 'nullable|string|max:255',
+        // RT/UT testing details
+        'rt' => 'boolean',
+        'ut' => 'boolean',
+        'rt_selected' => 'boolean',
+        'ut_selected' => 'boolean',
+        'rt_doc_no' => 'nullable|string|max:255',
+        'vt_report_no' => 'nullable|string|max:255',
+        'rt_report_no' => 'nullable|string|max:255',
 
-            // Personnel fields
-            'evaluated_by' => 'nullable|string|max:255',
-            'evaluated_company' => 'nullable|string|max:255',
-            'mechanical_tests_by' => 'nullable|string|max:255',
-            'lab_test_no' => 'nullable|string|max:255',
-            'supervised_by' => 'required|string|max:255',
-            'supervised_company' => 'nullable|string|max:255',
+        // Test results
+        'visual_examination_result' => 'nullable|string|max:255',
+        'alternative_volumetric_result' => 'nullable|string|max:255',
 
-            // Additional fields
-            'inspector_name' => 'required|string|max:255',
-            'inspector_date' => 'required|date',
-            'certification_text' => 'nullable|string',
+        // Personnel fields - FIXED FIELD NAMES
+        'film_evaluated_by' => 'nullable|string|max:255',
+        'evaluated_company' => 'nullable|string|max:255',
+        'mechanical_tests_by' => 'nullable|string|max:255',
+        'lab_test_no' => 'nullable|string|max:255',
+        'welding_supervised_by' => 'required|string|max:255', // FRONTEND SENDS: welding_supervised_by
+        'supervised_company' => 'nullable|string|max:255',
 
-            // Welding parameters
-            'transfer_mode' => 'nullable|string|max:255',
-            'transfer_mode_range' => 'nullable|string',
-            'current' => 'nullable|string|max:255',
-            'current_range' => 'nullable|string',
-            'equipment_type' => 'nullable|string|max:255',
-            'equipment_type_range' => 'nullable|string',
-            'technique' => 'nullable|string|max:255',
-            'technique_range' => 'nullable|string',
-            'oscillation' => 'nullable|string|max:255',
-            'oscillation_value' => 'nullable|string|max:255',
-            'oscillation_range' => 'nullable|string',
-            'operation_mode' => 'nullable|string|max:255',
-            'operation_mode_range' => 'nullable|string',
+        // Organization fields
+        'test_witnessed_by' => 'nullable|string|max:255',
+        'witness_name' => 'required|string|max:255',
+        'witness_date' => 'required|date',
+        'witness_signature' => 'nullable|string',
 
-            // File uploads
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'signature_data' => 'nullable|string',
-            'inspector_signature_data' => 'nullable|string',
-        ]);
+        // Additional fields
+        'certification_text' => 'required|string|max:255',
+
+        // File uploads
+        'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'signature_data' => 'nullable|string',
+        'inspector_signature_data' => 'nullable|string', // REQUIRED BY CUSTOM VALIDATION
+
+        // Automatic welding variables
+        'automatic_welding_type' => 'nullable|string|max:255',
+        'automatic_welding_type_range' => 'nullable|string|max:255',
+        'automatic_welding_process' => 'nullable|string|max:255',
+        'automatic_welding_process_range' => 'nullable|string|max:255',
+        'filler_metal_used_auto' => 'nullable|string|max:255',
+        'filler_metal_used_auto_range' => 'nullable|string|max:255',
+        'laser_type' => 'nullable|string|max:255',
+        'laser_type_range' => 'nullable|string|max:255',
+        'drive_type' => 'nullable|string|max:255',
+        'drive_type_range' => 'nullable|string|max:255',
+        'vacuum_type' => 'nullable|string|max:255',
+        'vacuum_type_range' => 'nullable|string|max:255',
+        'arc_voltage_control' => 'nullable|string|max:255',
+        'arc_voltage_control_range' => 'nullable|string|max:255',
+        'position_actual' => 'nullable|string|max:255',
+        'consumable_inserts_range' => 'nullable|string|max:255',
+
+        // Additional test fields
+        'additional_type_1' => 'nullable|string|max:255',
+        'additional_result_1' => 'nullable|string|max:255',
+        'test_type_2' => 'nullable|string|max:255',
+        'test_result_2' => 'nullable|string|max:255',
+        'additional_type_2' => 'nullable|string|max:255',
+        'additional_result_2' => 'nullable|string|max:255',
+        'fillet_fracture_test' => 'nullable|string|max:255',
+        'defects_length_percent' => 'nullable|string|max:255',
+        'macro_examination' => 'nullable|string|max:255',
+        'fillet_size' => 'nullable|string|max:255',
+        'other_tests' => 'nullable|string|max:255',
+        'concavity_convexity' => 'nullable|string|max:255',
+
+        // Confirmation fields
+        'confirm_date_1' => 'nullable|date',
+        'confirm_position_1' => 'nullable|string|max:255',
+        'confirm_date_2' => 'nullable|date',
+        'confirm_position_2' => 'nullable|string|max:255',
+        'confirm_date_3' => 'nullable|date',
+        'confirm_position_3' => 'nullable|string|max:255',
+    ]);
 
 
 
