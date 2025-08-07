@@ -749,30 +749,65 @@ function validateRequiredFields() {
     const requiredFields = document.querySelectorAll('input[required], select[required], textarea[required]');
     let isValid = true;
     let firstInvalidField = null;
-    
+    const invalidFields = [];
+
     requiredFields.forEach(field => {
-        if (!field.value.trim()) {
+        if (!field.disabled && !field.value.trim()) {
             field.classList.add('is-invalid');
             if (!firstInvalidField) {
                 firstInvalidField = field;
             }
             isValid = false;
+
+            let label = '';
+            const labelElement = document.querySelector(`label[for="${field.id}"]`);
+            if (labelElement) {
+                label = labelElement.textContent.trim();
+            } else {
+                const parentTd = field.closest('td');
+                if (parentTd) {
+                    const parentTr = parentTd.closest('tr');
+                    if (parentTr) {
+                        const labelTd = parentTr.querySelector('.var-label');
+                        if (labelTd) {
+                            label = labelTd.textContent.trim().replace(':', '');
+                        }
+                    }
+                }
+            }
+            if (label) {
+                invalidFields.push(label);
+            } else {
+                invalidFields.push(field.name);
+            }
+
         } else {
             field.classList.remove('is-invalid');
         }
     });
-    
-    if (!isValid && firstInvalidField) {
-        firstInvalidField.focus();
-        firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    if (!isValid) {
+        if(firstInvalidField) {
+            firstInvalidField.focus();
+            firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         
+        let errorMessage = 'Please fill in all required fields before submitting the form.<br><br>';
+        if(invalidFields.length > 0) {
+            errorMessage += '<b>The following fields are required:</b><br><ul style="text-align: left; margin-left: 20px;">';
+            invalidFields.forEach(fieldName => {
+                errorMessage += `<li>${fieldName}</li>`;
+            });
+            errorMessage += '</ul>';
+        }
+
         Swal.fire({
             icon: 'error',
             title: 'Required Fields Missing',
-            text: 'Please fill in all required fields before submitting the form.'
+            html: errorMessage
         });
     }
-    
+
     return isValid;
 }
 
