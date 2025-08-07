@@ -3,7 +3,7 @@ function sawLoadWelderData(welderId) {
         return;
     }
 
-    fetch(`/api/welders/${welderId}/details`)
+    fetch(`/welders/${welderId}/details`)
         .then(response => response.json())
         .then(data => {
             if (data.welder) {
