@@ -195,5 +195,6 @@
     <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap4.min.js"></script>
     
     @stack('scripts')
+    @include('rt-report-modal')
 </body>
 </html>

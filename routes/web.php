@@ -173,6 +173,10 @@ Route::middleware(['auth'])->group(function () {
 
     // SAW Certificate Routes
     Route::resource('saw-certificates', SawCertificateController::class);
+    Route::resource('smaw-rt-reports', SmawRtReportController::class);
+    Route::resource('gtaw-rt-reports', GtawRtReportController::class);
+    Route::resource('fcaw-rt-reports', FcawRtReportController::class);
+    Route::resource('saw-rt-reports', SawRtReportController::class);
     Route::get('saw-certificates/{id}/certificate', [SawCertificateController::class, 'generateCertificate'])->name('saw-certificates.certificate');
     Route::get('saw-certificates/{id}/card', [SawCertificateController::class, 'generateCard'])->name('saw-certificates.card');
     Route::get('saw-certificates/{id}/back-card', [SawCertificateController::class, 'generateBackCard'])->name('saw-certificates.back-card');
