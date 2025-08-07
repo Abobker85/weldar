@@ -794,7 +794,7 @@ class SawCertificateController extends Controller
         $verificationUrl = route('saw-certificates.verify', ['id' => $certificate->id, 'code' => $certificate->verification_code]);
         $qrCodeUrl = 'data:image/png;base64,' . base64_encode(FacadesQrCode::format('png')->size(200)->generate($verificationUrl));
 
-        return view('saw_certificates.certificate_updated', compact('certificate', 'qrCodeUrl', 'logoPath', 'logoExists'));
+        return view('saw_certificates.certificate', compact('certificate', 'qrCodeUrl', 'logoPath', 'logoExists'));
     }
 
     /**
