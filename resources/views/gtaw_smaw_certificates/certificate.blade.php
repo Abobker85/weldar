@@ -591,7 +591,11 @@
                 </td>
                 <td class="var-range">{{ $certificate->f_number_range }}</td>
             </tr>
-
+            <tr>
+                <td class="var-label">Consumable insert (GTAW, PAW, LBW):</td>
+                <td class="var-value">{{ $certificate->consumable_insert ?? 'Not Applicable' }}</td>
+                <td class="var-range">{{ $certificate->consumable_insert_range ?? 'Not Applicable' }}</td>
+            </tr>
             <tr>
                 <td class="var-label">Filler Metal Product Form (QW-404.23) (GTAW or PAW):</td>
                 <td class="var-value">
@@ -624,7 +628,7 @@
             </tr>
             <tr>
                 <td class="var-label">
-                    Process 1 __ 3 layers minimum
+                    Process 2 __ 3 layers minimum
                     <div style="display: inline-block; margin-left: 10px;">
                         <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-right: 5px; text-align: center; line-height: 12px;">
                             {!! $certificate->gtaw_process == 1 ? '✓' : '&nbsp;' !!}
@@ -641,7 +645,7 @@
             </tr>
              <tr>
                 <td class="var-label">
-                    Process 2 __ 3 layers minimum
+                    Process 1 __ 3 layers minimum
                     <div style="display: inline-block; margin-left: 10px;">
                         <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-right: 5px; text-align: center; line-height: 12px;">
                             {!! $certificate->smaw_process == 1 ? '✓' : '&nbsp;' !!}

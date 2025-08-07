@@ -168,10 +168,10 @@
     <tr>
         <td class="var-label">Consumable insert (GTAW, PAW, LBW):</td>
         <td class="var-value">
-            <input type="text" class="form-input" value="Not Applicable" disabled name="consumable_insert" placeholder="Not Applicable">
+            <input type="text" class="form-input" value="Not Applicable" readonly name="consumable_insert" placeholder="Not Applicable">
         </td>
         <td class="var-range">
-            <input type="text" class="form-input" value="Not Applicable" disabled name="consumable_insert_range"
+            <input type="text" class="form-input" value="Not Applicable" readonly name="consumable_insert_range"
                 placeholder="Not Applicable">
         </td>
     </tr>
@@ -179,8 +179,8 @@
         <td class="var-label">Filler Metal Product Form (QW-404.23) (GTAW or PAW):</td>
         <td class="var-value">
             <select class="form-select" name="filler_product_form" id="filler_product_form" onchange="updateFillerProductFormRange()">
-                <option value="bare (solid)">bare (solid)</option>
-                <option value="flux cored">flux cored</option>
+                <option value="bare (solid or metal cored)">bare (solid or metal cored)</option>
+                <option value="range">flux cored</option>
                 <option value="__manual__">Manual Entry</option>
             </select>
             <input type="text" class="form-input" name="filler_product_form_manual" id="filler_product_form_manual"
@@ -212,7 +212,7 @@
     </tr>
     <tr>
         <td class="var-label">
-    Process 2 __ 3 layers minimum
+    Process 1 __ 3 layers minimum
             <div class="checkbox-container" style="display: inline-block; margin-left: 10px;">
                 <input type="radio" name="gtaw_process" id="gtaw_yes" value="yes" checked>
                 <label for="gtaw_yes">YES</label>
@@ -221,7 +221,7 @@
             </div>
         </td>
         <td class="var-value">
-            <input type="text" class="form-input" name="gtaw_thickness" id="gtaw_thickness" 
+            <input type="text" class="form-input" name="gtaw_thickness" id="gtaw_thickness"
                 placeholder="Enter thickness (mm)" value="14.26" required
                 onchange="calculateThicknessGtawRange(this.value)">
         </td>
@@ -230,9 +230,9 @@
                 placeholder="Max. to be welded" readonly>
         </td>
     </tr>
-
-         <td class="var-label">
-    Process 1 __ 3 layers minimum
+    <tr>
+        <td class="var-label">
+    Process 2 __ 3 layers minimum
             <div class="checkbox-container" style="display: inline-block; margin-left: 10px;">
                 <input type="radio" name="smaw_process" id="smaw_yes" value="yes" checked>
                 <label for="smaw_yes">YES</label>
@@ -241,7 +241,7 @@
             </div>
         </td>
         <td class="var-value">
-            <input type="text" class="form-input" name="smaw_thickness" id="smaw_thickness" 
+            <input type="text" class="form-input" name="smaw_thickness" id="smaw_thickness"
                 placeholder="Enter thickness (mm)" value="14.26" required
                 onchange="calculateThicknessSmawRange(this.value)">
         </td>
