@@ -8,11 +8,14 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-12">
-                <h1 class="mb-4">Welder Performance Qualifications - Create</h1>
-                
-                <div class="form-container">
-                    <form id="certificate-form" action="{{ route('smaw-certificates.store') }}" method="POST"
-                        enctype="multipart/form-data">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div><i class="fas fa-certificate"></i> Create New SMAW Certificate</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-container">
+                            <form id="certificate-form" action="{{ route('smaw-certificates.store') }}" method="POST"
+                                enctype="multipart/form-data">
                 @csrf
                 <meta name="csrf-token" content="{{ csrf_token() }}">
                 
@@ -251,6 +254,8 @@
             }
         </script>
 @endpush
+                    </div>
+                </div>
             </div>
         </div>
     </div>

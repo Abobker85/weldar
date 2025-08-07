@@ -124,8 +124,8 @@ class GtawCertificate extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function rtReport()
+    public function rtReports()
     {
-        return $this->hasOne(GtawRtReportWeldar::class, 'certificate_id');
+        return $this->hasMany(GtawRtReportWeldar::class, 'certificate_id');
     }
 }

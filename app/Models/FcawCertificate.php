@@ -136,8 +136,8 @@ class FcawCertificate extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function rtReport()
+    public function rtReports()
     {
-        return $this->hasOne(FcawRtReportWeldar::class, 'certificate_id');
+        return $this->hasMany(FcawRtReportWeldar::class, 'certificate_id');
     }
 }

@@ -189,6 +189,11 @@ class SmawCertificate extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+    
+    public function rtReports()
+    {
+        return $this->hasMany(SmawRtReportWeldar::class, 'certificate_id');
+    }
 
     public function rtReport()
     {

@@ -11,6 +11,12 @@
                         <a href="{{ route('gtaw-smaw-certificates.certificate', $certificate->id) }}" class="btn btn-sm btn-primary" target="_blank">
                             <i class="fas fa-print"></i> Print Certificate
                         </a>
+                        <a href="{{ route('gtaw-smaw-certificates.card', $certificate->id) }}" class="btn btn-sm btn-success" target="_blank">
+                            <i class="fas fa-id-card"></i> Print Card
+                        </a>
+                        <a href="{{ route('gtaw-smaw-certificates.back-card', $certificate->id) }}" class="btn btn-sm btn-info" target="_blank">
+                            <i class="fas fa-id-card-alt"></i> Print Back Card
+                        </a>
                         <a href="{{ route('gtaw-smaw-certificates.edit', $certificate->id) }}" class="btn btn-sm btn-warning">
                             <i class="fas fa-edit"></i> Edit
                         </a>

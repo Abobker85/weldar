@@ -69,13 +69,15 @@ class SmawCertificateController extends Controller
                 })
                 ->addColumn('actions', function($certificate) {
                     $actions = '<div class="btn-group" role="group">';
-                    $actions .= '<a href="' . route('smaw-certificates.show', $certificate->id) . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>';
-                    $actions .= '<a href="' . route('smaw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>';
-                    $actions .= '<a href="' . route('smaw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank"><i class="fas fa-file-pdf"></i></a>';
-                    $actions .= '<button class="btn btn-sm btn-info" data-toggle="modal" data-target="#rt-report-modal" data-certificate-id="' . $certificate->id . '" data-welder-id="' . $certificate->welder_id . '" data-certificate-type="smaw"><i class="fas fa-upload"></i></button>';
+                    $actions .= '<a href="' . route('smaw-certificates.show', $certificate->id) . '" class="btn btn-sm btn-info" title="View Certificate"><i class="fas fa-eye"></i></a>';
+                    $actions .= '<a href="' . route('smaw-certificates.edit', $certificate->id) . '" class="btn btn-sm btn-primary" title="Edit Certificate"><i class="fas fa-edit"></i></a>';
+                    $actions .= '<a href="' . route('smaw-certificates.certificate', $certificate->id) . '" class="btn btn-sm btn-success" target="_blank" title="Print Certificate"><i class="fas fa-file-pdf"></i></a>';
+                    $actions .= '<a href="' . route('smaw-certificates.card', $certificate->id) . '" class="btn btn-sm btn-secondary" target="_blank" title="Print Card"><i class="fas fa-id-card"></i></a>';
+                    $actions .= '<a href="' . route('smaw-certificates.back-card', $certificate->id) . '" class="btn btn-sm btn-warning" target="_blank" title="Print Back Card"><i class="fas fa-id-card-alt"></i></a>';
+                    $actions .= '<button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#rt-report-modal" data-certificate-id="' . $certificate->id . '" data-welder-id="' . $certificate->welder_id . '" data-certificate-type="smaw" title="Upload RT Report"><i class="fas fa-upload"></i></button>';
                     $actions .= '<form action="' . route('smaw-certificates.destroy', $certificate->id) . '" method="POST" class="d-inline delete-form">';
                     $actions .= csrf_field() . method_field('DELETE');
-                    $actions .= '<button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure you want to delete this certificate?\')"><i class="fas fa-trash"></i></button>';
+                    $actions .= '<button type="submit" class="btn btn-sm btn-danger" title="Delete Certificate" onclick="return confirm(\'Are you sure you want to delete this certificate?\')"><i class="fas fa-trash"></i></button>';
                     $actions .= '</form>';
                     $actions .= '</div>';
                     return $actions;

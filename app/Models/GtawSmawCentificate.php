@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 
 class GtawSmawCentificate extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'certificate_no',
         'welder_id',
@@ -149,5 +150,15 @@ class GtawSmawCentificate extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+    
+    /**
+     * Get the GTAW RT reports associated with this certificate.
+     */
+    public function rtReports()
+    {
+        // For now, using GTAW RT reports for GTAW-SMAW certificates
+        // This may need to be adjusted if a dedicated model is created
+        return $this->hasMany(GtawRtReportWeldar::class, 'certificate_id');
     }
 }

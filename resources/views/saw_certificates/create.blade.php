@@ -1,3 +1,6 @@
+{{-- FIXED SAW CERTIFICATE CREATE FORM --}}
+{{-- File: resources/views/saw_certificates/create.blade.php --}}
+
 @extends('layouts.app')
 
 @section('content')
@@ -12,16 +15,40 @@
 </head>
 
 <body>
+    {{-- Error Display Section --}}
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="form-container">
+        {{-- FIXED: Use store route for create form, not update route --}}
         <form id="certificate-form" action="{{ route('saw-certificates.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
+            {{-- REMOVED: @method('PUT') - not needed for create --}}
             <meta name="csrf-token" content="{{ csrf_token() }}">
 
+            {{-- Hidden fields for range calculations --}}
+            <input type="hidden" name="diameter_range" id="diameter_range" value="{{ old('diameter_range') }}">
+            <input type="hidden" name="p_number_range" id="p_number_range" value="{{ old('p_number_range') }}">
+            <input type="hidden" name="position_range" id="position_range" value="{{ old('position_range') }}">
+            <input type="hidden" name="backing_range" id="backing_range" value="{{ old('backing_range') }}">
+            <input type="hidden" name="f_number_range" id="f_number_range" value="{{ old('f_number_range') }}">
+            <input type="hidden" name="vertical_progression_range" id="vertical_progression_range" value="{{ old('vertical_progression_range') }}">
+            <input type="hidden" name="visual_control_range" id="visual_control_range" value="{{ old('visual_control_range') }}">
+            <input type="hidden" name="joint_tracking_range" id="joint_tracking_range" value="{{ old('joint_tracking_range') }}">
+            <input type="hidden" name="passes_range" id="passes_range" value="{{ old('passes_range') }}">
+
+            {{-- FIXED: Pass empty certificate variable to partials for create --}}
             @include('saw_certificates.partials.header')
             @include('saw_certificates.partials.certificate-details')
             @include('saw_certificates.partials.test-description')
             @include('saw_certificates.partials.base-metal-position')
-            @include('saw_certificates.partials.testing-variables-automatic')
             @include('saw_certificates.partials.testing-variables-machine')
             @include('saw_certificates.partials.results-section')
             @include('saw_certificates.partials.certification-section')
@@ -34,11 +61,12 @@
         </form>
     </div>
 
-    <!-- Scripts -->
+    {{-- Scripts --}}
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.all.min.js"></script>
-    <script src="{{ asset('js/saw-certificate-form.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/saw-certificate-validation.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/welder-search.js') }}?v={{ time() }}"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -234,18 +262,18 @@
                 });
             }
             
-            // Initialize approver signature pad
-            const approverCanvas = document.getElementById('approver_signature_canvas');
-            if (approverCanvas) {
-                const approverSignaturePad = new SignaturePad(approverCanvas);
+            // Initialize inspector signature pad
+            const inspectorCanvas = document.getElementById('inspector_signature_canvas');
+            if (inspectorCanvas) {
+                const inspectorSignaturePad = new SignaturePad(inspectorCanvas);
                 
-                document.getElementById('clear_approver_signature')?.addEventListener('click', function() {
-                    approverSignaturePad.clear();
-                    document.getElementById('approver_signature').value = '';
+                document.getElementById('clear_inspector_signature')?.addEventListener('click', function() {
+                    inspectorSignaturePad.clear();
+                    document.getElementById('inspector_signature_data').value = '';
                 });
                 
-                approverSignaturePad.addEventListener('endStroke', function() {
-                    document.getElementById('approver_signature').value = approverSignaturePad.toDataURL();
+                inspectorSignaturePad.addEventListener('endStroke', function() {
+                    document.getElementById('inspector_signature_data').value = inspectorSignaturePad.toDataURL();
                 });
             }
         }
@@ -253,7 +281,7 @@
         function validateRequiredFields() {
             const requiredFields = [
                 'certificate_no', 'welder_id', 'company_id', 'wps_followed',
-                'test_date', 'base_metal_spec', 'thickness', 'welding_supervised_by'
+                'test_date', 'base_metal_spec', 'dia_thickness', 'welding_supervised_by'
             ];
             
             let isValid = true;

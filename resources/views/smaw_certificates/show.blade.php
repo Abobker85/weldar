@@ -11,6 +11,12 @@
                         <a href="{{ route('smaw-certificates.certificate', $certificate->id) }}" class="btn btn-sm btn-primary" target="_blank">
                             <i class="fas fa-print"></i> Print Certificate
                         </a>
+                        <a href="{{ route('smaw-certificates.card', $certificate->id) }}" class="btn btn-sm btn-success" target="_blank">
+                            <i class="fas fa-id-card"></i> Print Card
+                        </a>
+                        <a href="{{ route('smaw-certificates.back-card', $certificate->id) }}" class="btn btn-sm btn-info" target="_blank">
+                            <i class="fas fa-id-card-alt"></i> Print Back Card
+                        </a>
                         <a href="{{ route('smaw-certificates.edit', $certificate->id) }}" class="btn btn-sm btn-warning">
                             <i class="fas fa-edit"></i> Edit
                         </a>
@@ -257,6 +263,46 @@
                                         <dt>Vertical Progression Range</dt>
                                         <dd>{{ $certificate->vertical_progression_range }}</dd>
                                     </dl>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <!-- RT Reports Section -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h5>RT Reports</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date Uploaded</th>
+                                                    <th>File</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($certificate->rtReports as $report)
+                                                    <tr>
+                                                        <td>{{ $report->created_at->format('Y-m-d') }}</td>
+                                                        <td>{{ basename($report->attachment) }}</td>
+                                                        <td>
+                                                            <a href="{{ asset('storage/' . $report->attachment) }}" class="btn btn-sm btn-primary" target="_blank">
+                                                                <i class="fas fa-eye"></i> View
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="3" class="text-center">No RT reports uploaded yet</td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#rt-report-modal" data-certificate-id="{{ $certificate->id }}" data-welder-id="{{ $certificate->welder_id }}" data-certificate-type="smaw">
+                                        <i class="fas fa-upload"></i> Upload RT Report
+                                    </button>
                                 </div>
                             </div>
                             

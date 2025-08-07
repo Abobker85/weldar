@@ -18,6 +18,10 @@ use App\Http\Controllers\GtawCertificateController;
 use App\Http\Controllers\GtawSmawCentificateController;
 use App\Http\Controllers\FcawCertificateController;
 use App\Http\Controllers\SawCertificateController;
+use App\Http\Controllers\SmawRtReportController;
+use App\Http\Controllers\GtawRtReportController;
+use App\Http\Controllers\FcawRtReportController;
+use App\Http\Controllers\SawRtReportController;
 use Illuminate\Http\Request;
 
 // Authentication Routes
@@ -173,10 +177,12 @@ Route::middleware(['auth'])->group(function () {
 
     // SAW Certificate Routes
     Route::resource('saw-certificates', SawCertificateController::class);
-    Route::resource('smaw-rt-reports', SmawRtReportController::class);
-    Route::resource('gtaw-rt-reports', GtawRtReportController::class);
-    Route::resource('fcaw-rt-reports', FcawRtReportController::class);
-    Route::resource('saw-rt-reports', SawRtReportController::class);
+    
+    // RT Report routes - Use only store method and ensure they respond with JSON
+    Route::post('smaw-rt-reports', [SmawRtReportController::class, 'store'])->name('smaw-rt-reports.store');
+    Route::post('gtaw-rt-reports', [GtawRtReportController::class, 'store'])->name('gtaw-rt-reports.store');
+    Route::post('fcaw-rt-reports', [FcawRtReportController::class, 'store'])->name('fcaw-rt-reports.store');
+    Route::post('saw-rt-reports', [SawRtReportController::class, 'store'])->name('saw-rt-reports.store');
     Route::get('saw-certificates/{id}/certificate', [SawCertificateController::class, 'generateCertificate'])->name('saw-certificates.certificate');
     Route::get('saw-certificates/{id}/card', [SawCertificateController::class, 'generateCard'])->name('saw-certificates.card');
     Route::get('saw-certificates/{id}/back-card', [SawCertificateController::class, 'generateBackCard'])->name('saw-certificates.back-card');

@@ -10,85 +10,64 @@ class SawCertificate extends Model
 {
     use SoftDeletes;
     protected $fillable = [
-        'certificate_no',
-        'welder_id',
-        'revision_no',
-        'company_id',
-        'wps_followed',
-        'test_date',
-        'base_metal_spec',
-        'diameter',
-        'thickness',
-        'test_coupon',
-        'production_weld',
-        'plate_specimen',
-        'pipe_specimen',
-        'pipe_diameter_type',
-        'pipe_diameter_manual',
-        'diameter_range',
-        'base_metal_p_no',
-        'base_metal_p_no_manual',
-        'p_number_range',
-        'p_number_range_manual',
-        'test_position',
-        'position_range_manual',
-        'position_range',
-        'backing',
-        'backing_manual',
-        'backing_range',
-        'backing_gas',
-        'backing_gas_range',
-        'filler_spec',
-        'filler_spec_range',
-        'filler_spec_manual',
-        'filler_class',
-        'filler_class_range',
-        'filler_class_manual',
-        'filler_f_no',
-        'filler_f_no_range',
-        'filler_f_no_manual',
-        'f_number_range',
-        'vertical_progression',
-        'vertical_progression_range',
-        'inspector_name',
-        'inspector_date',
-        'photo_path',
-        'certification_text',
-        'signature_data',
-        'inspector_signature_data',
-        'transfer_mode',
-        'transfer_mode_range',
-        'equipment_type',
-        'equipment_type_range',
-        'technique',
-        'technique_range',
-        'oscillation',
-        'oscillation_value',
-        'oscillation_range',
-        'operation_mode',
-        'operation_mode_range',
-        'rt',
-        'ut',
-        'vt_report_no',
-        'voltage_range',
-        'amperage_range',
-        'wire_feed_speed',
-        'travel_speed',
-        'gas_flow_rate',
-        'preheat_interpass_temp',
-        'rt_report_no',
-        'rt_doc_no',
-        'visual_examination_result',
-        'evaluated_by',
-        'evaluated_company',
-        'mechanical_tests_by',
-        'lab_test_no',
-        'supervised_by',
-        'supervised_company',
-        'verification_code',
-        'test_result',
-        'created_by'
-    ];
+    // Existing fields
+    'certificate_no', 'welder_id', 'revision_no', 'company_id', 'wps_followed', 'test_date',
+    'base_metal_spec', 'diameter', 'thickness', 'dia_thickness',
+    'test_coupon', 'production_weld', 'plate_specimen', 'pipe_specimen',
+    
+    // ADDED: Frontend field mappings
+    'base_metal_p_no_from', 'base_metal_p_no_to', 'base_metal_p_no',
+    'filler_metal_sfa_spec', 'filler_metal_classification',
+    'filler_spec', 'filler_class', 'filler_f_no',
+    
+    // Position and backing
+    'test_position', 'position_range', 'backing', 'backing_range',
+    
+    // Machine variables
+    'welding_type', 'welding_process', 'visual_control_type', 
+    'joint_tracking', 'consumable_inserts', 'passes_per_side',
+    
+    // Range fields
+    'diameter_range', 'p_number_range', 'visual_control_range',
+    'joint_tracking_range', 'passes_range', 'f_number_range',
+    'vertical_progression', 'vertical_progression_range',
+    
+    // Test results
+    'rt', 'ut', 'rt_selected', 'ut_selected', 'rt_doc_no',
+    'vt_report_no', 'rt_report_no', 'visual_examination_result',
+    'alternative_volumetric_result',
+    
+    // Personnel
+    'film_evaluated_by', 'evaluated_company', 'mechanical_tests_by',
+    'lab_test_no', 'welding_supervised_by', 'supervised_by', 'supervised_company',
+    
+    // Organization
+    'test_witnessed_by', 'witness_name', 'witness_date', 'witness_signature',
+    
+    // Signatures and photos
+    'photo_path', 'signature_data', 'inspector_signature_data',
+    
+    // Additional
+    'certification_text', 'verification_code', 'test_result', 'created_by',
+    
+    // Automatic welding variables
+    'automatic_welding_type', 'automatic_welding_type_range',
+    'automatic_welding_process', 'automatic_welding_process_range',
+    'filler_metal_used_auto', 'filler_metal_used_auto_range',
+    'laser_type', 'laser_type_range', 'drive_type', 'drive_type_range',
+    'vacuum_type', 'vacuum_type_range', 'arc_voltage_control',
+    'arc_voltage_control_range', 'position_actual', 'consumable_inserts_range',
+    
+    // Additional test fields
+    'additional_type_1', 'additional_result_1', 'test_type_2', 'test_result_2',
+    'additional_type_2', 'additional_result_2', 'fillet_fracture_test',
+    'defects_length_percent', 'macro_examination', 'fillet_size',
+    'other_tests', 'concavity_convexity',
+    
+    // Confirmation fields
+    'confirm_date_1', 'confirm_position_1', 'confirm_date_2', 'confirm_position_2',
+    'confirm_date_3', 'confirm_position_3',
+];
 
     protected $casts = [
         'test_coupon' => 'boolean',
@@ -136,6 +115,11 @@ class SawCertificate extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+    
+    public function rtReports()
+    {
+        return $this->hasMany(SawRtReportWeldar::class, 'certificate_id');
     }
 
     public function rtReport()
