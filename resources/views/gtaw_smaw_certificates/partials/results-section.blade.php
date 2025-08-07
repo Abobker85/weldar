@@ -214,7 +214,7 @@
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="evaluated_company" value="SOGEC" readonly>
+                <input type="text" class="form-input" name="evaluated_company" value="SOGEC">
             </td>
         </tr>
         <tr>
@@ -234,7 +234,7 @@
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="supervised_company" value="{{ \App\Models\AppSetting::getValue('system_name', 'ELITE') }}" readonly>
+                <input type="text" class="form-input" name="supervised_company" value="Elite Engineering Arabia" readonly>
             </td>
         </tr>
     </table>
@@ -244,7 +244,7 @@
         <strong>We certify that the statements in this record are correct and that the test coupons were prepared, welded, and tested in accordance with the requirements of Section IX of the ASME BOILER AND PRESSURE VESSEL CODE.</strong>
         <span class="custom-certification-wrapper">
             <input type="text" name="certification_text" id="certification_text" class="custom-certification-input" 
-                value="{{ $certificate->certification_text ?? '' }}" placeholder="Add custom certification text here">
+                value="{{ $certificate->certification_text ?? '' }}" placeholder="Add custom certification text here" required>
         </span>
     </div>
 
