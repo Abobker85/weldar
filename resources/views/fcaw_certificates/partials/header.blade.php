@@ -34,6 +34,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initial setup - call these functions on page load
+    setTimeout(() => {
+        // Find any functions we need to call to initialize the form properly
+        if (typeof handleSpecimenToggle === 'function') {
+            console.log('Calling handleSpecimenToggle on load');
+            handleSpecimenToggle();
+        }
+        
+        if (typeof updateTestFields === 'function') {
+            console.log('Calling updateTestFields on load');
+            updateTestFields();
+        }
+    }, 300);
+
     const welderSelect = document.getElementById('welder_id');
     if (welderSelect) {
         welderSelect.addEventListener('change', function() {
@@ -63,39 +77,166 @@ function submitCertificateForm() {
     
     // Get the form
     const form = document.getElementById('certificate-form');
+    
+    // Perform pre-submission validation checks for special conditions
+    preSubmitValidationFixes(form);
+    
     const formData = new FormData(form);
+    
+    // Debug form data
+    console.log('Form action:', form.action);
+    console.log('Form method:', form.method);
+    
+    // Check for form encoding and method attributes
+    console.log('Form enctype:', form.enctype);
+    console.log('Form attributes:', Array.from(form.attributes).map(attr => `${attr.name}=${attr.value}`).join(', '));
     
     // Add CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
     // Use fetch API to submit the form
+    // Log what we're sending to help with debugging
+    console.log('Submitting form to:', form.action);
+    
+    // Convert FormData to a more readable format for debugging
+    console.log('Form data entries:');
+    for (let pair of formData.entries()) {
+        if (typeof pair[1] === 'string' && pair[1].length < 100) {
+            console.log(pair[0] + ': ' + pair[1]);
+        } else {
+            console.log(pair[0] + ': [data too long to display]');
+        }
+    }
+    
+    // Make sure we're explicitly handling the method override for PUT requests
+    if (form.method.toUpperCase() === 'POST' && form.querySelector('input[name="_method"][value="PUT"]')) {
+        console.log('Detected PUT method override');
+    }
+    
     fetch(form.action, {
-        method: 'POST',
+        method: form.method, // Use the form's method (POST or PUT with method override)
         headers: {
             'X-CSRF-TOKEN': csrfToken,
             'X-Requested-With': 'XMLHttpRequest'
+            // Note: Do not set Content-Type when using FormData, the browser will set it automatically
         },
-        body: formData
+        body: formData,
+        credentials: 'same-origin' // Include credentials like cookies
     })
     .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Array.from(response.headers.entries()));
+        
         if (!response.ok) {
             return response.json().then(errorData => {
                 throw errorData;
             });
         }
-        return response.json();
+        
+        // Clone the response so we can log it as text and also parse it as JSON
+        return response.text().then(text => {
+            console.log('Raw response text:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('Failed to parse response as JSON:', e);
+                throw new Error('Invalid JSON response from server');
+            }
+        });
     })
     .then(data => {
+        // Debug response data with more details
+        console.log('Response data type:', typeof data);
+        console.log('Response data:', data);
+        console.log('Response keys:', Object.keys(data));
+        
+        // Extract certificate URL - try multiple ways to be thorough
+        let certificateUrl = null;
+        
+        if (typeof data === 'object' && data !== null) {
+            // Try direct property access with logging
+            console.log('certificate_url present?', 'certificate_url' in data);
+            if ('certificate_url' in data) {
+                console.log('certificate_url value:', data.certificate_url);
+                certificateUrl = data.certificate_url;
+            }
+            
+            // If we didn't find it, look for nested properties or alternative names
+            if (!certificateUrl) {
+                const props = ['certificateUrl', 'certificate', 'print_url', 'url', 'open_certificate'];
+                for (const prop of props) {
+                    if (prop in data) {
+                        console.log(`Found alternative in data.${prop}:`, data[prop]);
+                        if (typeof data[prop] === 'string' && data[prop].includes('/certificate')) {
+                            certificateUrl = data[prop];
+                            break;
+                        } else if (typeof data[prop] === 'object' && data[prop] !== null && 'url' in data[prop]) {
+                            certificateUrl = data[prop].url;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
         if (data.success) {
             // Show success message
             showNotification('success', data.message || 'Certificate created successfully');
             
-            // Redirect after success if provided
-            if (data.redirect) {
-                setTimeout(() => {
-                    window.location.href = data.redirect;
-                }, 1500);
+            // Open certificate in new tab if URL was found - USING MORE DIRECT APPROACH
+            if (certificateUrl) {
+                console.log('Opening certificate in new tab:', certificateUrl);
+                
+                // Create a hidden link element and click it programmatically
+                // This approach is more reliable for opening new tabs
+                const link = document.createElement('a');
+                link.href = certificateUrl;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Also show a message that certificate is opening in new tab
+                showNotification('info', 'Certificate is opening in a new tab');
+            } else {
+                console.warn('No certificate URL found in the response');
+                // Fallback - attempt to construct the URL if we have the certificate ID
+                if (data.certificate && data.certificate.id) {
+                    const fallbackUrl = `/fcaw-certificates/${data.certificate.id}/certificate`;
+                    console.log('Using fallback URL:', fallbackUrl);
+                    
+                    const link = document.createElement('a');
+                    link.href = fallbackUrl;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
             }
+            
+            // Reset form instead of redirecting to index page
+            console.log('Resetting form to create a new certificate');
+            setTimeout(() => {
+                // Reset the form
+                form.reset();
+                
+                // Re-initialize any select2 or other enhanced form elements
+                const select2Elements = document.querySelectorAll('select.select2');
+                if (typeof $ !== 'undefined' && $.fn && $.fn.select2) {
+                    select2Elements.forEach(el => {
+                        try {
+                            $(el).val('').trigger('change');
+                        } catch (e) {
+                            console.error('Error resetting select2:', e);
+                        }
+                    });
+                }
+                
+                // Show a message that form has been reset
+                showNotification('info', 'Form reset. You can create a new certificate now.');
+            }, 500);
         } else {
             // Show error message
             showNotification('error', data.message || 'An error occurred');
@@ -115,6 +256,44 @@ function submitCertificateForm() {
     
     // Prevent default form submission
     return false;
+}
+
+// Function to fix validation issues before form submission
+function preSubmitValidationFixes(form) {
+    // Special case 1: Diameter field shouldn't be required for plate specimens
+    const plateCheckbox = document.getElementById('plate_specimen');
+    const pipeCheckbox = document.getElementById('pipe_specimen');
+    const diameterField = document.getElementById('diameter');
+    
+    if (plateCheckbox && plateCheckbox.checked && (!pipeCheckbox || !pipeCheckbox.checked)) {
+        // If only plate is checked, diameter is not required
+        console.log('Fixing diameter field validation for plate specimen');
+        if (diameterField) {
+            diameterField.required = false;
+            diameterField.removeAttribute('required');
+        }
+    }
+    
+    // Special case 2: evaluated_by and supervised_by shouldn't be required with RT/UT
+    const rtChecked = document.getElementById('rt') && document.getElementById('rt').checked;
+    const utChecked = document.getElementById('ut') && document.getElementById('ut').checked;
+    
+    if (rtChecked || utChecked) {
+        // If either RT or UT is checked, evaluated_by and supervised_by are not required
+        console.log('Fixing evaluated_by and supervised_by validation for RT/UT');
+        const evaluatedBy = document.getElementById('evaluated_by');
+        const supervisedBy = document.getElementById('supervised_by');
+        
+        if (evaluatedBy) {
+            evaluatedBy.required = false;
+            evaluatedBy.removeAttribute('required');
+        }
+        
+        if (supervisedBy) {
+            supervisedBy.required = false;
+            supervisedBy.removeAttribute('required');
+        }
+    }
 }
 
 // Function to clear validation errors

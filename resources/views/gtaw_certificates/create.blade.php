@@ -49,6 +49,17 @@
         <script>
             // Initialize form when DOM is loaded
             document.addEventListener('DOMContentLoaded', function() {
+                console.log('Create form initialization...');
+                
+                // Only ensure supervised_company has default value if empty
+                const supervisedCompany = document.querySelector('input[name="supervised_company"]');
+                
+                // Set default value for supervised_company if empty
+                if (supervisedCompany && (!supervisedCompany.value || supervisedCompany.value.trim() === '')) {
+                    supervisedCompany.value = 'Elite Engineering Arabia';
+                    console.log('✅ Set default supervised_company to: Elite Engineering Arabia');
+                }
+                
                 // Make sure the submitCertificateForm function is available globally
                 window.submitCertificateForm = function() {
                     // Clear previous validation errors

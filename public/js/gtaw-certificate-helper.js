@@ -31,18 +31,28 @@ function updateTestFields() {
     const updateField = () => {
         if (rtCheckbox.checked || utCheckbox.checked) {
             evaluatedCompanyField.removeAttribute('required');
+            // Let the field be editable always
             evaluatedCompanyField.readOnly = false;
-            evaluatedCompanyField.value = '';
+            
+            // Don't automatically clear value if user entered something
+            if (evaluatedCompanyField.getAttribute('data-auto-filled') === 'true') {
+                evaluatedCompanyField.value = '';
+            }
         } else {
             evaluatedCompanyField.setAttribute('required', 'required');
-            evaluatedCompanyField.readOnly = true;
-            evaluatedCompanyField.value = 'SOGEC';
+            // Keep field editable but leave existing value if present
+            evaluatedCompanyField.readOnly = false;
         }
     };
     
     // Add event listeners
     rtCheckbox.addEventListener('change', updateField);
     utCheckbox.addEventListener('change', updateField);
+    
+    // Mark field as auto-filled if it's empty
+    if (!evaluatedCompanyField.value) {
+        evaluatedCompanyField.setAttribute('data-auto-filled', 'true');
+    }
     
     // Initialize on page load
     updateField();

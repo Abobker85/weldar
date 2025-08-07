@@ -210,11 +210,11 @@
         <tr>
             <td class="var-label">Film or specimens evaluated by</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="evaluated_by" value="{{ isset($certificate) ? $certificate->evaluated_by : 'Kalith Majeedh' }}" required>
+                <input type="text" class="form-input" name="evaluated_by" value="{{ isset($certificate) && $certificate->evaluated_by ? $certificate->evaluated_by : '' }}" required>
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="evaluated_company" value="{{ isset($certificate) ? $certificate->evaluated_company : 'SOGEC' }}" readonly>
+                <input type="text" class="form-input" name="evaluated_company" value="{{ isset($certificate) && $certificate->evaluated_company ? $certificate->evaluated_company : '' }}" >
             </td>
         </tr>
         <tr>
@@ -234,7 +234,7 @@
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="supervised_company" value="{{ isset($certificate) ? $certificate->supervised_company : (\App\Models\AppSetting::getValue('system_name', 'ELITE')) }}" readonly>
+                <input type="text" class="form-input" name="supervised_company" value="{{ isset($certificate) && $certificate->supervised_company ? $certificate->supervised_company : (\App\Models\AppSetting::getValue('system_name', 'Elite Engineering Arabia')) }}" readonly>
             </td>
         </tr>
     </table>

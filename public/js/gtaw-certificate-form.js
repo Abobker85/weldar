@@ -310,10 +310,15 @@ function setDefaultSMAWValues() {
 
 // Update process fields based on selected welding process
 function updateProcessFields() {
-    const process = document.getElementById('welding_process').value;
+    const process = document.getElementById('welding_process');
     const processRange = document.getElementById('process_range');
 
-    if (process === 'GTAW') {
+    if (!process || !processRange) {
+        // Elements not found, skip update
+        return;
+    }
+
+    if (process.value === 'GTAW') {
         processRange.textContent = 'GTAW';
     }
 }

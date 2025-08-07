@@ -60,7 +60,8 @@
         </td>
         <td class="var-value">
             <select class="form-select" name="pipe_diameter_type" id="pipe_diameter_type"
-                onchange="updateDiameterRange()" disabled>
+                onchange="updateDiameterRange()" {{old('pipe_specimen', isset($certificate) ? $certificate->pipe_specimen : false) ? '' : 'disabled'}}>
+                <option value="" disabled selected>-- Select Pipe Size --</option>
                 <option value="8_nps" {{ old('pipe_diameter_type', isset($certificate) ? $certificate->pipe_diameter_type : '') == '8_nps' ? 'selected' : '' }}>8" NPS (Outside diameter 219.1 mm)</option>
                 <option value="6_nps" {{ old('pipe_diameter_type', isset($certificate) ? $certificate->pipe_diameter_type : '') == '6_nps' ? 'selected' : '' }}>6" NPS (Outside diameter 168.3 mm)</option>
                 <option value="4_nps" {{ old('pipe_diameter_type', isset($certificate) ? $certificate->pipe_diameter_type : '') == '4_nps' ? 'selected' : '' }}>4" NPS (Outside diameter 114.3 mm)</option>
@@ -70,7 +71,8 @@
             </select>
             <input type="text" class="form-input" name="pipe_diameter_manual"
                 id="pipe_diameter_manual" placeholder="Enter diameter (e.g., 10 inch NPS)"
-                style="display: none; margin-top: 2px;" value="{{ old('pipe_diameter_manual', isset($certificate) ? $certificate->pipe_diameter_manual : '') }}">
+                style="display: {{old('pipe_diameter_type', isset($certificate) ? $certificate->pipe_diameter_type : '') == '__manual__' ? 'block' : 'none'}}; margin-top: 2px;" 
+                value="{{ old('pipe_diameter_manual', isset($certificate) ? $certificate->pipe_diameter_manual : '') }}">
         </td>
         <td class="var-range">
             <span id="diameter_range_span">{{ old('diameter_range', isset($certificate) ? $certificate->diameter_range : '') }}</span>
@@ -107,14 +109,14 @@
         <td class="var-value">
             <select class="form-select" name="filler_spec" id="filler_spec"
                 onchange="toggleManualEntry('filler_spec'); updateFillerSpecRange()">
-                <option value="5.1" {{ old('filler_spec', isset($certificate) ? $certificate->filler_spec : '') == '5.1' ? 'selected' : '' }}>5.1</option>
-                <option value="A5.1" {{ old('filler_spec', isset($certificate) ? $certificate->filler_spec : '') == 'A5.1' ? 'selected' : '' }}>A5.1</option>
-                <option value="A5.18" {{ old('filler_spec', isset($certificate) ? $certificate->filler_spec : '') == 'A5.18' ? 'selected' : '' }}>A5.18</option>
-                <option value="A5.20" {{ old('filler_spec', isset($certificate) ? $certificate->filler_spec : '') == 'A5.20' ? 'selected' : '' }}>A5.20</option>
-                <option value="__manual__" {{ old('filler_spec', isset($certificate) ? $certificate->filler_spec : '') == '__manual__' ? 'selected' : '' }}>Manual Entry</option>
+                <option value="5.1" {{ old('filler_spec', isset($certificate) && $certificate->filler_spec != '__manual__' ? $certificate->filler_spec : '') == '5.1' ? 'selected' : '' }}>5.1</option>
+                <option value="A5.1" {{ old('filler_spec', isset($certificate) && $certificate->filler_spec != '__manual__' ? $certificate->filler_spec : '') == 'A5.1' ? 'selected' : '' }}>A5.1</option>
+                <option value="A5.18" {{ old('filler_spec', isset($certificate) && $certificate->filler_spec != '__manual__' ? $certificate->filler_spec : '') == 'A5.18' ? 'selected' : '' }}>A5.18</option>
+                <option value="A5.20" {{ old('filler_spec', isset($certificate) && $certificate->filler_spec != '__manual__' ? $certificate->filler_spec : '') == 'A5.20' ? 'selected' : '' }}>A5.20</option>
+                <option value="__manual__" {{ old('filler_spec') == '__manual__' || (isset($certificate) && !in_array($certificate->filler_spec, ['5.1', 'A5.1', 'A5.18', 'A5.20'])) ? 'selected' : '' }}>Manual Entry</option>
             </select>
             <input type="text" class="form-input" name="filler_spec_manual" id="filler_spec_manual"
-                placeholder="Enter SFA specification" style="display: none; margin-top: 2px;" value="{{ old('filler_spec_manual', isset($certificate) ? $certificate->filler_spec_manual : '') }}" oninput="updateFillerSpecRange()">
+                placeholder="Enter SFA specification" style="{{ old('filler_spec') == '__manual__' || (isset($certificate) && !in_array($certificate->filler_spec, ['5.1', 'A5.1', 'A5.18', 'A5.20'])) ? 'display: block;' : 'display: none;' }} margin-top: 2px;" value="{{ old('filler_spec_manual', isset($certificate) && !in_array($certificate->filler_spec, ['5.1', 'A5.1', 'A5.18', 'A5.20', '__manual__']) ? $certificate->filler_spec : $certificate->filler_spec_manual ?? '') }}" oninput="updateFillerSpecRange()">
         </td>
         <td class="var-range">
             <input type="text" class="form-input" name="filler_spec_range" id="filler_spec_range"
@@ -126,16 +128,16 @@
         <td class="var-value">
             <select class="form-select" name="filler_class" id="filler_class"
                 onchange="toggleManualEntry('filler_class'); updateFillerClassRange()">
-                <option value="E7018-1" {{ old('filler_class', isset($certificate) ? $certificate->filler_class : '') == 'E7018-1' ? 'selected' : '' }}>E7018-1</option>
-                <option value="E7018" {{ old('filler_class', isset($certificate) ? $certificate->filler_class : '') == 'E7018' ? 'selected' : '' }}>E7018</option>
-                <option value="E6010" {{ old('filler_class', isset($certificate) ? $certificate->filler_class : '') == 'E6010' ? 'selected' : '' }}>E6010</option>
-                <option value="E6013" {{ old('filler_class', isset($certificate) ? $certificate->filler_class : '') == 'E6013' ? 'selected' : '' }}>E6013</option>
-                <option value="ER70S-2" {{ old('filler_class', isset($certificate) ? $certificate->filler_class : '') == 'ER70S-2' ? 'selected' : '' }}>ER70S-2</option>
-                <option value="ER70S-6" {{ old('filler_class', isset($certificate) ? $certificate->filler_class : '') == 'ER70S-6' ? 'selected' : '' }}>ER70S-6</option>
-                <option value="__manual__" {{ old('filler_class', isset($certificate) ? $certificate->filler_class : '') == '__manual__' ? 'selected' : '' }}>Manual Entry</option>
+                <option value="E7018-1" {{ old('filler_class', isset($certificate) && $certificate->filler_class != '__manual__' ? $certificate->filler_class : '') == 'E7018-1' ? 'selected' : '' }}>E7018-1</option>
+                <option value="E7018" {{ old('filler_class', isset($certificate) && $certificate->filler_class != '__manual__' ? $certificate->filler_class : '') == 'E7018' ? 'selected' : '' }}>E7018</option>
+                <option value="E6010" {{ old('filler_class', isset($certificate) && $certificate->filler_class != '__manual__' ? $certificate->filler_class : '') == 'E6010' ? 'selected' : '' }}>E6010</option>
+                <option value="E6013" {{ old('filler_class', isset($certificate) && $certificate->filler_class != '__manual__' ? $certificate->filler_class : '') == 'E6013' ? 'selected' : '' }}>E6013</option>
+                <option value="ER70S-2" {{ old('filler_class', isset($certificate) && $certificate->filler_class != '__manual__' ? $certificate->filler_class : '') == 'ER70S-2' ? 'selected' : '' }}>ER70S-2</option>
+                <option value="ER70S-6" {{ old('filler_class', isset($certificate) && $certificate->filler_class != '__manual__' ? $certificate->filler_class : '') == 'ER70S-6' ? 'selected' : '' }}>ER70S-6</option>
+                <option value="__manual__" {{ old('filler_class') == '__manual__' || (isset($certificate) && !in_array($certificate->filler_class, ['E7018-1', 'E7018', 'E6010', 'E6013', 'ER70S-2', 'ER70S-6'])) ? 'selected' : '' }}>Manual Entry</option>
             </select>
             <input type="text" class="form-input" name="filler_class_manual" id="filler_class_manual"
-                placeholder="Enter classification" style="display: none; margin-top: 2px;" value="{{ old('filler_class_manual', isset($certificate) ? $certificate->filler_class_manual : '') }}" oninput="updateFillerClassRange()">
+                placeholder="Enter classification" style="{{ old('filler_class') == '__manual__' || (isset($certificate) && !in_array($certificate->filler_class, ['E7018-1', 'E7018', 'E6010', 'E6013', 'ER70S-2', 'ER70S-6'])) ? 'display: block;' : 'display: none;' }} margin-top: 2px;" value="{{ old('filler_class_manual', isset($certificate) && !in_array($certificate->filler_class, ['E7018-1', 'E7018', 'E6010', 'E6013', 'ER70S-2', 'ER70S-6', '__manual__']) ? $certificate->filler_class : $certificate->filler_class_manual ?? '') }}" oninput="updateFillerClassRange()">
         </td>
         <td class="var-range">
             <input type="text" class="form-input" name="filler_class_range" id="filler_class_range"
@@ -164,12 +166,13 @@
     <tr>
         <td class="var-label">Deposit thickness for each process:</td>
         <td class="var-value">
-            <input type="text" class="form-input" name="deposit_thickness"
-                placeholder="4mm &14.26 mm" value="{{ old('deposit_thickness', isset($certificate) ? $certificate->deposit_thickness : '') }}">
+            <input type="text" class="form-input" name="deposit_thickness" id="deposit_thickness"
+                placeholder="Enter thickness (mm)" value="{{ old('deposit_thickness', isset($certificate) ? $certificate->deposit_thickness : '') }}" required
+                onchange="calculateThicknessRange(this.value, 'deposit')">
         </td>
         <td class="var-range">
-            <input type="text" class="form-input" name="deposit_thickness_range"
-                placeholder="------" value="{{ old('deposit_thickness_range', isset($certificate) ? $certificate->deposit_thickness_range : '') }}">
+            <input type="text" class="form-input" name="deposit_thickness_range" id="deposit_thickness_range"
+                placeholder="Max. to be welded" value="{{ old('deposit_thickness_range', isset($certificate) ? $certificate->deposit_thickness_range : '') }}" readonly>
         </td>
     </tr>
     <tr>
@@ -197,15 +200,34 @@
 <script>
 // Function to handle specimen toggle logic
 function handleSpecimenToggle() {
+    console.log('Running handleSpecimenToggle');
     const plateCheckbox = document.getElementById('plate_specimen');
     const pipeCheckbox = document.getElementById('pipe_specimen');
     const pipeDiameterSelect = document.getElementById('pipe_diameter_type');
+    // The diameter field is in test-description.blade.php, not in this file
+    const diameterField = document.getElementById('diameter');
+    const thicknessField = document.getElementById('thickness');
     const diameterRangeSpan = document.getElementById('diameter_range_span');
     const diameterRangeHidden = document.getElementById('diameter_range');
+    
+    console.log('Diameter field found:', !!diameterField);
+    console.log('Thickness field found:', !!thicknessField);
+    console.log('Plate checkbox checked:', plateCheckbox ? plateCheckbox.checked : 'not found');
+    console.log('Pipe checkbox checked:', pipeCheckbox ? pipeCheckbox.checked : 'not found');
+    
+    // Get the diameter and thickness labels to update them
+    const diameterLabel = diameterField ? diameterField.parentElement.querySelector('strong') : null;
+    const thicknessLabel = thicknessField ? thicknessField.parentElement.querySelector('strong') : null;
     
     if (plateCheckbox.checked && pipeCheckbox.checked) {
         // Both are checked - disable pipe diameter but allow range
         pipeDiameterSelect.disabled = true;
+        // Still need diameter for pipe
+        if (diameterField) {
+            diameterField.required = true;
+            // If we found the label, update it
+            if (diameterLabel) diameterLabel.innerHTML = 'Diameter: <span class="text-danger">*</span>';
+        }
         if (diameterRangeSpan) {
             diameterRangeSpan.textContent = 'Plate & Pipe';
         }
@@ -213,8 +235,45 @@ function handleSpecimenToggle() {
             diameterRangeHidden.value = 'Plate & Pipe';
         }
     } else if (plateCheckbox.checked && !pipeCheckbox.checked) {
-        // Only plate is checked - disable pipe diameter
+        console.log('Plate checked, pipe not checked - making fields optional');
+        // Only plate is checked - disable pipe diameter and make diameter field not required
         pipeDiameterSelect.disabled = true;
+        // Handle diameter field
+        if (diameterField) {
+            console.log('Setting diameter field as not required');
+            diameterField.required = false;
+            diameterField.setAttribute('data-original-required', 'false'); // Store that it's not required
+            // Remove any required attribute and update the label
+            diameterField.removeAttribute('required');
+            // Also remove any validation classes
+            diameterField.classList.remove('is-invalid');
+            if (diameterLabel) {
+                diameterLabel.innerHTML = 'Diameter: <small class="text-muted">(Optional)</small>';
+            }
+            
+            // Force attribute removal by directly manipulating DOM attribute
+            setTimeout(() => {
+                diameterField.removeAttribute('required');
+                console.log('Required attribute status:', diameterField.hasAttribute('required'));
+            }, 100);
+        }
+        // Also handle thickness field - make it optional for plate only
+        if (thicknessField) {
+            console.log('Setting thickness field as not required');
+            thicknessField.required = false;
+            thicknessField.setAttribute('data-original-required', 'false');
+            thicknessField.removeAttribute('required');
+            thicknessField.classList.remove('is-invalid');
+            if (thicknessLabel) {
+                thicknessLabel.innerHTML = 'Thickness: <small class="text-muted">(Optional)</small>';
+            }
+            
+            // Force attribute removal by directly manipulating DOM attribute
+            setTimeout(() => {
+                thicknessField.removeAttribute('required');
+                console.log('Thickness required attribute status:', thicknessField.hasAttribute('required'));
+            }, 100);
+        }
         if (diameterRangeSpan) {
             diameterRangeSpan.textContent = 'Plate';
         }
@@ -222,12 +281,36 @@ function handleSpecimenToggle() {
             diameterRangeHidden.value = 'Plate';
         }
     } else if (!plateCheckbox.checked && pipeCheckbox.checked) {
-        // Only pipe is checked - enable pipe diameter
+        // Only pipe is checked - enable pipe diameter and require diameter field
         pipeDiameterSelect.disabled = false;
+        // Handle diameter field - required for pipe
+        if (diameterField) {
+            diameterField.required = true;
+            diameterField.setAttribute('required', 'required'); // Explicitly set required attribute
+            if (diameterLabel) diameterLabel.innerHTML = 'Diameter: <span class="text-danger">*</span>';
+        }
+        // Also handle thickness field - required for pipe
+        if (thicknessField) {
+            thicknessField.required = true;
+            thicknessField.setAttribute('required', 'required');
+            if (thicknessLabel) thicknessLabel.innerHTML = 'Thickness: <span class="text-danger">*</span>';
+        }
         updateDiameterRange();
     } else {
         // Neither is checked - disable pipe diameter and clear range
         pipeDiameterSelect.disabled = true;
+        // Handle diameter field
+        if (diameterField) {
+            diameterField.required = false;
+            diameterField.removeAttribute('required');
+            if (diameterLabel) diameterLabel.innerHTML = 'Diameter:';
+        }
+        // Handle thickness field
+        if (thicknessField) {
+            thicknessField.required = false;
+            thicknessField.removeAttribute('required');
+            if (thicknessLabel) thicknessLabel.innerHTML = 'Thickness:';
+        }
         if (diameterRangeSpan) {
             diameterRangeSpan.textContent = '';
         }
@@ -235,6 +318,32 @@ function handleSpecimenToggle() {
             diameterRangeHidden.value = '';
         }
     }
+    
+    // Call this function once at startup to properly set the initial state
+    setTimeout(() => {
+        // Force set correct field state based on actual checkbox values
+        if (plateCheckbox && plateCheckbox.checked && !pipeCheckbox.checked) {
+            // If only plate is checked, ensure diameter is not required
+            if (diameterField) {
+                diameterField.required = false;
+                diameterField.removeAttribute('required');
+                // Also remove any validation classes
+                diameterField.classList.remove('is-invalid');
+                if (diameterLabel) {
+                    diameterLabel.innerHTML = 'Diameter: <small class="text-muted">(Optional)</small>';
+                }
+            }
+            // Also handle thickness field for the initial state
+            if (thicknessField) {
+                thicknessField.required = false;
+                thicknessField.removeAttribute('required');
+                thicknessField.classList.remove('is-invalid');
+                if (thicknessLabel) {
+                    thicknessLabel.innerHTML = 'Thickness: <small class="text-muted">(Optional)</small>';
+                }
+            }
+        }
+    }, 100);
 }
 
 // Function to toggle manual entry for filler fields
@@ -261,9 +370,11 @@ function updateFillerSpecRange() {
     
     if (fillerSpec && fillerSpecRange) {
         if (fillerSpec.value === '__manual__' && fillerSpecManual) {
-            fillerSpecRange.value = fillerSpecManual.value;
+            // Use manual entry value for the range
+            fillerSpecRange.value = fillerSpecManual.value || '';
         } else {
-            fillerSpecRange.value = fillerSpec.value;
+            // Use dropdown value
+            fillerSpecRange.value = fillerSpec.value || '';
         }
     }
 }
@@ -276,9 +387,11 @@ function updateFillerClassRange() {
     
     if (fillerClass && fillerClassRange) {
         if (fillerClass.value === '__manual__' && fillerClassManual) {
-            fillerClassRange.value = fillerClassManual.value;
+            // Use manual entry value for the range
+            fillerClassRange.value = fillerClassManual.value || '';
         } else {
-            fillerClassRange.value = fillerClass.value;
+            // Use dropdown value
+            fillerClassRange.value = fillerClass.value || '';
         }
     }
 }
@@ -306,9 +419,31 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize specimen toggle
     handleSpecimenToggle();
     
-    // Initialize manual entry fields
+    // Add event listeners to checkboxes
+    const plateCheckbox = document.getElementById('plate_specimen');
+    const pipeCheckbox = document.getElementById('pipe_specimen');
+    
+    if (plateCheckbox) {
+        plateCheckbox.addEventListener('change', function() {
+            console.log('Plate checkbox changed:', this.checked);
+            handleSpecimenToggle();
+        });
+    }
+    
+    if (pipeCheckbox) {
+        pipeCheckbox.addEventListener('change', function() {
+            console.log('Pipe checkbox changed:', this.checked);
+            handleSpecimenToggle();
+        });
+    }
+    
+    // Initialize manual entry fields and their ranges
     toggleManualEntry('filler_spec');
+    updateFillerSpecRange();
+    
     toggleManualEntry('filler_class');
+    updateFillerClassRange();
+    
     toggleManualEntry('filler_f_no');
     
     // Initialize thickness ranges
@@ -317,8 +452,22 @@ document.addEventListener('DOMContentLoaded', function() {
         calculateThicknessRange(fcawThickness.value, 'fcaw');
     }
     
+    // Initialize deposit thickness range
+    const depositThickness = document.getElementById('deposit_thickness');
+    if (depositThickness && depositThickness.value) {
+        calculateThicknessRange(depositThickness.value, 'deposit');
+    }
+    
     // Initialize filler ranges
     updateFillerSpecRange();
     updateFillerClassRange();
+    
+    // Make sure to run the specimen toggle logic on page load
+    handleSpecimenToggle();
+    
+    // Run it again after a short delay to ensure it's fully applied
+    setTimeout(function() {
+        handleSpecimenToggle();
+    }, 300);
 });
 </script>

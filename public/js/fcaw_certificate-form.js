@@ -619,10 +619,18 @@ function updateBackingGasRange() {
     const backingGasRange = document.getElementById('backing_gas_range_span');
     const backingGasRangeInput = document.getElementById('backing_gas_range');
     
-    if (!backingGasRange) return;
+    if (!backingGasRange || !backingGas) return;
     
-    // Always use the same range regardless of selection
-    const backingGasRangeText = 'With or Without backing Gas';
+    let backingGasRangeText;
+    
+    // Set range based on selection
+    if (backingGas.value === 'Without backing Gas') {
+        backingGasRangeText = 'With or Without backing Gas';
+    } else if (backingGas.value === 'With backing Gas') {
+        backingGasRangeText = 'With backing Gas';
+    } else {
+        backingGasRangeText = 'With or Without backing Gas'; // Default
+    }
         
     // Set backing gas range text
     backingGasRange.textContent = backingGasRangeText;

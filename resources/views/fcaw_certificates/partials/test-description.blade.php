@@ -14,7 +14,7 @@
 
     <div style="width: 120px; border-right: 1px solid #000; padding: 0 10px; text-align: center;">
         <strong>Revision No:</strong>
-        <input type="text" class="form-input" name="revision_no" value="{{ old('revision_no', isset($certificate) ? $certificate->revision_no : '') }}" required
+        <input type="text" class="form-input" name="revision_no" value="{{ old('revision_no', isset($certificate) ? $certificate->revision_no : '') }}"
             style="width: 60px; font-weight: bold;">
     </div>
 
@@ -54,12 +54,12 @@
     <div class="cert-left">
         <strong>Diameter:</strong>
         <input type="text" class="form-input" name="diameter" id="diameter" value="{{ old('diameter', isset($certificate) ? $certificate->diameter : '') }}"
-            style="width: 80px; display: inline; font-weight: bold;" required>
+            style="width: 80px; display: inline; font-weight: bold;" {{ old('plate_specimen', isset($certificate) ? $certificate->plate_specimen : false) && !old('pipe_specimen', isset($certificate) ? $certificate->pipe_specimen : false) ? '' : 'required' }}>
     </div>
     <div style="width: 160px; border-right: 1px solid #000; padding: 0 10px; text-align: center; display: flex; align-items: center; gap: 5px; justify-content: center;">
         <strong>Thickness:</strong>
         <input type="text" class="form-input" name="thickness" id="thickness" value="{{ old('thickness', isset($certificate) ? $certificate->thickness : '') }}"
-            style="width: 100px; display: inline; font-weight: bold;" required>
+            style="width: 100px; display: inline; font-weight: bold;" {{ old('plate_specimen', isset($certificate) ? $certificate->plate_specimen : false) && !old('pipe_specimen', isset($certificate) ? $certificate->pipe_specimen : false) ? '' : 'required' }}>
     </div>
     <div style="flex: 1; padding: 0 10px; text-align: center;">
         <!-- Empty cell -->

@@ -18,7 +18,7 @@
     <tr>
         <td class="var-label" style="background: #f8f9fa; font-weight: bold; border: 1px solid #000; padding: 5px;">Name:</td>
         <td class="var-value" style="border: 1px solid #000; padding: 5px;">
-            <input type="text" class="form-input" name="inspector_name" placeholder="Ahmed Yousry" style="width: 100%">
+            <input type="text" class="form-input" name="inspector_name" placeholder="Ahmed Yousry" value="{{ old('inspector_name', isset($certificate) ? $certificate->inspector_name : '') }}" style="width: 100%">
         </td>
         <td class="var-label" style="background: #f9f9fa; font-weight: bold; border: 1px solid #000; padding: 5px;">Name:</td>
     </tr>

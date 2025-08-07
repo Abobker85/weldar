@@ -134,7 +134,8 @@
                 <div class="checkbox-container">
                     <!-- Fixed RT checkbox - use a single hidden field -->
                     <input type="hidden" name="rt" value="0">
-                    <input type="checkbox" name="rt" id="rt" value="1" {{ old('rt', isset($certificate) ? $certificate->rt : '') ? 'checked' : '' }} onchange="updateTestFields()">
+                    <input type="checkbox" name="rt" id="rt" value="1" {{ old('rt', isset($certificate) ? $certificate->rt : '') ? 'checked' : '' }} 
+                      onchange="updateTestFields(); if(this.checked) {document.getElementById('evaluated_by').removeAttribute('required'); document.getElementById('supervised_by').removeAttribute('required');}">
                     <label for="rt">■ RT</label>
                 </div>
             </td>
@@ -142,7 +143,8 @@
                 <div class="checkbox-container">
                     <!-- Fixed UT checkbox - use a single hidden field -->
                     <input type="hidden" name="ut" value="0">
-                    <input type="checkbox" name="ut" id="ut" value="1" {{ old('ut', isset($certificate) ? $certificate->ut : '') ? 'checked' : '' }} onchange="updateTestFields()">
+                    <input type="checkbox" name="ut" id="ut" value="1" {{ old('ut', isset($certificate) ? $certificate->ut : '') ? 'checked' : '' }} 
+                      onchange="updateTestFields(); if(this.checked) {document.getElementById('evaluated_by').removeAttribute('required'); document.getElementById('supervised_by').removeAttribute('required');}">
                     <label for="ut">□ UT</label>
                 </div>
             </td>
@@ -208,9 +210,12 @@
     <!-- Personnel Information -->
     <table class="results-table">
         <tr>
-            <td class="var-label">Film or specimens evaluated by</td>
+            <td class="var-label">
+                <label for="evaluated_by">Film or specimens evaluated by <span class="text-danger evaluated-required">*</span></label>
+            </td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="evaluated_by" value="{{ old('evaluated_by', isset($certificate) ? $certificate->evaluated_by : '') }}" required>
+                <input type="text" class="form-input" id="evaluated_by" name="evaluated_by" value="{{ old('evaluated_by', isset($certificate) ? $certificate->evaluated_by : '') }}" 
+                       {{ old('rt', isset($certificate) && $certificate->rt ? true : false) || old('ut', isset($certificate) && $certificate->ut ? true : false) ? '' : 'required' }}>
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
@@ -228,9 +233,12 @@
             </td>
         </tr>
         <tr>
-            <td class="var-label">Welding supervised by</td>
+            <td class="var-label">
+                <label for="supervised_by">Welding supervised by <span class="text-danger supervised-required">*</span></label>
+            </td>
             <td class="var-value" style="text-align: center;">
-                <input type="text" class="form-input" name="supervised_by" value="{{ old('supervised_by', isset($certificate) ? $certificate->supervised_by : '') }}" required>
+                <input type="text" class="form-input" id="supervised_by" name="supervised_by" value="{{ old('supervised_by', isset($certificate) ? $certificate->supervised_by : '') }}" 
+                       {{ old('rt', isset($certificate) && $certificate->rt ? true : false) || old('ut', isset($certificate) && $certificate->ut ? true : false) ? '' : 'required' }}>
             </td>
             <td class="var-label">Company</td>
             <td class="var-value" style="text-align: center;">
@@ -327,12 +335,69 @@ function updateTestFields() {
     const labTestNo = document.getElementById('lab_test_no');
     const evaluatedCompany = document.getElementById('evaluated_company');
     const rtDocNo = document.getElementById('rt_doc_no');
+    const evaluatedBy = document.getElementById('evaluated_by');
+    const supervisedBy = document.getElementById('supervised_by');
+    
+    // Get the label elements to update their appearance
+    const evaluatedByLabel = document.querySelector('label[for="evaluated_by"]');
+    const supervisedByLabel = document.querySelector('label[for="supervised_by"]');
+    const evaluatedRequired = evaluatedByLabel ? evaluatedByLabel.querySelector('.evaluated-required') : null;
+    const supervisedRequired = supervisedByLabel ? supervisedByLabel.querySelector('.supervised-required') : null;
     
     if (rtChecked || utChecked) {
         // If either RT or UT is checked, disable mechanical tests fields but keep them submittable
         mechanicalTestsBy.disabled = true;
         labTestNo.disabled = true;
         evaluatedCompany.disabled = true;
+        
+        // Make evaluated_by and supervised_by not required
+        if (evaluatedBy) {
+            // Save the original required state for when we uncheck RT/UT
+            if (!evaluatedBy.hasAttribute('data-original-required')) {
+                evaluatedBy.setAttribute('data-original-required', evaluatedBy.required ? 'true' : 'false');
+            }
+            
+            // Force remove required attribute - multiple approaches to ensure it's removed
+            evaluatedBy.required = false;
+            evaluatedBy.removeAttribute('required');
+            evaluatedBy.setAttribute('data-novalidate', 'true'); // Additional marker
+            evaluatedBy.classList.remove('is-invalid'); // Remove any validation errors
+            
+            if (evaluatedByLabel) {
+                if (evaluatedRequired) {
+                    evaluatedRequired.style.display = 'none';
+                }
+                // Add text indicating it's optional with RT/UT
+                const optionalText = evaluatedByLabel.querySelector('.optional-text');
+                if (!optionalText) {
+                    evaluatedByLabel.innerHTML += ' <small class="text-muted optional-text">(Optional with RT/UT)</small>';
+                }
+            }
+        }
+        
+        if (supervisedBy) {
+            // Save the original required state for when we uncheck RT/UT
+            if (!supervisedBy.hasAttribute('data-original-required')) {
+                supervisedBy.setAttribute('data-original-required', supervisedBy.required ? 'true' : 'false');
+            }
+            
+            // Force remove required attribute - multiple approaches to ensure it's removed
+            supervisedBy.required = false;
+            supervisedBy.removeAttribute('required');
+            supervisedBy.setAttribute('data-novalidate', 'true'); // Additional marker
+            supervisedBy.classList.remove('is-invalid'); // Remove any validation errors
+            
+            if (supervisedByLabel) {
+                if (supervisedRequired) {
+                    supervisedRequired.style.display = 'none';
+                }
+                // Add text indicating it's optional with RT/UT
+                const optionalText = supervisedByLabel.querySelector('.optional-text');
+                if (!optionalText) {
+                    supervisedByLabel.innerHTML += ' <small class="text-muted optional-text">(Optional with RT/UT)</small>';
+                }
+            }
+        }
         
         // Make RT doc number field required
         if (rtDocNo) {
@@ -364,6 +429,37 @@ function updateTestFields() {
             rtDocNo.removeAttribute('required');
         }
         
+        // Make evaluated_by and supervised_by required again
+        if (evaluatedBy) {
+            evaluatedBy.setAttribute('required', 'required');
+            if (evaluatedByLabel) {
+                // Show the required indicator
+                if (evaluatedRequired) {
+                    evaluatedRequired.style.display = '';
+                }
+                // Remove any optional text
+                const optionalText = evaluatedByLabel.querySelector('.optional-text');
+                if (optionalText) {
+                    optionalText.remove();
+                }
+            }
+        }
+        
+        if (supervisedBy) {
+            supervisedBy.setAttribute('required', 'required');
+            if (supervisedByLabel) {
+                // Show the required indicator
+                if (supervisedRequired) {
+                    supervisedRequired.style.display = '';
+                }
+                // Remove any optional text
+                const optionalText = supervisedByLabel.querySelector('.optional-text');
+                if (optionalText) {
+                    optionalText.remove();
+                }
+            }
+        }
+        
         // Reset placeholders
         mechanicalTestsBy.placeholder = "";
         labTestNo.placeholder = "Enter lab test number";
@@ -376,10 +472,113 @@ document.addEventListener('DOMContentLoaded', function() {
     // Run once on page load to set initial state
     updateTestFields();
     
+    // This is a direct fix to immediately remove required attribute if RT or UT is checked
+    const rtChecked = document.getElementById('rt') && document.getElementById('rt').checked;
+    const utChecked = document.getElementById('ut') && document.getElementById('ut').checked;
+    
+    if (rtChecked || utChecked) {
+        // Immediately remove required attributes regardless of any other logic
+        const evaluatedBy = document.getElementById('evaluated_by');
+        const supervisedBy = document.getElementById('supervised_by');
+        
+        if (evaluatedBy) {
+            evaluatedBy.removeAttribute('required');
+        }
+        if (supervisedBy) {
+            supervisedBy.removeAttribute('required');
+        }
+    }
+    
+    // Run it again after a short delay to ensure it overrides any other initialization
+    setTimeout(() => {
+        const rtChecked = document.getElementById('rt') && document.getElementById('rt').checked;
+        const utChecked = document.getElementById('ut') && document.getElementById('ut').checked;
+        
+        // If either RT or UT is checked at startup, ensure evaluated_by and supervised_by are not required
+        if (rtChecked || utChecked) {
+            const evaluatedBy = document.getElementById('evaluated_by');
+            const supervisedBy = document.getElementById('supervised_by');
+            const evaluatedByLabel = document.querySelector('label[for="evaluated_by"]');
+            const supervisedByLabel = document.querySelector('label[for="supervised_by"]');
+            
+            if (evaluatedBy) {
+                evaluatedBy.required = false;
+                evaluatedBy.removeAttribute('required');
+                if (evaluatedByLabel) {
+                    // Hide the required indicator
+                    const evaluatedRequired = evaluatedByLabel.querySelector('.evaluated-required');
+                    if (evaluatedRequired) {
+                        evaluatedRequired.style.display = 'none';
+                    }
+                    
+                    // Add optional text if it doesn't exist
+                    const optionalText = evaluatedByLabel.querySelector('.optional-text');
+                    if (!optionalText) {
+                        evaluatedByLabel.innerHTML += ' <small class="text-muted optional-text">(Optional with RT/UT)</small>';
+                    }
+                }
+            }
+            
+            if (supervisedBy) {
+                supervisedBy.required = false;
+                supervisedBy.removeAttribute('required');
+                if (supervisedByLabel) {
+                    // Hide the required indicator
+                    const supervisedRequired = supervisedByLabel.querySelector('.supervised-required');
+                    if (supervisedRequired) {
+                        supervisedRequired.style.display = 'none';
+                    }
+                    
+                    // Add optional text if it doesn't exist
+                    const optionalText = supervisedByLabel.querySelector('.optional-text');
+                    if (!optionalText) {
+                        supervisedByLabel.innerHTML += ' <small class="text-muted optional-text">(Optional with RT/UT)</small>';
+                    }
+                }
+            }
+        }
+    }, 200);
+    
     // Add event listener for form submission
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
+            // Check RT/UT and disable validation for evaluated_by and supervised_by if needed
+            const rtChecked = document.getElementById('rt') && document.getElementById('rt').checked;
+            const utChecked = document.getElementById('ut') && document.getElementById('ut').checked;
+            
+            if (rtChecked || utChecked) {
+                const evaluatedBy = document.getElementById('evaluated_by');
+                const supervisedBy = document.getElementById('supervised_by');
+                
+                if (evaluatedBy) {
+                    evaluatedBy.required = false;
+                    evaluatedBy.removeAttribute('required');
+                }
+                if (supervisedBy) {
+                    supervisedBy.required = false;
+                    supervisedBy.removeAttribute('required');
+                }
+            }
+            
+            // Also check if only plate is selected to disable validation for diameter/thickness
+            const plateChecked = document.getElementById('plate_specimen') && document.getElementById('plate_specimen').checked;
+            const pipeChecked = document.getElementById('pipe_specimen') && document.getElementById('pipe_specimen').checked;
+            
+            if (plateChecked && !pipeChecked) {
+                const diameterField = document.getElementById('diameter');
+                const thicknessField = document.getElementById('thickness');
+                
+                if (diameterField) {
+                    diameterField.required = false;
+                    diameterField.removeAttribute('required');
+                }
+                if (thicknessField) {
+                    thicknessField.required = false;
+                    thicknessField.removeAttribute('required');
+                }
+            }
+            
             // Enable disabled fields just before submission so they get included in the form data
             const disabledFields = document.querySelectorAll('input:disabled, select:disabled, textarea:disabled');
             disabledFields.forEach(field => {

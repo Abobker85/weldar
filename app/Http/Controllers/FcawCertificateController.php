@@ -282,8 +282,20 @@ public function store(Request $request)
         'plate_specimen' => 'boolean',
         'pipe_specimen' => 'boolean',
         'base_metal_spec' => 'required|string|max:255',
-        'diameter' => 'nullable|string|max:255',
-        'thickness' => 'required|string|max:255',
+        'diameter' => function($attribute, $value, $fail) use ($data) {
+            if (!empty($data['pipe_specimen']) && $data['pipe_specimen']) {
+                if (empty($value)) {
+                    $fail('The diameter field is required when pipe specimen is selected.');
+                }
+            }
+        },
+        'thickness' => function($attribute, $value, $fail) use ($data) {
+            if (empty($value)) {
+                if (!empty($data['pipe_specimen']) && $data['pipe_specimen']) {
+                    $fail('The thickness field is required when pipe specimen is selected.');
+                }
+            }
+        },
 
         // Pipe information
         'pipe_diameter_type' => 'nullable|string|max:255',
@@ -403,6 +415,30 @@ public function store(Request $request)
         'signature_data' => 'nullable|string',
     ]);
     
+    // Apply conditional validation rules
+    $data = $request->all();
+    
+    // 1. For plate specimens, diameter is not required
+    if (isset($data['plate_specimen']) && filter_var($data['plate_specimen'], FILTER_VALIDATE_BOOLEAN) 
+        && !filter_var($data['pipe_specimen'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+        $validator->setRules(array_merge(
+            $validator->getRules(), 
+            ['diameter' => 'nullable|string|max:255']
+        ));
+    }
+    
+    // 2. If RT or UT is enabled, evaluated_by and supervised_by are not required
+    if ((isset($data['rt']) && filter_var($data['rt'], FILTER_VALIDATE_BOOLEAN)) ||
+        (isset($data['ut']) && filter_var($data['ut'], FILTER_VALIDATE_BOOLEAN))) {
+        $validator->setRules(array_merge(
+            $validator->getRules(), 
+            [
+                'evaluated_by' => 'nullable|string|max:255',
+                'supervised_by' => 'nullable|string|max:255'
+            ]
+        ));
+    }
+    
     // Check validation result before proceeding
     if ($validator->fails()) {
         // For AJAX requests, return JSON response
@@ -457,17 +493,26 @@ public function store(Request $request)
         
         // Check if request is AJAX
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            // Make sure the certificate URL is clearly available in the response
+            $certificateUrl = route('fcaw-certificates.certificate', $certificate);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Certificate created successfully.',
-                'redirect' => route('fcaw-certificates.certificate', $certificate),
-                'certificate' => $certificate
+                'redirect' => route('fcaw-certificates.index'),
+                'certificate_url' => $certificateUrl,
+                'print_url' => $certificateUrl, // Adding an alternative name just to be safe
+                'certificate' => [
+                    'id' => $certificate->id,
+                    'url' => $certificateUrl
+                ]
             ]);
         }
         
-        // Standard redirect for non-AJAX requests
-        return redirect()->route('fcaw-certificates.certificate', $certificate)
-                        ->with('success', 'Certificate created successfully.');
+        // For non-AJAX requests, we'll add JavaScript to open certificate in a new tab and redirect to index
+        return redirect()->route('fcaw-certificates.index')
+                        ->with('success', 'Certificate created successfully.')
+                        ->with('open_certificate', route('fcaw-certificates.certificate', $certificate));
     } catch (\Exception $e) {
         DB::rollBack();
         
@@ -656,8 +701,20 @@ public function update(Request $request, $id)
         'plate_specimen' => 'boolean',
         'pipe_specimen' => 'boolean',
         'base_metal_spec' => 'required|string|max:255',
-        'diameter' => 'nullable|string|max:255',
-        'thickness' => 'required|string|max:255',
+        'diameter' => function($attribute, $value, $fail) use ($data) {
+            if (!empty($data['pipe_specimen']) && $data['pipe_specimen']) {
+                if (empty($value)) {
+                    $fail('The diameter field is required when pipe specimen is selected.');
+                }
+            }
+        },
+        'thickness' => function($attribute, $value, $fail) use ($data) {
+            if (empty($value)) {
+                if (!empty($data['pipe_specimen']) && $data['pipe_specimen']) {
+                    $fail('The thickness field is required when pipe specimen is selected.');
+                }
+            }
+        },
 
         // Pipe information
         'pipe_diameter_type' => 'nullable|string|max:255',
@@ -777,6 +834,30 @@ public function update(Request $request, $id)
         'signature_data' => 'nullable|string',
     ]);
 
+    // Apply conditional validation rules
+    $data = $request->all();
+    
+    // 1. For plate specimens, diameter is not required
+    if (isset($data['plate_specimen']) && filter_var($data['plate_specimen'], FILTER_VALIDATE_BOOLEAN) 
+        && !filter_var($data['pipe_specimen'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+        $validator->setRules(array_merge(
+            $validator->getRules(), 
+            ['diameter' => 'nullable|string|max:255']
+        ));
+    }
+    
+    // 2. If RT or UT is enabled, evaluated_by and supervised_by are not required
+    if ((isset($data['rt']) && filter_var($data['rt'], FILTER_VALIDATE_BOOLEAN)) ||
+        (isset($data['ut']) && filter_var($data['ut'], FILTER_VALIDATE_BOOLEAN))) {
+        $validator->setRules(array_merge(
+            $validator->getRules(), 
+            [
+                'evaluated_by' => 'nullable|string|max:255',
+                'supervised_by' => 'nullable|string|max:255'
+            ]
+        ));
+    }
+    
     // Check validation result before proceeding
     if ($validator->fails()) {
         // For AJAX requests, return JSON response
@@ -816,17 +897,26 @@ public function update(Request $request, $id)
 
         // Check if request is AJAX
         if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            // Make sure the certificate URL is clearly available in the response
+            $certificateUrl = route('fcaw-certificates.certificate', $certificate);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Certificate updated successfully.',
-                'redirect' => route('fcaw-certificates.certificate', $certificate),
-                'certificate' => $certificate
+                'redirect' => route('fcaw-certificates.index'),
+                'certificate_url' => $certificateUrl,
+                'print_url' => $certificateUrl, // Adding an alternative name just to be safe
+                'certificate' => [
+                    'id' => $certificate->id,
+                    'url' => $certificateUrl
+                ]
             ]);
         }
 
-        // Standard redirect for non-AJAX requests
-        return redirect()->route('fcaw-certificates.certificate', $certificate)
-                        ->with('success', 'Certificate updated successfully.');
+        // For non-AJAX requests, we'll add JavaScript to open certificate in a new tab and redirect to index
+        return redirect()->route('fcaw-certificates.index')
+                        ->with('success', 'Certificate updated successfully.')
+                        ->with('open_certificate', route('fcaw-certificates.certificate', $certificate));
     } catch (\Exception $e) {
         DB::rollBack();
 
@@ -884,8 +974,8 @@ public function update(Request $request, $id)
         // Generate QR Code for certificate verification
         $verificationUrl = route('fcaw-certificates.verify', ['id' => $certificate->id, 'code' => $certificate->verification_code]);
         $qrCodeUrl = 'data:image/png;base64,' . base64_encode(FacadesQrCode::format('png')->size(200)->generate($verificationUrl));
-        
-        return view('fcaw_certificates.certificate_updated', compact('certificate', 'qrCodeUrl', 'logoPath', 'logoExists'));
+
+        return view('fcaw_certificates.certificate', compact('certificate', 'qrCodeUrl', 'logoPath', 'logoExists'));
     }
     
     /**

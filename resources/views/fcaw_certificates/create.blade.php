@@ -135,7 +135,12 @@
                                 timer: 2000,
                                 showConfirmButton: false
                             }).then(() => {
-                                if (data.redirect) {
+                                // Redirect to certificate page
+                                if (data.certificate && data.certificate.id) {
+                                    window.location.href = '{{ url("/fcaw-certificates") }}/' + data.certificate.id + '/certificate';
+                                } else if (data.certificate_id) {
+                                    window.location.href = '{{ url("/fcaw-certificates") }}/' + data.certificate_id + '/certificate';
+                                } else if (data.redirect) {
                                     window.location.href = data.redirect;
                                 }
                             });
@@ -168,64 +173,168 @@
                 // Initialize range values on page load
                 setExplicitRangeValues();
                 
+                // Make sure handleSpecimenToggle is called after DOM is fully loaded
+                if (typeof handleSpecimenToggle === 'function') {
+                    // Call it once on page load
+                    handleSpecimenToggle();
+                    
+                    // Add extra call with a slight delay to ensure it takes effect
+                    setTimeout(() => {
+                        handleSpecimenToggle();
+                        console.log('Called handleSpecimenToggle with delay');
+                    }, 500);
+                } else {
+                    console.warn('handleSpecimenToggle function not found');
+                }
+                
                 console.log('Certificate form initialized');
             });
             
-            // Function to explicitly set range values
-            function setExplicitRangeValues() {
-                // Backing range - update both span and input elements
-                const backing = document.getElementById('backing');
-                if (backing) {
-                    const backingRangeText = (backing.value === 'With Backing') ? 
-                        'With backing or backing and gouging' : 
-                        'Without backing or with backing and gouging';
-                        
-                    // Update both the visible span and hidden input
-                    const backingRangeSpan = document.getElementById('backing_range_span');
-                    const backingRangeInput = document.querySelector('input[name="backing_range"]');
-                    
-                    if (backingRangeSpan) backingRangeSpan.textContent = backingRangeText;
-                    if (backingRangeInput) backingRangeInput.value = backingRangeText;
-                }
-                
-                // P-Number range - use fixed range text instead of mapping
-                const pNumberRangeText = 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49';
-                const pNumberRangeSpan = document.getElementById('p_number_range_span');
-                const pNumberRangeInput = document.getElementById('p_number_range');
-                
-                if (pNumberRangeSpan) pNumberRangeSpan.textContent = pNumberRangeText;
-                if (pNumberRangeInput) pNumberRangeInput.value = pNumberRangeText;
-                
-                // Call the update functions to set other range values
-                if (typeof updateDiameterRange === 'function') updateDiameterRange();
-                if (typeof updateFNumberRange === 'function') updateFNumberRange();
-                if (typeof updatePositionRange === 'function') updatePositionRange();
-                if (typeof updateVerticalProgressionRange === 'function') updateVerticalProgressionRange();
-                
-                // For any functions that don't exist, create fallbacks
-                if (typeof updateVerticalProgressionRange !== 'function') {
-                    console.warn('updateVerticalProgressionRange function not found, creating fallback');
-                    const verticalProgression = document.getElementById('vertical_progression');
-                    const verticalProgressionRangeInput = document.getElementById('vertical_progression_range');
-                    
-                    if (verticalProgression && verticalProgressionRangeInput) {
-                        verticalProgressionRangeInput.value = verticalProgression.value || '';
-                    }
-                }
-                
-                // Debug - output all range values to console
-                console.log('Range values after explicit initialization:');
-                console.log('P-Number range:', pNumberRangeInput ? pNumberRangeInput.value : 'not set');
-                console.log('Diameter range:', document.getElementById('diameter_range') ? 
-                            document.getElementById('diameter_range').value : 'not set');
-                console.log('F-Number range:', document.getElementById('f_number_range') ? 
-                            document.getElementById('f_number_range').value : 'not set');
-                console.log('Vertical progression range:', document.getElementById('vertical_progression_range') ? 
-                            document.getElementById('vertical_progression_range').value : 'not set');
-                console.log('Position range:', document.getElementById('position_range') ? 
-                            document.getElementById('position_range').value : 'not set');
-            }
+
             
+                // Function to explicitly set range values
+                function setExplicitRangeValues() {
+                    // Call all of our update functions to set range values
+                    if (typeof updateBackingRange === 'function') updateBackingRange();
+                    if (typeof updateDiameterRange === 'function') updateDiameterRange();
+                    if (typeof updateFNumberRange === 'function') updateFNumberRange();
+                    if (typeof updatePositionRange === 'function') updatePositionRange();
+                    if (typeof updateVerticalProgressionRange === 'function') updateVerticalProgressionRange();
+                    
+                    // P-Number range - use fixed range text instead of mapping
+                    const pNumberRangeText = 'P-NO. 1 through P-NO. 15F, P-NO. 34, and P-NO. 41 through P-NO. 49';
+                    const pNumberRangeSpan = document.getElementById('p_number_range_span');
+                    const pNumberRangeInput = document.getElementById('p_number_range');
+
+                    if (pNumberRangeSpan) pNumberRangeSpan.textContent = pNumberRangeText;
+                    if (pNumberRangeInput) pNumberRangeInput.value = pNumberRangeText;
+                }
+                
+                // Function to validate required fields before form submission
+                function validateRequiredFields() {
+                    // Clear previous validation errors
+                    clearValidationErrors();
+                    
+                    // First make sure handleSpecimenToggle has been applied
+                    if (typeof handleSpecimenToggle === 'function') {
+                        handleSpecimenToggle();
+                    }
+                    
+                    let isValid = true;
+                    
+                    // Check if plate only is selected - if so, diameter and thickness are optional
+                    const plateCheckbox = document.getElementById('plate_specimen');
+                    const pipeCheckbox = document.getElementById('pipe_specimen');
+                    const plateChecked = plateCheckbox ? plateCheckbox.checked : false;
+                    const pipeChecked = pipeCheckbox ? pipeCheckbox.checked : false;
+                    
+                    console.log('Validating required fields - Plate:', plateChecked, 'Pipe:', pipeChecked);
+                    
+                    // Get diameter and thickness fields
+                    const diameterField = document.getElementById('diameter');
+                    const thicknessField = document.getElementById('thickness');
+                    
+                    // Make diameter and thickness optional if only plate is checked
+                    if (plateChecked && !pipeChecked) {
+                        if (diameterField) {
+                            console.log('Making diameter field optional');
+                            diameterField.required = false;
+                            diameterField.removeAttribute('required');
+                            // Also update the label if it exists
+                            const diameterLabel = diameterField.parentElement.querySelector('strong');
+                            if (diameterLabel) {
+                                diameterLabel.innerHTML = 'Diameter: <small class="text-muted">(Optional)</small>';
+                            }
+                        }
+                        
+                        if (thicknessField) {
+                            console.log('Making thickness field optional');
+                            thicknessField.required = false;
+                            thicknessField.removeAttribute('required');
+                            // Also update the label if it exists
+                            const thicknessLabel = thicknessField.parentElement.querySelector('strong');
+                            if (thicknessLabel) {
+                                thicknessLabel.innerHTML = 'Thickness: <small class="text-muted">(Optional)</small>';
+                            }
+                        }
+                    } else if (pipeChecked) {
+                        // If pipe is checked, ensure diameter and thickness are required
+                        if (diameterField) {
+                            console.log('Making diameter field required');
+                            diameterField.required = true;
+                            diameterField.setAttribute('required', 'required');
+                            // Also update the label if it exists
+                            const diameterLabel = diameterField.parentElement.querySelector('strong');
+                            if (diameterLabel) {
+                                diameterLabel.innerHTML = 'Diameter: <span class="text-danger">*</span>';
+                            }
+                        }
+                        
+                        if (thicknessField) {
+                            console.log('Making thickness field required');
+                            thicknessField.required = true;
+                            thicknessField.setAttribute('required', 'required');
+                            // Also update the label if it exists
+                            const thicknessLabel = thicknessField.parentElement.querySelector('strong');
+                            if (thicknessLabel) {
+                                thicknessLabel.innerHTML = 'Thickness: <span class="text-danger">*</span>';
+                            }
+                        }
+                    }
+                    
+                    // Apply validation changes immediately to the DOM
+                    if (plateChecked && !pipeChecked) {
+                        // Remove diameter and thickness from validation if they're empty
+                        if (diameterField && !diameterField.value.trim()) {
+                            diameterField.classList.remove('is-invalid');
+                        }
+                        if (thicknessField && !thicknessField.value.trim()) {
+                            thicknessField.classList.remove('is-invalid');
+                        }
+                    }
+                    
+                    // Get all required form elements
+                    const requiredElements = document.querySelectorAll('[required]');
+                    
+                    // Check if all required fields have values
+                    requiredElements.forEach(function(element) {
+                        if (!element.value.trim()) {
+                            element.classList.add('is-invalid');
+                            
+                            const errorElement = document.createElement('div');
+                            errorElement.className = 'invalid-feedback';
+                            errorElement.textContent = 'This field is required.';
+                            
+                            element.parentNode.insertBefore(errorElement, element.nextSibling);
+                            
+                            isValid = false;
+                        }
+                    });
+                    
+                    if (!isValid) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Form Validation Error',
+                            text: 'Please fill in all required fields.'
+                        });
+                    }
+                    
+                    // Debug - output all range values to console
+                    console.log('Range values after validation:');
+                    console.log('P-Number range:', document.getElementById('p_number_range') ? 
+                                document.getElementById('p_number_range').value : 'not set');
+                    console.log('Diameter range:', document.getElementById('diameter_range') ?
+                                document.getElementById('diameter_range').value : 'not set');
+                    console.log('F-Number range:', document.getElementById('f_number_range') ?
+                                document.getElementById('f_number_range').value : 'not set');
+                    console.log('Vertical progression range:', document.getElementById('vertical_progression_range') ?
+                                document.getElementById('vertical_progression_range').value : 'not set');
+                    console.log('Position range:', document.getElementById('position_range') ? 
+                                document.getElementById('position_range').value : 'not set');
+                                
+                    return isValid;
+                }
+                
             // Function to display validation errors
             function displayValidationErrors(errors) {
                 for (const field in errors) {

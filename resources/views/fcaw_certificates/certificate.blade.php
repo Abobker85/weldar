@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FCAW Welder Qualification Certificate</title>
+    <title>SMAW Welder Qualification Certificate</title>
     
     <!-- Define the formatDate helper function -->
     @php
@@ -17,9 +17,6 @@
         return $date->format('d F, Y');
     }
     @endphp
-    
-    <!-- Include the FCAW certificate specific CSS -->
-    <link rel="stylesheet" href="{{ asset('css/fcaw-certificate.css') }}">
     
     <style>
         @page {
@@ -478,8 +475,35 @@
           
         </table>
         
-        <!-- Include the new styled welding variables section -->
-        @include('fcaw_certificates.partials.welding-variables')
+        <!-- Testing Variables Header -->
+        <table class="content-table">
+            <tr>
+                <td colspan="5" class="section-header">Testing Variables and Qualification Limits</td>
+            </tr>
+        </table>
+        
+        <!-- Variables Table with integrated Position Qualification -->
+        <table class="variables-table">
+            <tr>
+                <td class="var-label">Welding Variables (QW-350)</td>
+                <td class="var-value" style="width: 150px;"><strong>Actual Values</strong></td>
+                <td class="var-range" style="width: 200px;"><strong>Range Qualified</strong></td>
+            </tr>
+            <tr>
+                <td class="var-label">Welding process(es):</td>
+                <td class="var-value">FCAW</td>
+                <td class="var-range">FCAW OR GTAW</td>
+            </tr>
+            <tr>
+                <td class="var-label">Type (i.e., manual, semi-automatic) used:</td>
+                <td class="var-value">semi-automatic</td>
+                <td class="var-range">semi-automatic</td>
+            </tr>
+            <tr>
+                <td class="var-label">Backing (with/without):</td>
+                <td class="var-value">{{ $certificate->backing_manual ?? $certificate->backing }}</td>
+                <td class="var-range">{{ $certificate->backing_range }}</td>
+            </tr>
             <tr>
                 <td class="var-label">
                     <div style="display: flex; align-items: center;">
@@ -569,8 +593,8 @@
                 
 
                 <td class="var-label">Deposit thickness for each process:</td>
-                <td class="var-value">SMAW({{ $certificate->deposit_thickness }} mm)</td>
-                <td class="var-range">SMAW({{ $certificate->deposit_thickness_range }} mm)</td>
+                <td class="var-value">FCAW({{ $certificate->deposit_thickness }})</td>
+                <td class="var-range">FCAW({{ $certificate->deposit_thickness_range }})</td>
             </tr>
             <tr>
                 <td class="var-label">
@@ -586,25 +610,10 @@
                         NO
                     </div>
                 </td>
-                <td class="var-value">SMAW({{ $certificate->smaw_thickness }}mm)</td>
-                <td class="var-range">SMAW({{ $certificate->smaw_thickness_range }})</td>
+                <td class="var-value">FCAW({{ $certificate->fcaw_thickness }})</td>
+                <td class="var-range">FCAW({{ $certificate->fcaw_thickness_range }})</td>
             </tr>
-             <tr>
-                <td class="var-label">
-                    Process 2 __ 3 layers minimum
-                    <div style="display: inline-block; margin-left: 10px;">
-                        <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-right: 5px; text-align: center; line-height: 12px;">
-                         
-                        </span>
-                        YES
-                        <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin: 0 5px 0 10px; text-align: center; line-height: 12px;">
-                        </span>
-                        NO
-                    </div>
-                </td>
-                <td class="var-value">...............</td>
-                <td class="var-range">...............</td>
-            </tr>
+           
             
             <!-- Position Qualification integrated with special styling -->
             <tr>
@@ -625,8 +634,6 @@
                 </td>
             </tr>
             <tr>
-          
-            <tr>
                 <td class="var-label">Vertical progression (uphill or downhill):</td>
                 <td class="var-value">{{ $certificate->vertical_progression }}</td>
                 <td class="var-range">{{ $certificate->vertical_progression_range }}</td>
@@ -640,8 +647,73 @@
                 <td class="var-label">Use of backing gas (GTAW, PAW, GMAW, LBW):</td>
                 <td class="var-value">{{ $certificate->backing_gas ?? '------' }}</td>
                 <td class="var-range">{{ $certificate->backing_gas_range ?? '------' }}</td>
+            <tr>
+                <td class="var-label">GTAW current type and polarity (AC, DCEP, DCEN) For LBW or LLBW:</td>
+                <td class="var-value">
+                    {{ $certificate->gtaw_polarity ?? '------' }}
+                </td>
+                <td class="var-range">
+                    {{ $certificate->gtaw_polarity ?? '------' }}
+                </td>
             </tr>
-             <tr>
+            <tr>
+                <td class="var-label">Transfer mode (spray, globular, or pulse to short circuit-GMAW):</td>
+                <td class="var-value">
+                    {{ $certificate->transfer_mode ?? '------' }}
+                </td>
+                <td class="var-range">
+                    {{ $certificate->transfer_mode_range ?? '------' }}
+                </td>
+            </tr>
+            <tr>
+                <td class="var-label">Type of equipment:</td>
+                <td class="var-value">
+                    {{ $certificate->equipment_type ?? '------' }}
+                </td>
+                <td class="var-range">
+                    {{ $certificate->equipment_type_range ?? '------' }}
+                </td>
+            </tr>
+            <tr>
+                <td class="var-label">Technique (keyhole LBW or melt-in):</td>
+                <td class="var-value">
+                    {{ $certificate->technique ?? '------' }}
+                </td>
+                <td class="var-range">
+                    {{ $certificate->technique_range ?? '------' }}
+                </td>
+            </tr>
+            <tr>
+                <td class="var-label">
+                    Torch/Gun/Beam oscillation
+                    <div style="display: inline-block; margin-left: 10px;">
+                        <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin-right: 5px; text-align: center; line-height: 12px;">
+                            {!! $certificate->oscillation == 'yes' ? '✓' : '&nbsp;' !!}
+                        </span>
+                        YES
+                        <span style="display: inline-block; width: 14px; height: 14px; border: 1px solid #000; margin: 0 5px 0 10px; text-align: center; line-height: 12px;">
+                            {!! $certificate->oscillation == 'no' || !$certificate->oscillation ? '✓' : '&nbsp;' !!}
+                        </span>
+                        NO
+                    </div>
+                </td>
+                <td class="var-value">
+                    {{ $certificate->oscillation_value ?? '------' }}
+                </td>
+                <td class="var-range">
+                    {{ $certificate->oscillation_range ?? '------' }}
+                </td>
+            </tr>
+            <tr>
+                <td class="var-label">Mode of operation (pulsed or continuous):</td>
+                <td class="var-value">
+                   ------
+                </td>
+                <td class="var-range">
+                    ------
+                </td>
+            </tr>
+             {{-- <tr>
         <td class="var-label">Transfer mode (spray, globular, or pulse to short circuit-GMAW):</td>
         <td class="var-value">
             <span> ..... </span>
@@ -650,15 +722,7 @@
             <span> ..... </span>
         </td>
     </tr>
-    <tr>
-        <td class="var-label">GTAW current type and polarity (AC, DCEP, DCEN) For LBW or LLBW:</td>
-        <td class="var-value">
-            <span> ..... </span>
-        </td>
-        <td class="var-range">
-            <span> ..... </span>
-        </td>
-    </tr>
+    
     <tr>
         <td class="var-label">Type of equipment</td>
         <td class="var-value">
@@ -702,7 +766,8 @@
         <td class="var-range">
             <span> ..... </span>
         </td>
-
+    </tr> --}}
+        </table>
         
         <!-- RESULTS Section -->
         <div class="signature-section">
