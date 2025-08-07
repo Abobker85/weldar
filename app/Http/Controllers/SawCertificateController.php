@@ -818,37 +818,6 @@ class SawCertificateController extends Controller
     /**
      * Get welder details for AJAX requests
      */
-    public function getWelderDetails($id)
-    {
-        $welder = Welder::with('company')->find($id);
-
-        if (!$welder) {
-            return response()->json(['error' => 'Welder not found'], 404);
-        }
-
-        // Generate full URL for photo if it exists
-        $photoUrl = null;
-        if ($welder->photo) {
-            $photoUrl = asset('storage/' . $welder->photo);
-        }
-
-        return response()->json([
-            'welder' => [
-                'id' => $welder->id,
-                'name' => $welder->name,
-                'welder_id_no' => $welder->welder_no,
-                'passport_no' => $welder->passport_id_no,
-                'iqama_no' => $welder->iqama_no,
-                'photo_path' => $photoUrl,
-                'photo' => $welder->photo
-            ],
-            'company' => $welder->company ? [
-                'id' => $welder->company->id,
-                'name' => $welder->company->name,
-                'code' => $welder->company->code
-            ] : null
-        ]);
-    }
 
     /**
      * Show certificate preview
