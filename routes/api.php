@@ -22,6 +22,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('/welders/search', [App\Http\Controllers\WelderController::class, 'search'])->name('welders.search');
+Route::get('/welders/{id}', [App\Http\Controllers\SawCertificateController::class, 'getWelderDetails'])->name('welders.details');
+
 // API routes using ApiController - Unified certificate endpoints
 Route::get('/welders/{id}', [ApiController::class, 'getWelder'])->name('api.welders.show');
 Route::get('/welders/{id}/{certificateType}', [ApiController::class, 'getWelder'])->name('api.welders.certificate');

@@ -214,4 +214,24 @@ class WelderController extends Controller
         return redirect()->route('welders.index')
             ->with('success', 'Welder deleted successfully.');
     }
+
+    /**
+     * Search for welders.
+     */
+    public function search(Request $request)
+    {
+        $term = $request->input('q');
+
+        if (empty($term)) {
+            return response()->json([]);
+        }
+
+        $welders = Welder::where('name', 'like', "%{$term}%")
+            ->orWhere('welder_no', 'like', "%{$term}%")
+            ->orWhere('iqama_no', 'like', "%{$term}%")
+            ->limit(20)
+            ->get();
+
+        return response()->json($welders);
+    }
 }
