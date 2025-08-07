@@ -179,8 +179,8 @@
         <td class="var-label">Filler Metal Product Form (QW-404.23) (GTAW or PAW):</td>
         <td class="var-value">
             <select class="form-select" name="filler_product_form" id="filler_product_form" onchange="updateFillerProductFormRange()">
-                <option value="bare (solid or metal cored)">bare (solid or metal cored)</option>
-                <option value="range">flux cored</option>
+                <option value="bare (solid)">bare (solid)</option>
+                <option value="flux cored">flux cored</option>
                 <option value="__manual__">Manual Entry</option>
             </select>
             <input type="text" class="form-input" name="filler_product_form_manual" id="filler_product_form_manual"
