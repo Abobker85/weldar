@@ -5,9 +5,17 @@
 @endpush
 
 @section('content')
-        <div class="form-container">
-            <form id="certificate-form" action="{{ route('gtaw-certificates.store') }}" method="POST"
-                enctype="multipart/form-data">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div><i class="fas fa-certificate"></i> Create New GTAW Certificate</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-container">
+                            <form id="certificate-form" action="{{ route('gtaw-certificates.store') }}" method="POST"
+                                enctype="multipart/form-data">
                 @csrf
                 <meta name="csrf-token" content="{{ csrf_token() }}">
                 
@@ -37,7 +45,13 @@
                 </div>
             </form>
         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+@push('scripts')
         <!-- Add any required third-party libraries before your scripts -->
         <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
@@ -212,13 +226,5 @@
                 document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
             }
         </script>
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.all.min.js"></script>
-    <script src="{{ asset('js/gtaw-certificate-form.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/gtaw-certificate-helper.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/welder-search.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/form-validation.js') }}?v={{ time() }}"></script>
 @endpush
 @endsection
